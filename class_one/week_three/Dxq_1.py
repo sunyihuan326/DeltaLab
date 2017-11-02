@@ -18,7 +18,7 @@ X, Y = load_planar_dataset()
 # print(Y.shape)  # (1,400)
 
 
-def layer_sizes(X, Y):
+def layer_sizes(X, Y, n_h=4):
     """
     Arguments:
     X -- input dataset of shape (input size, number of examples)
@@ -31,10 +31,9 @@ def layer_sizes(X, Y):
     """
     ### START CODE HERE ### (≈ 3 lines of code)
     n_x = X[0]  # size of input layer
-    n_h = 4
     n_y = Y[0]  # size of output layer
     ### END CODE HERE ###
-    return (n_x, n_h, n_y)
+    return n_x, n_h, n_y
 
 
 def initialize_parameters(n_x, n_h, n_y):
@@ -241,15 +240,10 @@ def nn_model(X, Y, n_h, num_iterations=10000, print_cost=False):
     """
 
     np.random.seed(3)
-    n_x = layer_sizes(X.shape, Y.shape)[0]
-    n_y = layer_sizes(X.shape, Y.shape)[2]
+    n_x, n_h, n_y = layer_sizes(X.shape, Y.shape, n_h)
     # Initialize parameters, then retrieve W1, b1, W2, b2. Inputs: "n_x, n_h, n_y". Outputs = "W1, b1, W2, b2, parameters".
     ### START CODE HERE ### (≈ 5 lines of code)
     parameters = initialize_parameters(n_x, n_h, n_y)
-    W1 = parameters['W1']
-    b1 = parameters['b1']
-    W2 = parameters['W2']
-    b2 = parameters['b2']
     ### END CODE HERE ###
 
     # Loop (gradient descent)
@@ -427,4 +421,4 @@ def other_data_test():
 
 
 if __name__ == '__main__':
-    other_data_test()
+    model_test()
