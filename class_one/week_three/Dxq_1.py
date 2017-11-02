@@ -127,6 +127,9 @@ def compute_cost(A2, Y, parameters):
     ### START CODE HERE ### (≈ 2 lines of code)
     logprobs = np.multiply(np.log(A2), Y) + np.multiply(np.log(1 - A2), 1 - Y)
     cost = - 1 / m * np.sum(logprobs)  # no need to use a for loop!
+    # dot usage
+    # logprobs = np.dot(np.log(A2),np.squeeze(Y))+np.dot(np.log(1-A2),np.squeeze(1-Y))
+    # cost=-1 / m * logprobs
     ### END CODE HERE ###
 
     cost = np.squeeze(cost)  # makes sure cost is the dimension we expect.
