@@ -419,6 +419,6 @@ def other_data_test():
     plt.scatter(X[0, :], X[1, :], c=np.squeeze(Y), s=40, cmap=plt.cm.Spectral)
     plt.show()
 
-
+#
 if __name__ == '__main__':
     model_test()
