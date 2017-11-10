@@ -442,4 +442,5 @@ def update_parameters_exam():
 
 
 if __name__ == '__main__':
-    update_parameters_exam()
+    # update_parameters_exam()
+    print(np.array([1, 2, 3]) > 2)

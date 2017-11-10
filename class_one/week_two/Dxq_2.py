@@ -139,7 +139,7 @@ def model_compare():
     plt.show()
 
 
-def model_test(w, b):
+def model_exam(w, b):
     my_image = "cat_in_iran.jpg"
 
     fname = "images/" + my_image
@@ -161,4 +161,4 @@ if __name__ == '__main__':
     d = model(train_set_x, train_set_y, test_set_x, test_set_y, epochs=2000, learning_rate=0.005, print_cost=True)
     # cost_fig(d['costs'], d['learning_rate'])
     # model_compare()
-    model_test(d['w'], d['b'])
+    # model_exam(d['w'], d['b'])

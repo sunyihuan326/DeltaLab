@@ -252,5 +252,6 @@ if __name__ == '__main__':
     train_x = train_x_flatten / 255.
     test_x = test_x_flatten / 255.
     # todo 储存
-    parameters = deep_layer_model_exam()
-    my_pic_exam()
+    # parameters = deep_layer_model_exam()
+    # my_pic_exam()
+    two_layer_model_exam()
