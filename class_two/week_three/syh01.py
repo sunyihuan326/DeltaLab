@@ -456,7 +456,7 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate=0.0001,
 
     # Backpropagation: Define the tensorflow optimizer. Use an AdamOptimizer.
     ### START CODE HERE ### (1 line)
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
     ### END CODE HERE ###
 
     # Initialize all the variables
@@ -517,5 +517,22 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate=0.0001,
         return parameters
 
 parameters = model(X_train, Y_train, X_test, Y_test)
+
+import scipy
+from PIL import Image
+from scipy import ndimage
+
+## START CODE HERE ## (PUT YOUR IMAGE NAME)
+my_image = "thumbs_up.jpg"
+## END CODE HERE ##
+
+# We preprocess your image to fit your algorithm.
+fname = "images/" + my_image
+image = np.array(ndimage.imread(fname, flatten=False))
+my_image = scipy.misc.imresize(image, size=(64,64)).reshape((1, 64*64*3)).T
+my_image_prediction = predict(my_image, parameters)
+
+plt.imshow(image)
+print("Your algorithm predicts: y = " + str(np.squeeze(my_image_prediction)))
 
 
