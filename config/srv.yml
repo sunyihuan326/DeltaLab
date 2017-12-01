@@ -1,0 +1,51 @@
+local:
+  rabbit:
+    host: dev.yanzijia.cn
+    port: 5672
+    user: yanzijia
+    pwd: yzjpwd123
+
+  redis:
+    host: dxq.neuling.top
+    port: 6379
+    db: 0
+    password: dxqpwd123
+
+  mongo:
+    host: dxq.neuling.top
+    port: 27017
+    db: dxq
+    uname: dxq
+    pwd: 123
+
+  log:
+    error.log: /var/log/gunicorn/neuling_error.log
+    stdout: /var/log/upstart/runsvdir.log
+    access.log: /var/log/gunicorn/neuling_access.log
+    application.log: /var/log/tornado/neuling.log
+
+develop:
+  rabbit:
+    host: dev.yanzijia.cn
+    port: 5672
+    user: yanzijia
+    pwd: yzjpwd123
+
+  redis:
+    host: dxq.neuling.top
+    port: 6379
+    db: 0
+    password: dxqpwd123
+
+  mongo:
+    host: dxq.neuling.top
+    port: 27017
+    db: dxq
+    uname: dxq
+    pwd: 123
+
+  log:
+    error.log: /var/log/gunicorn/neuling_error.log
+    stdout: /var/log/upstart/runsvdir.log
+    access.log: /var/log/gunicorn/neuling_access.log
+    application.log: /var/log/tornado/neuling.log
