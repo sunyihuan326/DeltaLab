@@ -17,7 +17,7 @@ x = tf.placeholder(tf.float32,[3,1])
 # x= tf.constant(coefficients,tf.float32)
 cost = x[0][0] * w ** 2 + x[1][0] * w + x[2][0]
 train = tf.train.GradientDescentOptimizer(0.01).minimize(cost)
-
+tra=tf.train.AdamOptimizer()
 init = tf.global_variables_initializer()
 session = tf.Session()
 session.run(init)
