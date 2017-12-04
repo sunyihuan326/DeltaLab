@@ -62,9 +62,9 @@ tf.reset_default_graph()
 
 # Start interactive session
 sess = tf.InteractiveSession()
-content_image = scipy.misc.imread("images/fh.jpg")
+content_image = scipy.misc.imread("images/1.jpg")
 content_image = reshape_and_normalize_image(content_image)
-style_image = scipy.misc.imread("images/drop-of-water.jpg")
+style_image = scipy.misc.imread("images/starry_night.jpg")
 style_image = reshape_and_normalize_image(style_image)
 generated_image = generate_noise_image(content_image)
 
@@ -76,6 +76,7 @@ a_C = sess.run(out)
 a_G = out
 J_content = compute_content_cost(a_C, a_G)
 
+print(model['input'])
 sess.run(model['input'].assign(style_image))
 
 # Compute the style cost
@@ -112,4 +113,4 @@ def model_nn(sess, input_image, num_iterations=200):
     return generated_image
 
 
-model_nn(sess, generated_image, num_iterations=1000)
+model_nn(sess, generated_image, num_iterations=3000)
