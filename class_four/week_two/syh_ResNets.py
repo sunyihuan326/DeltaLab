@@ -41,16 +41,18 @@ def identity_block(X, f, filters, stage, block):
     X = BatchNormalization(axis=3, name=bn_name_base + '2a')(X)
     X = Activation('relu')(X)
 
+
     X = Conv2D(filters=F2, kernel_size=(f, f), strides=(1, 1), padding='same', name=con_name_base + '2b',
                kernel_initializer=glorot_uniform(seed=0))(X)
     X = BatchNormalization(axis=3, name=bn_name_base + '2b')(X)
     X = Activation('relu')(X)
 
+
     X = Conv2D(filters=F3, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=con_name_base + '2c',
                kernel_initializer=glorot_uniform(seed=0))(X)
     X = BatchNormalization(axis=3, name=bn_name_base + '2c')(X)
 
-    X = layers.add([X_shortcut, X])
+    X = layers.add([X, X_shortcut])
     X = Activation('relu')(X)
 
     return X
@@ -142,13 +144,13 @@ def ResNets_Model(input_shape=(64, 64, 3), classes=6):
     X = identity_block(X, f=3, filters=[512, 512, 2048], stage=5, block='b')
     X = identity_block(X, f=3, filters=[512, 512, 2048], stage=5, block='c')
 
-    X = AveragePooling2D((2, 2), name='avg_pool')(X)
+    X = AveragePooling2D(pool_size=(2, 2), name='avg_pool')(X)
 
     X = Flatten()(X)
     X = Dense(classes, name='fc' + str(classes),activation='softmax', kernel_initializer = glorot_uniform(seed=0))(X)
 
-    model = Model(inputs=X_input, outputs=X)
-    # model = Model(inputs=X_input, outputs=X, name='ResNet50')
+    # model = Model(inputs=X_input, outputs=X)
+    model = Model(inputs=X_input, outputs=X, name='ResNet50')
     return model
 
 
@@ -173,8 +175,22 @@ print("Y_train shape: " + str(Y_train.shape))
 print("X_test shape: " + str(X_test.shape))
 print("Y_test shape: " + str(Y_test.shape))
 
-model.fit(X_train, Y_train, epochs=20, batch_size=32)
+model.fit(X_train, Y_train, epochs=2, batch_size=32)
 
 preds = model.evaluate(X_test, Y_test)
 print ("Loss = " + str(preds[0]))
 print ("Test Accuracy = " + str(preds[1]))
+
+img_path = 'images/my_image.jpg'
+img = image.load_img(img_path, target_size=(64, 64))
+x = image.img_to_array(img)
+x = np.expand_dims(x, axis=0)
+x = preprocess_input(x)
+print('Input image shape:', x.shape)
+my_image = scipy.misc.imread(img_path)
+imshow(my_image)
+print("class prediction vector [p(0), p(1), p(2), p(3), p(4), p(5)] = ")
+print(model.predict(x))
+
+plot_model(model, to_file='model.png')
+SVG(model_to_dot(model).create(prog='dot', format='svg'))
