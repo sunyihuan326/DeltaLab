@@ -9,6 +9,7 @@ import pandas as pd
 import scipy.io as scio
 import numpy as np
 
+dir = 'F:/dataSets/LFPW/testset/'
 UseKey = ['_id', 'face_img', 't_outline', 't_sense', 't_style', 't_style_text', 't_face']
 
 
@@ -33,8 +34,7 @@ def num_change(idx):
 
 
 def read_point():
-    dir = 'F:/dataSets/LFPW/trainset/'
-    for i in range(1, 872):
+    for i in range(1, 240):
         file_name = 'image_{}.pts'.format(num_change(i))
         print(file_name, 'loding---->------>')
         try:
@@ -60,7 +60,5 @@ def read_point():
         except:
             print(file_name)
             continue
-        scio.savemat(file_name.replace('pts', 'mat'), {'landmarks72': np.array(tt)})
+        scio.savemat(dir + file_name.replace('pts', 'mat'), {'landmarks72': np.array(tt)})
         print(file_name, 'loding---->------>', 'OK')
-
-
