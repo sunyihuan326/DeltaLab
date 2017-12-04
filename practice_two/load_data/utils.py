@@ -25,15 +25,19 @@ UseKey = ['_id', 'face_img', 't_outline', 't_sense', 't_style', 't_style_text', 
 
 def fetch_source_data(_id=None):
     if _id:
-        _res = requests.post('http://style.yanzijia.cn/ai/user/model', data={'_id': int(_id)}).json()['user']
+        _resList = [requests.post('http://style.yanzijia.cn/ai/user/model', data={'_id': int(_id)}).json()['user']]
     else:
-        _res = requests.post('http://style.yanzijia.cn/ai/user/model').json()['user']
+        _resList = requests.post('http://style.yanzijia.cn/ai/user/model').json()['user']
 
-    res = dict()
-    if _res:
-        for key in UseKey:
-            res.update({key: _res[key]})
-    return res
+    resList = list()
+    if _resList:
+        for _res in _resList:
+            res = dict()
+            for key in UseKey:
+                res.update({key: _res[key]})
+            resList.append(res)
+
+    return resList
 
 
 def num_change(idx):
@@ -59,14 +63,19 @@ def landmark72_trans(points):
     return data
 
 
-def get_landmark72(full_path):
+def get_landmark72(full_path, typ='local'):
     options = {
         'max_face_num': 1,
         # 'face_fields': "age,beauty,expression,faceshape,gender,glasses,landmark,race,qualities",
         'face_fields': "landmark"
     }
-    result = client.detect(get_file_content(full_path), options=options)
+    if typ == 'local':
+        result = client.detect(get_file_content(full_path), options=options)
+    else:
+        result = client.detect(get_url_img(full_path), options=options)
+
     landmark72 = landmark72_trans(result['result'][0]['landmark72'])
+
     return landmark72
 
 
@@ -78,7 +87,6 @@ def draw_pic(data, index=1):
     plt.show()
     # ax = plt.gca()
     # ax.set_aspect(1)
-
 
 # dir = 'F:/dataSets/LFPW/trainset/'
 # ids = 34
