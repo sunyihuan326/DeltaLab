@@ -46,7 +46,7 @@ def get_landmark72(full_path):
 # nose# data4 = data[47:58]
 # mouse# data5 = data[58:]
 if __name__ == '__main__':
-    file = 'check/2.jpg'
+    file = 'check/6.jpg'
 
     im = Image.open(file)
     drawSurface = ImageDraw.Draw(im)

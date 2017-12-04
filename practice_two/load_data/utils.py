@@ -8,8 +8,16 @@ import requests
 import pandas as pd
 import scipy.io as scio
 import numpy as np
+from aip import AipFace
+import urllib.request
+import matplotlib.pyplot as plt
 
-dir = 'F:/dataSets/LFPW/testset/'
+""" 你的 APPID AK SK """
+APP_ID = '10365287'
+API_KEY = 'G7q4m36Yic1vpFCl5t46yH5K'
+SECRET_KEY = 'MneS2GDvPQ5QsGpVtSaHXGAlvwHu1XnC '
+
+client = AipFace(APP_ID, API_KEY, SECRET_KEY)
 UseKey = ['_id', 'face_img', 't_outline', 't_sense', 't_style', 't_style_text', 't_face']
 
 
@@ -33,32 +41,47 @@ def num_change(idx):
     return '0' * (4 - len(i)) + i
 
 
-def read_point():
-    for i in range(1, 240):
-        file_name = 'image_{}.pts'.format(num_change(i))
-        print(file_name, 'loding---->------>')
-        try:
-            openFileHandle = open(dir + file_name, 'r')
-        except:
-            continue
-        j = 0
-        tt = []
+def get_file_content(filePath):
+    with open(filePath, 'rb') as fp:
+        return fp.read()
 
-        while True:
-            line = openFileHandle.readline()
-            j += 1
-            if j > 3:
-                if line:
-                    point = line.replace('\n', '').split(' ')
-                    if len(point) == 2:
-                        tt.append(np.array(point).astype('float'))
-                else:
-                    openFileHandle.close()
-                    break
-        try:
-            assert np.array(tt).shape == (68, 2)
-        except:
-            print(file_name)
-            continue
-        scio.savemat(dir + file_name.replace('pts', 'mat'), {'landmarks72': np.array(tt)})
-        print(file_name, 'loding---->------>', 'OK')
+
+def get_url_img(filePath):
+    image_bytes = urllib.request.urlopen(filePath).read()
+    return image_bytes
+
+
+def landmark72_trans(points):
+    num = len(points)
+    data = np.zeros([num, 2])
+    data[:, 0] = [p['x'] for p in points]
+    data[:, 1] = [p['y'] for p in points]
+    return data
+
+
+def get_landmark72(full_path):
+    options = {
+        'max_face_num': 1,
+        # 'face_fields': "age,beauty,expression,faceshape,gender,glasses,landmark,race,qualities",
+        'face_fields': "landmark"
+    }
+    result = client.detect(get_file_content(full_path), options=options)
+    landmark72 = landmark72_trans(result['result'][0]['landmark72'])
+    return landmark72
+
+
+def draw_pic(data, index=1):
+    # plt.subplot(3, 2, index)
+    # x = [d['x'] for d in data]
+    # y = [-d['y'] for d in data]
+    plt.scatter(data[:, 0], -data[:, 1])
+    plt.show()
+    # ax = plt.gca()
+    # ax.set_aspect(1)
+
+
+# dir = 'F:/dataSets/LFPW/trainset/'
+# ids = 34
+# draw_pic(get_landmark72(dir + 'image_00{}.png'.format(ids)))
+# dd = scio.loadmat(dir + 'image_00{}.mat'.format(ids))
+# draw_pic(dd['landmarks72'])
