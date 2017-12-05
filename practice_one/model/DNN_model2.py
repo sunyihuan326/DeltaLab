@@ -32,7 +32,7 @@ def load_data(file):
         data = scio.loadmat(file)
         m = data['X'].shape[0]
         x = data['X'].reshape(m, -1).T
-        y = np.squeeze(data['Y'])
+        y = np.squeeze(data['Y']).T
         init_sets(x, y, file, distribute=[0.8, 0.2])
     return True
 
@@ -204,7 +204,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
 
 
 if __name__ == '__main__':
-    file = 'face_data_3_64'
+    file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
     load_data(file)
 
     data_train = scio.loadmat(file + '_train')
