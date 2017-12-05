@@ -7,14 +7,83 @@ Created on 2017/12/4.
 import scipy.io as scio
 import os
 import matplotlib.pyplot as plt
+from PIL import Image, ImageDraw, ImageEnhance
+import numpy as np
 
-# logdir = '../data/image3channel'
-# files = os.listdir(logdir)
-# for file in files:
-#     _, _, id = file.replace('.mat', '').split('-')
-#     if int(id) == 100002:
-#         points = scio.loadmat(logdir + '/' + file)['Points']
-#         plt.scatter(points[:, 0], points[:, 1])
-#         plt.show()
-tt=scio.loadmat('face_3_channel.mat')
-print(tt['X'].shape)
+
+def draw_points(points):
+    X = points[:, 0]
+    Y = points[:, 1]
+    min_x = min(X)
+    min_y = min(Y)
+    max_x = max(X)
+    max_y = max(Y)
+
+    wid = max(max_y - min_y, max_x - min_x)
+
+    pil_image = Image.open('1.jpg')
+    d = ImageDraw.Draw(pil_image)
+    d.line(points, width=5)
+    region = pil_image.crop((min_x, min_y, min_x + wid, min_y + wid))
+    res = region.resize((64, 64), Image.ANTIALIAS).convert("L")
+    res.save('res.jpg')
+    return True
+
+
+def get_face_box(points):
+    X = points[:, 0]
+    Y = points[:, 1]
+    min_x = min(X) - 10
+    max_x = max(X) + 10
+    min_y = min(Y) - 10
+    max_y = max(Y) + 10
+
+    wid = max(max_y - min_y, max_x - min_x)
+
+    new_x = min_x - (wid - (max_x - min_x)) // 2
+    new_y = min_y - (wid - (max_y - min_y)) // 2
+
+    pil_image = Image.new("RGB", (2000, 2000), color=255)
+    d = ImageDraw.Draw(pil_image)
+
+    d.line([tuple(p) for p in points[:13]], width=10, fill=0)
+    d.line([tuple(p) for p in points[13:21]], width=10, fill=0)
+    d.line([tuple(p) for p in [points[13], points[20]]], width=10, fill=0)
+    d.line([tuple(p) for p in points[30:38]], width=10, fill=0)
+    d.line([tuple(p) for p in [points[30], points[37]]], width=10, fill=0)
+    d.line([tuple(p) for p in points[22:30]], width=10, fill=0)
+    d.line([tuple(p) for p in [points[22], points[29]]], width=10, fill=0)
+    d.line([tuple(p) for p in points[39:47]], width=10, fill=0)
+    d.line([tuple(p) for p in [points[39], points[46]]], width=10, fill=0)
+    d.line([tuple(p) for p in points[47:57]], width=10, fill=0)
+    d.line([tuple(p) for p in points[58:66]], width=10, fill=0)
+    d.line([tuple(p) for p in [points[58], points[65]]], width=10, fill=0)
+
+    region = pil_image.crop([new_x, new_y, new_x + wid, new_y + wid])
+    region = region.resize((128, 128), Image.ANTIALIAS).convert("L")
+    region = ImageEnhance.Contrast(region).enhance(999)
+    # region.show()
+    return region
+
+
+def main():
+    logdir = '../data/image3channel'
+    label_dir = '../data/label'
+    files = os.listdir(logdir)
+    num = len(files)
+    print('total num ------>', num)
+    data_X = np.zeros((num, 128, 128))
+    data_Y = np.zeros((num, 9))
+    for i, file in enumerate(files):
+        print('read_{}_data------->loading----->start'.format(file))
+        points = scio.loadmat(logdir + '/' + file)['Points']
+        data_X[i, :, :] = get_face_box(points)
+        data_Y[i, :] = scio.loadmat(label_dir + '/' + file.replace('Point', 'Label'))['Label']
+        print('read_{}_data------->loading----->end'.format(file))
+
+    scio.savemat('face_1_channel', {"X": data_X, "Y": data_Y})
+
+
+if __name__ == '__main__':
+    # main()
+    pass

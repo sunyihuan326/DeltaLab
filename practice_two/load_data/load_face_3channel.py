@@ -30,8 +30,10 @@ def main():
     num = len(resList)
     print('total num ------>', num)
     data = np.zeros(shape=(num, 256, 256, 3))
+    data_Y = np.zeros([num, 9])
     for i, res in enumerate(resList):
         point_dir = '../data/image3channel/Image-Point-{}.mat'.format(res['_id'])
+        label_dir = '../data/label/Image-Label-{}.mat'.format(res['_id'])
         if os.path.exists(point_dir):
             points = scio.loadmat(point_dir)['Points']
         else:
@@ -44,17 +46,11 @@ def main():
         region = get_face_box(points)
 
         data[i, :, :, :] = np.array(image.crop(region).resize([256, 256]))
+        data_Y[i, :] = scio.loadmat(label_dir)['Label']
         print('read_{}_data------->loading----->end'.format(i))
 
-    scio.savemat('face_3_channel', {"X": data})
+    scio.savemat('face_3_channel', {"X": data, "Y": data_Y})
 
 
 if __name__ == '__main__':
     main()
-
-    # res='http://zdimg.yanzijia.cn/basicInfo/face_img/20170821/e5d8c15e053cd460'
-    # response = requests.get(res)
-    # print(response.content)
-    # image = Image.open(BytesIO(response.content)).convert("RGB")
-    # points = get_landmark72(res, 'url')
-    # print(points)

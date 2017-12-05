@@ -61,6 +61,8 @@ if __name__ == '__main__':
     drawSurface.line(landmark72[22:30], fill=150, width=2)
     drawSurface.line(landmark72[39:47], fill=150, width=2)
     drawSurface.line(landmark72[47:58], fill=50, width=2)
-    drawSurface.line(landmark72[58:], fill=50, width=2)
+    drawSurface.line(landmark72[58:66], fill=50, width=2)
+    drawSurface.line(landmark72[69:], fill=50, width=2)
+    drawSurface.line(landmark72[66:69], fill=50, width=2)
 
     im.show()

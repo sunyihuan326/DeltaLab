@@ -79,6 +79,11 @@ def get_landmark72(full_path, typ='local'):
     return landmark72
 
 
+def convert_to_one_hot(Y, C):
+    Y = np.eye(C)[Y, :]
+    return Y
+
+
 def draw_pic(data, index=1):
     # plt.subplot(3, 2, index)
     # x = [d['x'] for d in data]
