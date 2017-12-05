@@ -33,11 +33,12 @@ def conv_net(x, weights, biases, dropout):
     x = tf.reshape(x, shape=[-1, 128, 128, 1])
     conv1 = conv2d(x, weights['wc1'], biases['bc1'])
     conv1 = maxpool2d(conv1, k=2)
-
+    print(conv1.shape)
     conv2 = conv2d(conv1, weights['wc2'], biases['bc2'])
     conv2 = maxpool2d(conv2, k=2)
-
+    print(conv2.shape)
     fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]])
+    print(fc1.shape)
     fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
     fc1 = tf.nn.relu(fc1)
     # Apply Dropout
@@ -219,4 +220,4 @@ if __name__ == '__main__':
     # data_check(Y_test)
     # data_check(Y_train)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, kp=0.8, epochs=20, learning_rate=0.001)
+    parameters = model(X_train, Y_train, X_test, Y_test, kp=1, epochs=200, learning_rate=0.2)
