@@ -66,6 +66,7 @@ def forward_propagation(X, parameters, keep_prob):
     L = len(parameters) // 2
     for l in range(1, L):
         A_prev = A
+        A_prev = tf.layers.batch_normalization(A_prev, axis=0)
         W = parameters['W' + str(l)]
         b = parameters['b' + str(l)]
         A = tf.nn.relu(tf.add(tf.matmul(W, A_prev), b))
@@ -133,14 +134,13 @@ def accuracy_cal(train_pre_val, train_cor_val):
         [7, 6, 4, 8],
         [8, 7, 5],
     ]
-    error_count = {
-        '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, 'num': len(train_cor_val)
-    }
+    error_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, len(train_cor_val), 0, 0, 0, 0, 0, 0, 0, 0, 0]
     correct = 0
     real_correct = 0
     pre_real = np.zeros([len(train_cor_val), 2])
     for i in range(len(train_cor_val)):
         pre_real[i, :] = [train_pre_val[i], train_cor_val[i]]
+        error_count[train_cor_val[i] + 10] += 1
         if train_pre_val[i] in accept_ans[train_cor_val[i]]:
             correct += 1
         else:
@@ -157,7 +157,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
     ops.reset_default_graph()
     n_x, m = X_train.shape
     n_y = Y_train.shape[0]
-    costs = []
+    # costs = []
 
     X, Y = create_placeholders(n_x, n_y)
     keep_prob = tf.placeholder(tf.float32)
@@ -179,9 +179,9 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
     # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
-                                               decay_steps=10, decay_rate=0.9)
+                                               decay_steps=10, decay_rate=0.95)
 
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate + 0.01).minimize(cost)
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate + 0.001).minimize(cost)
     # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
     add_global = global_step.assign_add(1)
     init = tf.global_variables_initializer()
@@ -208,10 +208,10 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
 
             if print_cost and epoch % 5 == 0:
                 print("Cost after epoch %i: %f" % (epoch, temp_cost))
-            if print_cost and epoch % 1 == 0:
-                costs.append(minibatch_cost)
+                # if print_cost and epoch % 1 == 0:
+                #     costs.append(minibatch_cost)
 
-        cost_fig(costs, learning_rate)
+        # cost_fig(costs, learning_rate)
 
         train_pre_val = predict_op.eval({X: X_train, Y: Y_train, keep_prob: 1})
         train_cor_val = correct_op.eval({X: X_train, Y: Y_train, keep_prob: 1})
@@ -228,7 +228,11 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
 
 
 if __name__ == '__main__':
-    file = 'E:/deeplearning_Data/face_1_channel_XY'
+    name = 'Dxq'
+    if name == 'Dxq':
+        file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
+    elif name == 'Syh':
+        file = 'E:/deeplearning_Data/face_1_channel_XY'
     load_data(file)
 
     data_train = scio.loadmat(file + 'DNN2_train')
@@ -238,10 +242,10 @@ if __name__ == '__main__':
     data_test = scio.loadmat(file + 'DNN2_test')
     X_test = data_test['X'] / 255.
     Y_test = data_test['Y']
-    layer_dims = [X_train.shape[0], Y_train.shape[0]]
+    layer_dims = [X_train.shape[0], 1024, Y_train.shape[0]]
     data_check(Y_test)
     data_check(Y_train)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=1000, initial_learning_rate=0.5)
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=200, initial_learning_rate=0.5)
 
     scio.savemat(file + 'DNN2_parameter', parameters)

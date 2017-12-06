@@ -9,6 +9,16 @@ from collections import Counter
 import csv
 
 res = scio.loadmat('res.mat')['result']
+error = scio.loadmat('error.mat')['result'][0]
+
+
+def error_result():
+    print('sample_num：=========', error[-1])
+    print('error_rate:==========', round(sum(error[:-1]) / error[-1], 2))
+    for i in range(9):
+        print('error_sample_{}'.format(i), '错误总占比===', round(100 * error[i] / error[9]), '%')
+        print('error_sample_{}'.format(i), '错误占个比===', round(100 * error[i] / error[i-9]), '%')
+        print('---------------==================---------------------------------------')
 
 
 def main():
@@ -34,4 +44,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    error_result()
