@@ -168,6 +168,13 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
     ZL = forward_propagation(X, parameters, keep_prob)
 
     cost = compute_cost(ZL, Y)
+    tf.summary.scalar(name='cost', tensor=cost)
+    predict_op = tf.argmax(tf.transpose(ZL), 1)
+    correct_op = tf.argmax(tf.transpose(Y), 1)
+
+    tf.summary.histogram(name='predict_op', values=predict_op)
+    tf.summary.histogram(name='correct_op', values=correct_op)
+
     # cost = compute_cost(Z1, Y) + tf.contrib.layers.l1_regularizer(.2)(parameters['W1'])
     # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
@@ -179,8 +186,12 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
     add_global = global_step.assign_add(1)
     init = tf.global_variables_initializer()
 
+    merged_summary_op = tf.summary.merge_all()
+
     with tf.Session() as sess:
         sess.run(init)
+
+        summary = tf.summary.FileWriter(logdir='logdir/DNN2', graph=sess.graph)
         for epoch in range(epochs):
 
             minibatch_cost = 0.
@@ -189,8 +200,10 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
 
             for minibatch in minibatches:
                 (minibatch_X, minibatch_Y) = minibatch
-                zl, par, _, temp_cost, _ = sess.run([ZL, parameters, optimizer, cost, add_global],
-                                                    feed_dict={X: minibatch_X, Y: minibatch_Y, keep_prob: kp})
+                summary_op, zl, par, _, temp_cost, _ = sess.run(
+                    [merged_summary_op, ZL, parameters, optimizer, cost, add_global],
+                    feed_dict={X: minibatch_X, Y: minibatch_Y, keep_prob: kp})
+                summary.add_summary(summary_op, epoch)
                 minibatch_cost += temp_cost / num_minibatches
 
             if print_cost and epoch % 5 == 0:
@@ -200,8 +213,6 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
 
         cost_fig(costs, learning_rate)
 
-        predict_op = tf.argmax(tf.transpose(ZL), 1)
-        correct_op = tf.argmax(tf.transpose(Y), 1)
         train_pre_val = predict_op.eval({X: X_train, Y: Y_train, keep_prob: 1})
         train_cor_val = correct_op.eval({X: X_train, Y: Y_train, keep_prob: 1})
         train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
@@ -217,7 +228,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
 
 
 if __name__ == '__main__':
-    file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
+    file = 'E:/deeplearning_Data/face_1_channel_XY'
     load_data(file)
 
     data_train = scio.loadmat(file + 'DNN2_train')
