@@ -37,7 +37,7 @@ def load_data(file):
         data = scio.loadmat(file)
         m = data['X'].shape[0]
         x = data['X'].reshape(m, -1)
-        y = np.squeeze(data['Y']).T
+        y = np.squeeze(data['Y'])
         print(x.shape)
         print(y.shape)
         init_sets(x, y, file, distribute=[0.8, 0.2])
@@ -179,7 +179,7 @@ def model(X_train, Y_train, X_test, Y_test, file, epochs=2000, minibatch_size=64
 
 
 if __name__ == '__main__':
-    file = 'face_data_3_64'
+    file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
     load_data(file)
 
     data_train = scio.loadmat(file + '_train')
@@ -192,7 +192,7 @@ if __name__ == '__main__':
 
     # data_check(Y_test)
     # data_check(Y_train)
-    parameters = model(X_train, Y_train, X_test, Y_test, file, epochs=500, learning_rate=0.005)
+    parameters = model(X_train, Y_train, X_test, Y_test, file, epochs=500, learning_rate=0.2)
     # W1 = parameters['W1']
     # b1 = parameters['b1']
     # scio.savemat(file + '_parameter', {'W1': W1, 'b1': b1})

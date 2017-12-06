@@ -20,15 +20,15 @@ def init_sets(X, Y, file, distribute):
     shuffled_Y = Y[:, permutation]
     assert len(distribute) == 2
     assert sum(distribute) == 1
-    scio.savemat(file + '_train',
+    scio.savemat(file + 'DNN2_train',
                  {'X': shuffled_X[:, :int(m * distribute[0])], 'Y': shuffled_Y[:, :int(m * distribute[0])]})
-    scio.savemat(file + '_test',
+    scio.savemat(file + 'DNN2_test',
                  {'X': shuffled_X[:, int(m * distribute[0]):], 'Y': shuffled_Y[:, int(m * distribute[0]):]})
     return True
 
 
 def load_data(file):
-    if not os.path.exists(file + '_test.mat'):
+    if not os.path.exists(file + 'DNN2_test.mat'):
         data = scio.loadmat(file)
         m = data['X'].shape[0]
         x = data['X'].reshape(m, -1).T
@@ -71,7 +71,7 @@ def forward_propagation(X, parameters, keep_prob):
         A = tf.nn.relu(tf.add(tf.matmul(W, A_prev), b))
         A = tf.nn.dropout(A, keep_prob)
     ZL = tf.add(tf.matmul(parameters['W' + str(L)], A), parameters['b' + str(L)])
-
+    ZL = tf.layers.batch_normalization(ZL, axis=0)
     return ZL
 
 
@@ -126,26 +126,34 @@ def accuracy_cal(train_pre_val, train_cor_val):
         [0, 1, 3],
         [1, 0, 2, 4],
         [2, 1, 5],
-        [3, 0, 4, 6, ],
+        [3, 0, 4, 6],
         [4, 1, 3, 5, 7],
         [5, 2, 4, 8],
         [6, 3, 7],
         [7, 6, 4, 8],
         [8, 7, 5],
     ]
+    error_count = {
+        '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, 'num': len(train_cor_val)
+    }
     correct = 0
     real_correct = 0
+    pre_real = np.zeros([len(train_cor_val), 2])
     for i in range(len(train_cor_val)):
+        pre_real[i, :] = [train_pre_val[i], train_cor_val[i]]
         if train_pre_val[i] in accept_ans[train_cor_val[i]]:
             correct += 1
+        else:
+            error_count[train_cor_val[i]] += 1
         if train_pre_val[i] == train_cor_val[i]:
             real_correct += 1
-
+    scio.savemat('result_analysis/DNN2/res', {'result': pre_real})
+    scio.savemat('result_analysis/DNN2/error', {'result': error_count})
     return correct / len(train_cor_val), real_correct / len(train_cor_val)
 
 
-def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, minibatch_size=64, learning_rate=0.5,
-          print_cost=True):
+def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, minibatch_size=64,
+          initial_learning_rate=0.5, print_cost=True):
     ops.reset_default_graph()
     n_x, m = X_train.shape
     n_y = Y_train.shape[0]
@@ -155,15 +163,20 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
     keep_prob = tf.placeholder(tf.float32)
 
     parameters = initialize_parameters_deep(layer_dims)
+    global_step = tf.Variable(0, trainable=False)
     # layer_dims = [5, 4, 3]
     ZL = forward_propagation(X, parameters, keep_prob)
 
     cost = compute_cost(ZL, Y)
     # cost = compute_cost(Z1, Y) + tf.contrib.layers.l1_regularizer(.2)(parameters['W1'])
     # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-    # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
+    learning_rate = tf.train.exponential_decay(initial_learning_rate,
+                                               global_step=global_step,
+                                               decay_steps=10, decay_rate=0.9)
 
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate + 0.01).minimize(cost)
+    # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
+    add_global = global_step.assign_add(1)
     init = tf.global_variables_initializer()
 
     with tf.Session() as sess:
@@ -176,8 +189,8 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
 
             for minibatch in minibatches:
                 (minibatch_X, minibatch_Y) = minibatch
-                zl, par, _, temp_cost = sess.run([ZL, parameters, optimizer, cost],
-                                                 feed_dict={X: minibatch_X, Y: minibatch_Y, keep_prob: kp})
+                zl, par, _, temp_cost, _ = sess.run([ZL, parameters, optimizer, cost, add_global],
+                                                    feed_dict={X: minibatch_X, Y: minibatch_Y, keep_prob: kp})
                 minibatch_cost += temp_cost / num_minibatches
 
             if print_cost and epoch % 5 == 0:
@@ -207,18 +220,17 @@ if __name__ == '__main__':
     file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
     load_data(file)
 
-    data_train = scio.loadmat(file + '_train')
-    X_train = data_train['X']
+    data_train = scio.loadmat(file + 'DNN2_train')
+    X_train = data_train['X'] / 255.
     Y_train = data_train['Y']
 
-    data_test = scio.loadmat(file + '_test')
-    X_test = data_test['X']
+    data_test = scio.loadmat(file + 'DNN2_test')
+    X_test = data_test['X'] / 255.
     Y_test = data_test['Y']
-
-    layer_dims = [X_train.shape[0], 64, 32, Y_train.shape[0]]
+    layer_dims = [X_train.shape[0], Y_train.shape[0]]
     data_check(Y_test)
     data_check(Y_train)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=500, learning_rate=0.001)
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=1000, initial_learning_rate=0.5)
 
-    scio.savemat(file + '_parameter', parameters)
+    scio.savemat(file + 'DNN2_parameter', parameters)

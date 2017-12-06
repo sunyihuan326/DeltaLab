@@ -14,6 +14,7 @@ import numpy as np
 from tensorflow.python.framework import ops
 import math
 import matplotlib.pyplot as plt
+from PIL import Image
 
 
 def conv2d(x, W, b, strides=1):
@@ -30,15 +31,19 @@ def maxpool2d(x, k=2):
 
 
 def conv_net(x, weights, biases, dropout):
+    # x.shape (?, 16384)
     x = tf.reshape(x, shape=[-1, 128, 128, 1])
     conv1 = conv2d(x, weights['wc1'], biases['bc1'])
     conv1 = maxpool2d(conv1, k=2)
-    print(conv1.shape)
+    # print(conv1.shape==(?, 64, 64, 32))
     conv2 = conv2d(conv1, weights['wc2'], biases['bc2'])
     conv2 = maxpool2d(conv2, k=2)
-    print(conv2.shape)
+    # print(conv2.shape==(?, 32, 32, 64))
+    # conv3 = conv2d(conv2, weights['wc3'], biases['bc3'])
+    # conv3 = maxpool2d(conv3, k=1)
+    # print(conv3.shape)
     fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]])
-    print(fc1.shape)
+    # print(fc1.shape == (?, 65536))
     fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
     fc1 = tf.nn.relu(fc1)
     # Apply Dropout
@@ -118,6 +123,8 @@ def initialize_parameters(n_y):
         'wc1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
         # 5x5 conv, 32 inputs, 64 outputs
         'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
+        # 5x5 conv, 32 inputs, 64 outputs
+        'wc3': tf.Variable(tf.random_normal([5, 5, 64, 128])),
         # fully connected, 7*7*64 inputs, 1024 outputs
         'wd1': tf.Variable(tf.random_normal([32 * 32 * 64, 1024])),
         # 1024 inputs, 10 outputs (class prediction)
@@ -127,6 +134,7 @@ def initialize_parameters(n_y):
     biases = {
         'bc1': tf.Variable(tf.random_normal([32])),
         'bc2': tf.Variable(tf.random_normal([64])),
+        'bc3': tf.Variable(tf.random_normal([128])),
         'bd1': tf.Variable(tf.random_normal([1024])),
         'out': tf.Variable(tf.random_normal([n_y]))
     }
@@ -143,7 +151,7 @@ def cost_fig(costs, learning_rate):
     return True
 
 
-def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=64, learning_rate=0.5,
+def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=64, initial_learning_rate=0.5,
           print_cost=True):
     ops.reset_default_graph()
     n_x, m = X_train.shape
@@ -152,9 +160,9 @@ def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=
     # 9
     costs = []
     weights, biases = initialize_parameters(n_y)
-
+    global_step = tf.Variable(0, trainable=False)
     X, Y = create_placeholders(n_x, n_y)
-    # (16384, ?) (9, ?)
+    # (?, 16384) (?, 9)
     keep_prob = tf.placeholder(tf.float32)
 
     logits = conv_net(X, weights, biases, keep_prob)
@@ -163,9 +171,14 @@ def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=
     # Define loss and optimizer
     loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
         logits=logits, labels=Y))
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-    train_op = optimizer.minimize(loss_op)
 
+    learning_rate = tf.train.exponential_decay(initial_learning_rate,
+                                               global_step=global_step,
+                                               decay_steps=10, decay_rate=0.9)
+
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate + 0.01)
+    train_op = optimizer.minimize(loss_op)
+    add_global = global_step.assign_add(1)
     # Evaluate model
     correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
@@ -178,14 +191,15 @@ def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=
         for epoch in range(epochs):
 
             minibatch_cost = 0.
-            num_minibatches = int(m / minibatch_size)
+            num_minibatches = m // minibatch_size
             minibatches = random_mini_batches(X_train, Y_train, minibatch_size)
 
             for minibatch in minibatches:
-                (minibatch_X, minibatch_Y) = minibatch
-                _, loss, acc, par = sess.run([train_op, loss_op, accuracy, weights], feed_dict={X: minibatch_X.T,
-                                                                                                Y: minibatch_Y.T,
-                                                                                                keep_prob: kp})
+                minibatch_X, minibatch_Y = minibatch
+                _, loss, acc, par, _ = sess.run([train_op, loss_op, accuracy, weights, add_global],
+                                                feed_dict={X: minibatch_X.T,
+                                                           Y: minibatch_Y.T,
+                                                           keep_prob: kp})
                 minibatch_cost += loss / num_minibatches
 
             if print_cost and epoch % 5 == 0:
@@ -199,10 +213,16 @@ def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=
         print("Optimization Finished!")
 
         cost_fig(costs, learning_rate)
-        # train_accuracy = accuracy.eval({X: X_train.T, Y: Y_train.T, keep_prob: 1})
+        train_accuracy = accuracy.eval({X: X_train.T, Y: Y_train.T, keep_prob: 1})
         test_accuracy = accuracy.eval({X: X_test.T, Y: Y_test.T, keep_prob: 1})
+        print('train_accuracy', train_accuracy)
         print('test_accuracy', test_accuracy)
     return par
+
+
+def draw_pic(data):
+    data = data.reshape([128, 128])
+    Image.fromarray(data).show()
 
 
 if __name__ == '__main__':
@@ -220,4 +240,4 @@ if __name__ == '__main__':
     # data_check(Y_test)
     # data_check(Y_train)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, kp=1, epochs=200, learning_rate=0.2)
+    parameters = model(X_train, Y_train, X_test, Y_test, kp=1, epochs=10, initial_learning_rate=0.5)
