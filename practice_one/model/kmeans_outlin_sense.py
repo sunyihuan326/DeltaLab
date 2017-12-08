@@ -1,21 +1,17 @@
 # coding:utf-8
 '''
-Created on 2017/12/6
+Created on 2017/12/8
 
 @author: sunyihuan
 '''
-from __future__ import print_function
 
+from __future__ import print_function
+import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow.contrib.factorization import KMeans
-
-# Ignore all GPUs, tf random forest does not benefit from it.
 import os
 import scipy.io as scio
-import numpy as np
-from sklearn.model_selection import train_test_split
-
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 def data_check(data):
@@ -30,10 +26,6 @@ def data_check(data):
 def main(Xtr, Ytr, Xte, Yte):
     X = tf.placeholder(tf.float32, shape=[None, num_features])
     Y = tf.placeholder(tf.float32, shape=[None, num_classes])
-
-
-
-
 
     kmeans = KMeans(inputs=X, num_clusters=k,
                     distance_metric='cosine',
@@ -102,12 +94,25 @@ def main(Xtr, Ytr, Xte, Yte):
                 c += 1
     print(round(100 * (c / test_y.shape[0]), 2), "%")
 
+    return cluster_label
+
+
+def load_data_train(file):
+    data_train = scio.loadmat(file_sense)
+    data_X = np.reshape(data_train['X'], [data_train['X'].shape[0], num_features])
+    X_train = data_X[:1200, :] / 255.
+    Y_train = data_train['Y'][:1200, :]
+
+    X_test = data_X[1200:, :] / 255
+    Y_test = data_train['Y'][1200:, :]
+    return X_train, Y_train, X_test, Y_test
+
 
 num_steps = 30  # Total steps to train
 batch_size = 1024  # The number of samples per batch
 k = 22  # The number of clusters
-num_classes = 9  # The 10 digits
-num_features = 128 * 128  # Each image is 28x28 pixels
+num_classes = 3  # The 10 digits
+num_features = 64 * 64  # Each image is 28x28 pixels
 
 if __name__ == '__main__':
 
@@ -115,12 +120,21 @@ if __name__ == '__main__':
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_1_channel_XY'
+        file_sense = 'E:/deeplearning_Data/face_1_channel_sense_XY64'
+        file_outlin = 'E:/deeplearning_Data/face_1_channel_outlin_XY64'
 
-    data_train = scio.loadmat(file)
-    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], train_size=0.8)
-    X_train = X_train / 255.
-    X_test = X_test / 255.
+    # 样本比例检测
+    # data_check(Y_test)
+    # data_check(Y_train)
 
-    # Parameters
-    main(X_train.reshape(-1,128*128), Y_train, X_test.reshape(-1,128*128), Y_test)
+    X_train0, Y_train0, X_test0, Y_test0 = load_data_train(file_outlin)
+    cluster_sense = main(X_train0, Y_train0, X_test0, Y_test0)
+
+    cluster_sense = pd.DataFrame(cluster_sense)
+    cluster_sense.to_csv('cluster_outlin.csv')
+
+    # Y = scio.loadmat('E:/deeplearning_Data/face_1_channel_XY')
+    # Y = Y['Y'][1200:, :]
+    # correct_prediction = tf.equal(cluster_labels, tf.cast(tf.argmax(Y, 1), tf.int32))
+    # # print(correct_prediction)
+    # accuracy_op = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))

@@ -231,7 +231,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
 
 
 if __name__ == '__main__':
-    name = 'Dxq'
+    name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
