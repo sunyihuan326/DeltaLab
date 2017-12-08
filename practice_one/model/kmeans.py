@@ -31,10 +31,6 @@ def main(Xtr, Ytr, Xte, Yte):
     X = tf.placeholder(tf.float32, shape=[None, num_features])
     Y = tf.placeholder(tf.float32, shape=[None, num_classes])
 
-
-
-
-
     kmeans = KMeans(inputs=X, num_clusters=k,
                     distance_metric='cosine',
                     use_mini_batch=True)
