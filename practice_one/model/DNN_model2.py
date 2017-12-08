@@ -63,12 +63,12 @@ def forward_propagation(X, parameters, keep_prob):
     L = len(parameters) // 2
     for l in range(1, L):
         A_prev = A
-        A_prev = tf.layers.batch_normalization(A_prev, axis=0)
         W = parameters['W' + str(l)]
         b = parameters['b' + str(l)]
         A = tf.nn.relu(tf.add(tf.matmul(W, A_prev), b))
-        A = tf.layers.batch_normalization(A, axis=0)
-        # A = tf.nn.dropout(A, keep_prob)
+        # A = tf.layers.batch_normalization(A, axis=0)
+        A = tf.nn.dropout(A, keep_prob)
+    A = tf.nn.dropout(A, keep_prob)
     ZL = tf.add(tf.matmul(parameters['W' + str(L)], A), parameters['b' + str(L)])
     ZL = tf.layers.batch_normalization(ZL, axis=0)
     return ZL
@@ -140,7 +140,7 @@ def accuracy_cal(train_pre_val, train_cor_val):
     return correct / len(train_cor_val), real_correct / len(train_cor_val)
 
 
-def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, minibatch_size=128,
+def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, minibatch_size=64,
           initial_learning_rate=0.5, print_cost=True):
     ops.reset_default_graph()
     n_x, m = X_train.shape
@@ -228,7 +228,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
 
 
 if __name__ == '__main__':
-    name = 'Syh'
+    name = 'Dxq'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
@@ -242,10 +242,10 @@ if __name__ == '__main__':
     data_test = scio.loadmat(file + '64DNN2_test')
     X_test = data_test['X'] / 255.
     Y_test = data_test['Y']
-    layer_dims = [X_train.shape[0], 16, Y_train.shape[0]]
+    layer_dims = [X_train.shape[0], Y_train.shape[0]]
     data_check(Y_test)
     data_check(Y_train)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=1000, initial_learning_rate=0.5)
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, kp=.8, epochs=2000, initial_learning_rate=0.5)
 
     scio.savemat(file + '64DNN2_parameter', parameters)
