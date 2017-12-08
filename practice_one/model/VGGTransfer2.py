@@ -72,7 +72,7 @@ def load_vgg_model(path):
     graph['conv5_4'] = _conv2d_relu(graph['conv5_3'], 34, 'conv5_4')
     graph['avgpool5'] = _avgpool(graph['conv5_4'])
 
-    return graph
+    return graph, vgg_layers
 
 
 def compute_cost(ZL, Y):
@@ -130,52 +130,77 @@ if __name__ == '__main__':
     name = 'Dxq'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel3/face_3_channel_XY64'
-
+    is_training = True
+    dropout = 0.1
+    n_classes = 9
+    initial_learning_rate = 0.5
     load_data(file)
 
     data_train = scio.loadmat(file + 'VGG_train')
     X_train = data_train['X'] / 255.
     Y_train = data_train['Y']
-    print(Y_train.shape)
+
     data_test = scio.loadmat(file + 'VGG_test')
     X_test = data_test['X'] / 255.
     Y_test = data_test['Y']
-    minibatch_size = 8
+
+    minibatch_size = 20
     minibatches = random_mini_batches(X_train, Y_train, minibatch_size)
-    model_dir = "F:\AImodel\imagenet-vgg-verydeep-19.mat"
-    model = load_vgg_model(model_dir)
-    X = model['input']
-    Y = tf.placeholder(tf.float32, shape=[None, 9])
 
-    New_trx = model['conv4_2']
+    # model_dir = "F:\AImodel\imagenet-vgg-verydeep-19.mat"
+    # model, vgg_layers = load_vgg_model(model_dir)
+    # tf.reset_default_graph()
+
+    X = tf.placeholder(tf.float32, shape=[None, 64, 64, 3])
+    Y = tf.placeholder(tf.float32, shape=[None, n_classes])
+
+    global_step = tf.Variable(0, trainable=False)
+
+    # vgg_out = model['input']
+    vgg_out = X
+    _, k1, k2, channel = vgg_out.shape
     #  (8, 8, 8, 512)
-    s2 = tf.reshape(New_trx, [-1, 8 * 8 * 512])
-
+    fc1 = tf.contrib.layers.flatten(vgg_out)
     # Z1 = tf.layers.dense(s2, 128, activation=tf.nn.relu)
-    ZL = tf.layers.dense(s2, 9, activation=None)
+    # fc1 = tf.layers.dense(fc1, 128)
+    # fc1 = tf.layers.dropout(fc1, rate=dropout, training=is_training)
+    out = tf.layers.dense(fc1, n_classes, activation=None)
 
-    # Tensor("Const_32:0", shape=(2, 131072), dtype=float32)
-    # Tensor("dense/BiasAdd:0", shape=(2, 9), dtype=float32)
-    correct_pred = tf.equal(tf.argmax(ZL, 1), tf.argmax(Y, 1))
-    accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
-    cost = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(logits=tf.transpose(ZL), labels=tf.transpose(Y)))
-    optimizer = tf.train.AdamOptimizer(0.01)
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=tf.transpose(out), labels=tf.transpose(Y)))
+    tf.summary.scalar('cost', cost)
+
+    learning_rate = tf.train.exponential_decay(initial_learning_rate,
+                                               global_step=global_step,
+                                               decay_steps=10, decay_rate=0.98)
+
+    optimizer = tf.train.AdamOptimizer(learning_rate + 0.001)
     train_step = optimizer.minimize(cost)
 
+    correct_pred = tf.equal(tf.argmax(out, 1), tf.argmax(Y, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+    add_global = global_step.assign_add(1)
+
     init = tf.global_variables_initializer()
+    merge_op = tf.summary.merge_all()
     with tf.Session() as sess:
         sess.run(init)
-        for epoch in range(10):
+        Writer = tf.summary.FileWriter(logdir='logdir/VGG', graph=sess.graph)
+        for epoch in range(20):
+            minibatch_cost = 0
+            num_minibatches = int(1500 / minibatch_size)
             for i, minibatch in enumerate(minibatches):
                 (minibatch_X, minibatch_Y) = minibatch
-                cs,_=sess.run([cost,train_step], feed_dict={X: minibatch_X.T.reshape(-1, 64, 64, 3), Y: minibatch_Y.T})
-        print(cs)
-        print('epoch===>acc', i,
-              accuracy.eval(feed_dict={X: X_train[:, 0:200].T.reshape(-1, 64, 64, 3), Y: Y_train[:, 0:200].T}))
-        print('epoch===>acc', i,
-              accuracy.eval(feed_dict={X: X_train[:, 200:400].T.reshape(-1, 64, 64, 3), Y: Y_train[:, 200:400].T}))
-        print('epoch===>acc', i,
-              accuracy.eval(feed_dict={X: X_train[:, 400:600].T.reshape(-1, 64, 64, 3), Y: Y_train[:, 400:600].T}))
-        print('epoch===>acc', i,
-              accuracy.eval(feed_dict={X: X_train[:, 600:800].T.reshape(-1, 64, 64, 3), Y: Y_train[:, 600:800].T}))
+                summary, cs, _, global_step = sess.run([merge_op, cost, train_step, add_global],
+                                                       feed_dict={X: minibatch_X.T.reshape(-1, 64, 64, 3),
+                                                                  Y: minibatch_Y.T})
+                Writer.add_summary(summary, global_step)
+
+                # o = res.eval(feed_dict={X: minibatch_X.T.reshape(-1, 64, 64, 3),
+                #                         Y: minibatch_Y.T})
+                # t = resY.eval(feed_dict={X: minibatch_X.T.reshape(-1, 64, 64, 3),
+                #                          Y: minibatch_Y.T})
+                #
+                # minibatch_cost += cs / num_minibatches
+            a = accuracy.eval(feed_dict={X: X_train.T.reshape(-1, 64, 64, 3),Y: Y_train.T})
+            if epoch % 1 == 0:
+                print("Cost after epoch %i: %f" % (epoch, a))

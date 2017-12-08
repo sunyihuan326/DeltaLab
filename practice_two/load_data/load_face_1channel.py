@@ -6,28 +6,8 @@ Created on 2017/12/4.
 '''
 import scipy.io as scio
 import os
-import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageEnhance
 import numpy as np
-
-
-def draw_points(points):
-    X = points[:, 0]
-    Y = points[:, 1]
-    min_x = min(X)
-    min_y = min(Y)
-    max_x = max(X)
-    max_y = max(Y)
-
-    wid = max(max_y - min_y, max_x - min_x)
-
-    pil_image = Image.open('1.jpg')
-    d = ImageDraw.Draw(pil_image)
-    d.line(points, width=5)
-    region = pil_image.crop((min_x, min_y, min_x + wid, min_y + wid))
-    res = region.resize((64, 64), Image.ANTIALIAS).convert("L")
-    res.save('res.jpg')
-    return True
 
 
 def get_face_box(points):
@@ -60,7 +40,7 @@ def get_face_box(points):
     d.line([tuple(p) for p in [points[58], points[65]]], width=10, fill=0)
 
     region = pil_image.crop([new_x, new_y, new_x + wid, new_y + wid])
-    region = region.resize((128, 128), Image.ANTIALIAS).convert("L")
+    region = region.resize((64, 64), Image.ANTIALIAS).convert("L")
     region = ImageEnhance.Contrast(region).enhance(999)
     # region.show()
     return region
@@ -72,7 +52,7 @@ def main():
     files = os.listdir(logdir)
     num = len(files)
     print('total num ------>', num)
-    data_X = np.zeros((num, 128, 128))
+    data_X = np.zeros((num, 64, 64))
     data_Y = np.zeros((num, 9))
     for i, file in enumerate(files):
         print('read_{}_data------->loading----->start'.format(file))
@@ -81,9 +61,9 @@ def main():
         data_Y[i, :] = scio.loadmat(label_dir + '/' + file.replace('Point', 'Label'))['Label']
         print('read_{}_data------->loading----->end'.format(file))
 
-    scio.savemat('face_1_channel', {"X": data_X, "Y": data_Y})
+    scio.savemat('face_1_channel_XY64', {"X": data_X, "Y": data_Y})
 
 
 if __name__ == '__main__':
-    # main()
-    pass
+    main()
+    # pass

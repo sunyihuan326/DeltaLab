@@ -24,15 +24,15 @@ def init_sets(X, Y, file, distribute):
     shuffled_Y = Y[:, permutation]
     assert len(distribute) == 2
     assert sum(distribute) == 1
-    scio.savemat(file + '_train',
+    scio.savemat(file + 'SoftMax_train',
                  {'X': shuffled_X[:, :int(m * distribute[0])], 'Y': shuffled_Y[:, :int(m * distribute[0])]})
-    scio.savemat(file + '_test',
+    scio.savemat(file + 'SoftMax_test',
                  {'X': shuffled_X[:, int(m * distribute[0]):], 'Y': shuffled_Y[:, int(m * distribute[0]):]})
     return True
 
 
 def load_data(file):
-    if not os.path.exists(file + '_test.mat'):
+    if not os.path.exists(file + 'SoftMax_test.mat'):
         data = scio.loadmat(file)
         init_sets(data['X'].T, data['Y'].T, file, distribute=[0.8, 0.2])
     # X(784, 20000)
@@ -44,8 +44,8 @@ def initialize_parameters(n_x, n_y, file, ifExtend=False):
     W1 = tf.get_variable(name='W1', dtype=tf.float32, shape=(n_y, n_x),
                          initializer=tf.contrib.layers.xavier_initializer())
     b1 = tf.constant(0.1)
-    if ifExtend and os.path.exists(file + '_parameters'):
-        parameters = scio.loadmat(file + '_parameters')
+    if ifExtend and os.path.exists(file + 'SoftMax_parameters'):
+        parameters = scio.loadmat(file + 'SoftMax_parameters')
         W1 = tf.Variable(parameters['W1'])
         b1 = tf.Variable(parameters['b1'])
 
@@ -141,14 +141,18 @@ def model(X_train, Y_train, X_test, Y_test, file, epochs=2000, learning_rate=0.5
 
 
 if __name__ == '__main__':
-    file = 'mnist_data_small'
-    load_data(file)
+    name = 'Dxq'
+    if name == 'Dxq':
+        file = 'F:/dataSets/MNIST/mnist_data_small'
+    elif name == 'Syh':
+        file = ''
 
-    data_train = scio.loadmat(file + '_train')
+    load_data(file)
+    data_train = scio.loadmat(file + 'SoftMax_train')
     X_train = data_train['X']
     Y_train = data_train['Y']
 
-    data_test = scio.loadmat(file + '_test')
+    data_test = scio.loadmat(file + 'SoftMax_test')
     X_test = data_test['X']
     Y_test = data_test['Y']
 
@@ -158,4 +162,4 @@ if __name__ == '__main__':
     parameters = model(X_train, Y_train, X_test, Y_test, file, epochs=200, learning_rate=0.01)
     W1 = parameters['W1']
     b1 = parameters['b1']
-    scio.savemat(file + '_parameter', {'W1': W1, 'b1': b1})
+    scio.savemat(file + 'SoftMax_parameter', {'W1': W1, 'b1': b1})

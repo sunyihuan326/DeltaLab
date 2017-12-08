@@ -32,7 +32,7 @@ def maxpool2d(x, k=2):
 
 def conv_net(x, weights, biases, dropout):
     # x.shape (?, 16384)
-    x = tf.reshape(x, shape=[-1, 128, 128, 1])
+    x = tf.reshape(x, shape=[-1, 64, 64, 1])
     conv1 = conv2d(x, weights['wc1'], biases['bc1'])
     conv1 = maxpool2d(conv1, k=2)
     # print(conv1.shape==(?, 64, 64, 32))
@@ -61,15 +61,15 @@ def init_sets(X, Y, file, distribute):
     shuffled_Y = Y[:, permutation]
     assert len(distribute) == 2
     assert sum(distribute) == 1
-    scio.savemat(file + '_train',
+    scio.savemat(file + '64CNN_train',
                  {'X': shuffled_X[:, :int(m * distribute[0])], 'Y': shuffled_Y[:, :int(m * distribute[0])]})
-    scio.savemat(file + '_test',
+    scio.savemat(file + '64CNN_test',
                  {'X': shuffled_X[:, int(m * distribute[0]):], 'Y': shuffled_Y[:, int(m * distribute[0]):]})
     return True
 
 
 def load_data(file):
-    if not os.path.exists(file + '_test.mat'):
+    if not os.path.exists(file + '64CNN_test.mat'):
         data = scio.loadmat(file)
         data_check(data['Y'].T)
         m = data['X'].shape[0]
@@ -126,7 +126,7 @@ def initialize_parameters(n_y):
         # 5x5 conv, 32 inputs, 64 outputs
         'wc3': tf.Variable(tf.random_normal([5, 5, 64, 128])),
         # fully connected, 7*7*64 inputs, 1024 outputs
-        'wd1': tf.Variable(tf.random_normal([32 * 32 * 64, 1024])),
+        'wd1': tf.Variable(tf.random_normal([16 * 16 * 64, 1024])),
         # 1024 inputs, 10 outputs (class prediction)
         'out': tf.Variable(tf.random_normal([1024, n_y]))
     }
@@ -212,32 +212,32 @@ def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=
 
         print("Optimization Finished!")
 
-        cost_fig(costs, learning_rate)
-        train_accuracy = accuracy.eval({X: X_train.T, Y: Y_train.T, keep_prob: 1})
+        # train_accuracy = accuracy.eval({X: X_train.T, Y: Y_train.T, keep_prob: 1})
         test_accuracy = accuracy.eval({X: X_test.T, Y: Y_test.T, keep_prob: 1})
-        print('train_accuracy', train_accuracy)
+        # print('train_accuracy', train_accuracy)
         print('test_accuracy', test_accuracy)
     return par
 
 
 def draw_pic(data):
-    data = data.reshape([128, 128])
+    data = data.reshape([64, 64])
     Image.fromarray(data).show()
 
 
 if __name__ == '__main__':
-    file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
+    file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     load_data(file)
 
-    data_train = scio.loadmat(file + '_train')
+    data_train = scio.loadmat(file + '64CNN_train')
     X_train = data_train['X']
     Y_train = data_train['Y']
-
-    data_test = scio.loadmat(file + '_test')
+    print(X_train.shape)
+    data_test = scio.loadmat(file + '64CNN_test')
     X_test = data_test['X']
     Y_test = data_test['Y']
 
     # data_check(Y_test)
     # data_check(Y_train)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, kp=1, epochs=10, initial_learning_rate=0.5)
+    parameters = model(X_train, Y_train, X_test, Y_test, kp=1, epochs=200, initial_learning_rate=0.5)
+    scio.savemat(file + '64CNN_parameter', parameters)

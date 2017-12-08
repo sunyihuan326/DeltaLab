@@ -146,7 +146,7 @@ if __name__ == '__main__':
     sess = tf.InteractiveSession()
     model_dir = "F:\AImodel\imagenet-vgg-verydeep-19.mat"
     model = load_vgg_model(model_dir, minibatch_size)
-    for epoch in range(1):
+    for epoch in range(2):
         for i, minibatch in enumerate(minibatches):
             if i <= 20:
                 (minibatch_X, minibatch_Y) = minibatch
@@ -174,4 +174,4 @@ if __name__ == '__main__':
                 tf.global_variables_initializer().run()
 
                 sess.run(train_step)
-        print('epoch===>acc', i, accuracy.eval())
+            print('epoch===>acc', i, cost.eval())
