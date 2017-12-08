@@ -30,10 +30,7 @@ def init_sets(X, Y, file, distribute):
 def load_data(file):
     if not os.path.exists(file + 'DNN_test.mat'):
         data = scio.loadmat(file)
-        m = data['X'].shape[0]
-        x = data['X'].reshape(-1, m)
-        y = np.squeeze(data['Y']).T
-        init_sets(x, y, file, distribute=[0.8, 0.2])
+        init_sets(data['X'].T, data['Y'].T, file, distribute=[0.8, 0.2])
     return True
 
 
@@ -70,10 +67,13 @@ def forward_propagation(X, parameters):
         W = parameters['W' + str(l)]
         b = parameters['b' + str(l)]
         A = tf.nn.relu(tf.add(tf.matmul(W, A_prev), b))
+        A = tf.layers.batch_normalization(A, axis=0)
         # A = tf.nn.dropout(A, 0.9)
         # 94
     ZL = tf.add(tf.matmul(parameters['W' + str(L)], A), parameters['b' + str(L)])
 
+    # Z1 = tf.add(tf.matmul(parameters['W1'], X), parameters['b1'])
+    # ZL = tf.add(tf.matmul(parameters['W2'], tf.nn.relu(Z1)), parameters['b2'])
     return ZL
 
 
@@ -122,6 +122,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, epochs=2000, minibatch_s
     X, Y = create_placeholders(n_x, n_y)
 
     parameters = initialize_parameters_deep(layer_dims)
+
     global_step = tf.Variable(0, trainable=False)
     # layer_dims = [5, 4, 3]
     ZL = forward_propagation(X, parameters)
@@ -136,8 +137,8 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, epochs=2000, minibatch_s
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
                                                decay_steps=100, decay_rate=0.98)
-    tf.summary.scalar('learning_rate', learning_rate+0.001)
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+    tf.summary.scalar('learning_rate', learning_rate + 0.001)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
     # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
     add_global = global_step.assign_add(1)
     merge_op = tf.summary.merge_all()
@@ -186,16 +187,16 @@ if __name__ == '__main__':
     data_train = scio.loadmat(file + 'DNN_train')
     X_train = data_train['X']
     Y_train = data_train['Y']
-    # print(X_train.shape)
     # (784, 16000)
     # print(Y_train.shape)
     data_test = scio.loadmat(file + 'DNN_test')
     X_test = data_test['X']
     Y_test = data_test['Y']
 
-    layer_dims = [784, 10]
-    data_check(Y_test)
+    layer_dims = [784,64, 10]
     data_check(Y_train)
+    data_check(Y_test)
+
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, epochs=200, initial_learning_rate=0.5)
     W1 = parameters['W1']
     b1 = parameters['b1']

@@ -43,7 +43,9 @@ def load_data(file):
 def initialize_parameters(n_x, n_y, file, ifExtend=False):
     W1 = tf.get_variable(name='W1', dtype=tf.float32, shape=(n_y, n_x),
                          initializer=tf.contrib.layers.xavier_initializer())
-    b1 = tf.constant(0.1)
+    b1 = tf.get_variable(dtype=tf.float32, name='b1', shape=(1),
+                         initializer=tf.contrib.layers.xavier_initializer())
+    # b1 = tf.constant(0.1)
     if ifExtend and os.path.exists(file + 'SoftMax_parameters'):
         parameters = scio.loadmat(file + 'SoftMax_parameters')
         W1 = tf.Variable(parameters['W1'])
@@ -103,10 +105,13 @@ def model(X_train, Y_train, X_test, Y_test, file, epochs=2000, learning_rate=0.5
     costs = []
 
     X, Y = create_placeholders(n_x, n_y)
-
+    print(X)
+    print(Y)
     parameters = initialize_parameters(n_x, n_y, file)
-
+    print('W1===================', parameters['W1'])
+    print('b1==================', parameters['b1'])
     Z1 = forward_propagation(X, parameters)
+    print('ZL========', Z1)
 
     cost = compute_cost(Z1, Y, parameters, False)
 
@@ -151,7 +156,8 @@ if __name__ == '__main__':
     data_train = scio.loadmat(file + 'SoftMax_train')
     X_train = data_train['X']
     Y_train = data_train['Y']
-
+    print(X_train[:, 5].reshape([28, 28]))
+    print(Y_train[:, 5])
     data_test = scio.loadmat(file + 'SoftMax_test')
     X_test = data_test['X']
     Y_test = data_test['Y']

@@ -30,10 +30,7 @@ def init_sets(X, Y, file, distribute):
 def load_data(file):
     if not os.path.exists(file + '64DNN2_test.mat'):
         data = scio.loadmat(file)
-        m = data['X'].shape[0]
-        x = data['X'].reshape(m, -1).T
-        y = np.squeeze(data['Y']).T
-        init_sets(x, y, file, distribute=[0.8, 0.2])
+        init_sets(data['X'].T, data['Y'].T, file, distribute=[0.8, 0.2])
     return True
 
 
