@@ -15,6 +15,7 @@ from tensorflow.python.framework import ops
 import math
 import matplotlib.pyplot as plt
 from PIL import Image
+from sklearn.model_selection import train_test_split
 
 
 def conv2d(x, W, b, strides=1):
@@ -96,22 +97,22 @@ def create_placeholders(n_x, n_y):
 
 
 def random_mini_batches(X, Y, mini_batch_size=64):
-    m = X.shape[1]
+    m = X.shape[0]
     mini_batches = []
 
     permutation = list(np.random.permutation(m))
-    shuffled_X = X[:, permutation]
-    shuffled_Y = Y[:, permutation]
+    shuffled_X = X[permutation, :]
+    shuffled_Y = Y[permutation, :]
 
     num_complete_minibatches = math.floor(m / mini_batch_size)
     for k in range(0, num_complete_minibatches):
-        mini_batch_X = shuffled_X[:, k * mini_batch_size: k * mini_batch_size + mini_batch_size]
-        mini_batch_Y = shuffled_Y[:, k * mini_batch_size: k * mini_batch_size + mini_batch_size]
+        mini_batch_X = shuffled_X[k * mini_batch_size: k * mini_batch_size + mini_batch_size, :]
+        mini_batch_Y = shuffled_Y[k * mini_batch_size: k * mini_batch_size + mini_batch_size, :]
         mini_batch = (mini_batch_X, mini_batch_Y)
         mini_batches.append(mini_batch)
     if m % mini_batch_size != 0:
-        mini_batch_X = shuffled_X[:, num_complete_minibatches * mini_batch_size: m]
-        mini_batch_Y = shuffled_Y[:, num_complete_minibatches * mini_batch_size: m]
+        mini_batch_X = shuffled_X[num_complete_minibatches * mini_batch_size: m, :]
+        mini_batch_Y = shuffled_Y[num_complete_minibatches * mini_batch_size: m, :]
         mini_batch = (mini_batch_X, mini_batch_Y)
         mini_batches.append(mini_batch)
     return mini_batches
@@ -154,9 +155,9 @@ def cost_fig(costs, learning_rate):
 def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=64, initial_learning_rate=0.5,
           print_cost=True):
     ops.reset_default_graph()
-    n_x, m = X_train.shape
+    m, n_x = X_train.shape
     # 16384,1201
-    n_y = Y_train.shape[0]
+    n_y = Y_train.shape[1]
     # 9
     costs = []
     weights, biases = initialize_parameters(n_y)
@@ -197,8 +198,8 @@ def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=
             for minibatch in minibatches:
                 minibatch_X, minibatch_Y = minibatch
                 _, loss, acc, par, _ = sess.run([train_op, loss_op, accuracy, weights, add_global],
-                                                feed_dict={X: minibatch_X.T,
-                                                           Y: minibatch_Y.T,
+                                                feed_dict={X: minibatch_X,
+                                                           Y: minibatch_Y,
                                                            keep_prob: kp})
                 minibatch_cost += loss / num_minibatches
 
@@ -225,17 +226,21 @@ def draw_pic(data):
 
 
 if __name__ == '__main__':
-    file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
+    name = 'Syh'
+    if name == 'Dxq':
+        file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
+    elif name == 'Syh':
+        file = 'E:/deeplearning_Data/face_1_channel_XY64'
+
     load_data(file)
+    data_train = scio.loadmat(file)
+    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=0.2)
+    X_train = X_train / 255.
+    X_test = X_test / 255.
 
-    data_train = scio.loadmat(file + '64CNN_train')
-    X_train = data_train['X']
-    Y_train = data_train['Y']
-    print(X_train.shape)
-    data_test = scio.loadmat(file + '64CNN_test')
-    X_test = data_test['X']
-    Y_test = data_test['Y']
-
+    X_train = X_train.reshape([-1, X_train.shape[1] * X_train.shape[2]])
+    X_test = X_test.reshape([-1, X_test.shape[1] * X_test.shape[2]])
+    # print(X_test.shape, X_train.shape, Y_train.shape)
     # data_check(Y_test)
     # data_check(Y_train)
 
