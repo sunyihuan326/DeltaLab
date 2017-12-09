@@ -104,10 +104,13 @@ def model(X_train, Y_train, X_test, Y_test, keep_prob=1.0, epochs=2000, minibatc
     loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
         logits=logits, labels=Y))
 
+    tf.summary.scalar('loss', loss_op)
+
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
                                                decay_steps=10, decay_rate=0.9)
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
+    tf.summary.scalar('learning_rate', learning_rate)
 
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(loss_op)
@@ -117,12 +120,15 @@ def model(X_train, Y_train, X_test, Y_test, keep_prob=1.0, epochs=2000, minibatc
     prediction = tf.nn.softmax(logits)
     correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+    tf.summary.scalar('accuracy', accuracy)
+    summary_merge_op = tf.summary.merge_all()
 
     # Initialize the variables (i.e. assign their default value)
     init = tf.global_variables_initializer()
 
     with tf.Session() as sess:
         sess.run(init)
+        summary_write = tf.summary.FileWriter('logdir/CNN_model', sess.graph)
         for epoch in range(epochs):
             minibatch_cost = 0.
             num_minibatches = m // minibatch_size
@@ -130,11 +136,13 @@ def model(X_train, Y_train, X_test, Y_test, keep_prob=1.0, epochs=2000, minibatc
 
             for minibatch in minibatches:
                 minibatch_X, minibatch_Y = minibatch
-                _, loss, acc, par, _ = sess.run([train_op, loss_op, accuracy, weights, add_global],
-                                                feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
+                summary_merge, _, loss, acc, par, _ = sess.run(
+                    [summary_merge_op, train_op, loss_op, accuracy, weights, add_global],
+                    feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
                 minibatch_cost += loss / num_minibatches
 
             if epoch % 5 == 0:
+                summary_write.add_summary(summary_merge, epoch)
                 print("Cost after epoch %i: %f" % (epoch, loss))
 
             print("Step " + str(epoch) + ", Minibatch Loss= " + \
@@ -162,10 +170,11 @@ if __name__ == '__main__':
 
     # preprocess
     X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
+    print(X_train.shape,Y_train.shape)
 
     # check the distribution
-    data_check(Y_train)
-    data_check(Y_test)
+    # data_check(Y_train)
+    # data_check(Y_test)
 
     parameters = model(X_train, Y_train, X_test, Y_test, keep_prob=1, epochs=100, initial_learning_rate=0.5)
     scio.savemat(file + '64CNN_parameter', parameters)
