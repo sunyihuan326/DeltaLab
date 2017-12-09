@@ -12,6 +12,7 @@ import tensorflow as tf
 from tensorflow.contrib.factorization import KMeans
 import os
 import scipy.io as scio
+from sklearn.model_selection import train_test_split
 
 
 def data_check(data):
@@ -127,7 +128,11 @@ if __name__ == '__main__':
     # data_check(Y_test)
     # data_check(Y_train)
 
-    X_train0, Y_train0, X_test0, Y_test0 = load_data_train(file_outlin)
+    data_train = scio.loadmat(file_outlin)
+
+    X_train0, X_test0, Y_train0, Y_test0 = train_test_split(data_train['X'], data_train['Y'], test_size=0.2)
+    X_train0 = X_train0.reshape(-1, X_train0.shape[1] * X_train0.shape[2])
+    X_test0 = X_test0.reshape(-1, X_test0.shape[1] * X_test0.shape[2])
     cluster_sense = main(X_train0, Y_train0, X_test0, Y_test0)
 
     cluster_sense = pd.DataFrame(cluster_sense)

@@ -16,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as scio
 import math
+from sklearn.model_selection import train_test_split
 
 
 def init_sets(X, Y, file, distribute):
@@ -135,7 +136,7 @@ def model(X_train, Y_train, X_test, Y_test, file, epochs=2000, minibatch_size=64
     Z1 = forward_propagation(X, parameters)
 
     # cost = compute_cost(Z1, Y)
-    cost = compute_cost(Z1, Y)+tf.contrib.layers.l1_regularizer(.2)(parameters['W1'])
+    cost = compute_cost(Z1, Y) + tf.contrib.layers.l1_regularizer(.2)(parameters['W1'])
     # tf.nn.l2_loss(parameters['W1'])
     # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
@@ -179,19 +180,14 @@ def model(X_train, Y_train, X_test, Y_test, file, epochs=2000, minibatch_size=64
 
 
 if __name__ == '__main__':
-    file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
-    load_data(file)
+    name = 'Syh'
+    if name == 'Syh':
+        file = 'E:/deeplearning_Data/mnist_data_small'
+    elif name == 'Dxq':
+        file = 'F:/dataSets/MNIST/mnist_data_small'
+    data_train = scio.loadmat(file)
+    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=0.2)
 
-    data_train = scio.loadmat(file + '_train')
-    X_train = data_train['X']
-    Y_train = data_train['Y']
-
-    data_test = scio.loadmat(file + '_test')
-    X_test = data_test['X']
-    Y_test = data_test['Y']
-
-    # data_check(Y_test)
-    # data_check(Y_train)
     parameters = model(X_train, Y_train, X_test, Y_test, file, epochs=500, learning_rate=0.2)
     # W1 = parameters['W1']
     # b1 = parameters['b1']

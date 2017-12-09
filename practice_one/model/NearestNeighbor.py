@@ -10,6 +10,7 @@ import numpy as np
 import tensorflow as tf
 
 import scipy.io as scio
+from sklearn.model_selection import train_test_split
 
 accept_ans = [
     [0, 1, 3],
@@ -54,17 +55,17 @@ def main(Xtr, Ytr, Xte, Yte):
 
 
 if __name__ == '__main__':
-    name = 'Dxq'
+    name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY'
 
-    data_train = scio.loadmat(file + 'DNN2_train')
-    X_train = data_train['X'] / 255.
-    Y_train = data_train['Y']
+    data_train = scio.loadmat(file)
 
-    data_test = scio.loadmat(file + 'DNN2_test')
-    X_test = data_test['X'] / 255.
-    Y_test = data_test['Y']
-    main(X_train.T, Y_train.T, X_test.T, Y_test.T)
+    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=0.2)
+    X_train = X_train.reshape(-1, X_train.shape[1] * X_train.shape[2])
+    X_test = X_test.reshape(-1, X_test.shape[1] * X_test.shape[2])
+
+
+    main(X_train, Y_train, X_test, Y_test)

@@ -15,6 +15,7 @@ from tensorflow.python.framework import ops
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as scio
+from sklearn.model_selection import train_test_split
 
 
 def init_sets(X, Y, file, distribute):
@@ -57,8 +58,8 @@ def initialize_parameters(n_x, n_y, file, ifExtend=False):
 
 
 def create_placeholders(n_x, n_y):
-    X = tf.placeholder(name='X', shape=(n_x, None), dtype=tf.float32)
-    Y = tf.placeholder(name='Y', shape=(n_y, None), dtype=tf.float32)
+    X = tf.placeholder(name='X', shape=(None, n_x), dtype=tf.float32)
+    Y = tf.placeholder(name='Y', shape=(None, n_y), dtype=tf.float32)
 
     return X, Y
 
@@ -67,13 +68,13 @@ def forward_propagation(X, parameters):
     W1 = parameters['W1']
     b1 = parameters['b1']
 
-    Z1 = tf.add(tf.matmul(W1, X), b1)
+    Z1 = tf.add(tf.matmul(X, tf.transpose(W1)), b1)
     # Z1 = tf.nn.dropout(Z1, 0.9)
     return Z1
 
 
 def compute_cost(Z1, Y, parameters, regular=False):
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=tf.transpose(Z1), labels=tf.transpose(Y)))
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=Z1, labels=Y))
     if regular:
         cost += tf.contrib.layers.l2_regularizer(.2)(parameters['W1'])
     return cost
@@ -100,8 +101,8 @@ def data_check(data):
 
 def model(X_train, Y_train, X_test, Y_test, file, epochs=2000, learning_rate=0.5, print_cost=True):
     ops.reset_default_graph()
-    n_x = X_train.shape[0]
-    n_y = Y_train.shape[0]
+    n_x = X_train.shape[1]
+    n_y = Y_train.shape[1]
     costs = []
 
     X, Y = create_placeholders(n_x, n_y)
@@ -131,8 +132,8 @@ def model(X_train, Y_train, X_test, Y_test, file, epochs=2000, learning_rate=0.5
 
         cost_fig(costs, learning_rate)
 
-        predict_op = tf.argmax(tf.transpose(Z1), 1)
-        correct_prediction = tf.equal(predict_op, tf.argmax(tf.transpose(Y), 1))
+        predict_op = tf.argmax(Z1, 1)
+        correct_prediction = tf.equal(predict_op, tf.argmax(Y, 1))
 
         # Calculate accuracy on the test set
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -146,26 +147,21 @@ def model(X_train, Y_train, X_test, Y_test, file, epochs=2000, learning_rate=0.5
 
 
 if __name__ == '__main__':
-    name = 'Dxq'
+    name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/MNIST/mnist_data_small'
     elif name == 'Syh':
-        file = ''
+        file = 'E:/deeplearning_Data/mnist_data_small'
 
-    load_data(file)
-    data_train = scio.loadmat(file + 'SoftMax_train')
-    X_train = data_train['X']
-    Y_train = data_train['Y']
-    print(X_train[:, 5].reshape([28, 28]))
-    print(Y_train[:, 5])
-    data_test = scio.loadmat(file + 'SoftMax_test')
-    X_test = data_test['X']
-    Y_test = data_test['Y']
+    data_train = scio.loadmat(file)
+    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=0.2)
 
-    data_check(Y_train)
-    data_check(Y_test)
+    # print(X_train.shape,X_test.shape,Y_train.shape)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, file, epochs=200, learning_rate=0.01)
+    # data_check(Y_train)
+    # data_check(Y_test)
+    #
+    parameters = model(X_train, Y_train, X_test, Y_test, file, epochs=20, learning_rate=0.01)
     W1 = parameters['W1']
     b1 = parameters['b1']
     scio.savemat(file + 'SoftMax_parameter', {'W1': W1, 'b1': b1})
