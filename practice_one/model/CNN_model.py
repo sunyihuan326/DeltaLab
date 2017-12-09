@@ -9,23 +9,12 @@ from __future__ import division, print_function, absolute_import
 
 import tensorflow as tf
 from tensorflow.python.framework import ops
-import numpy as np
-import math
 
 from practice_one.model.utils import *
 
 
 def preprocessing(trX, teX, trY, teY):
     return trX / 255., teX / 255., trY, teY
-
-
-def data_check(data):
-    res = list(np.argmax(data, 1))
-    num = len(res)
-    classes = data.shape[1]
-    for i in range(classes):
-        print(str(i) + '的比例', round(100.0 * res.count(i) / num, 2), '%')
-    print('<------------------分割线---------------------->')
 
 
 def create_placeholders(n_x, n_y):
@@ -96,28 +85,6 @@ def conv_net(x, weights, biases, dropout):
     return out
 
 
-def random_mini_batches(X, Y, mini_batch_size=64):
-    m = X.shape[0]
-    mini_batches = []
-
-    permutation = list(np.random.permutation(m))
-    shuffled_X = X[permutation, :]
-    shuffled_Y = Y[permutation, :]
-
-    num_complete_minibatches = math.floor(m / mini_batch_size)
-    for k in range(0, num_complete_minibatches):
-        mini_batch_X = shuffled_X[k * mini_batch_size: k * mini_batch_size + mini_batch_size, :]
-        mini_batch_Y = shuffled_Y[k * mini_batch_size: k * mini_batch_size + mini_batch_size, :]
-        mini_batch = (mini_batch_X, mini_batch_Y)
-        mini_batches.append(mini_batch)
-    if m % mini_batch_size != 0:
-        mini_batch_X = shuffled_X[num_complete_minibatches * mini_batch_size: m, :]
-        mini_batch_Y = shuffled_Y[num_complete_minibatches * mini_batch_size: m, :]
-        mini_batch = (mini_batch_X, mini_batch_Y)
-        mini_batches.append(mini_batch)
-    return mini_batches
-
-
 def model(X_train, Y_train, X_test, Y_test, keep_prob=1.0, epochs=2000, minibatch_size=64,
           initial_learning_rate=0.5, minest_learning_rate=0.01):
     ops.reset_default_graph()
@@ -128,10 +95,10 @@ def model(X_train, Y_train, X_test, Y_test, keep_prob=1.0, epochs=2000, minibatc
     kp = tf.placeholder(tf.float32)
     global_step = tf.Variable(0, trainable=False)
 
-    weights, biases = initialize_parameters(n_y)
     X, Y = create_placeholders(n_x, n_y)
+    weights, biases = initialize_parameters(n_y)
 
-    logits = conv_net(X, weights, biases, keep_prob)
+    logits = conv_net(X, weights, biases, kp)
 
     # Define loss and optimizer
     loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
