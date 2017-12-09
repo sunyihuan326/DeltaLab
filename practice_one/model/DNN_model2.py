@@ -185,9 +185,9 @@ if __name__ == '__main__':
     data_check(Y_test)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    data_check(Y_test)
     data_check(Y_train)
-
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.7, epochs=200, initial_learning_rate=0.5)
+    data_check(Y_test)
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.7, epochs=200,
+                       initial_learning_rate=0.5)
 
     scio.savemat(file + '64DNN2_parameter', parameters)
