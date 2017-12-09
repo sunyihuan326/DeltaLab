@@ -136,7 +136,7 @@ if __name__ == '__main__':
     data_check(Y_train)
     data_check(Y_test)
 
-    layer_dims = [784, 64, 10]
+    layer_dims = [X_train.shape[1], 64, Y_train.shape[1]]
 
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20,
                        initial_learning_rate=0.5)

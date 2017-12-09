@@ -4,34 +4,13 @@ Created on 2017/11/15.
 
 @author: chk01
 '''
-import os
 import tensorflow as tf
 from tensorflow.python.framework import ops
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.io as scio
-import math
+from practice_one.model.utils import *
 
 
-def init_sets(X, Y, file, distribute):
-    m = X.shape[1]
-    permutation = list(np.random.permutation(m))
-    shuffled_X = X[:, permutation]
-    shuffled_Y = Y[:, permutation]
-    assert len(distribute) == 2
-    assert sum(distribute) == 1
-    scio.savemat(file + '64DNN2_train',
-                 {'X': shuffled_X[:, :int(m * distribute[0])], 'Y': shuffled_Y[:, :int(m * distribute[0])]})
-    scio.savemat(file + '64DNN2_test',
-                 {'X': shuffled_X[:, int(m * distribute[0]):], 'Y': shuffled_Y[:, int(m * distribute[0]):]})
-    return True
-
-
-def load_data(file):
-    if not os.path.exists(file + '64DNN2_test.mat'):
-        data = scio.loadmat(file)
-        init_sets(data['X'].T, data['Y'].T, file, distribute=[0.8, 0.2])
-    return True
+def preprocessing(trX, teX, trY, teY):
+    return trX, teX, trY, teY
 
 
 def initialize_parameters_deep(layer_dims):
@@ -43,71 +22,33 @@ def initialize_parameters_deep(layer_dims):
                                                    shape=(layer_dims[l], layer_dims[l - 1]),
                                                    initializer=tf.contrib.layers.xavier_initializer())
         parameters['b' + str(l)] = tf.get_variable(dtype=tf.float32, name='b' + str(l),
-                                                   shape=(layer_dims[l], 1),
+                                                   shape=(1, layer_dims[l]),
                                                    initializer=tf.contrib.layers.xavier_initializer())
         assert (parameters['W' + str(l)].shape == (layer_dims[l], layer_dims[l - 1]))
-        assert (parameters['b' + str(l)].shape == (layer_dims[l], 1))
+        assert (parameters['b' + str(l)].shape == (1, layer_dims[l]))
 
     return parameters
 
 
 def create_placeholders(n_x, n_y):
-    X = tf.placeholder(name='X', shape=(n_x, None), dtype=tf.float32)
-    Y = tf.placeholder(name='Y', shape=(n_y, None), dtype=tf.float32)
+    X = tf.placeholder(name='X', shape=(None, n_x), dtype=tf.float32)
+    Y = tf.placeholder(name='Y', shape=(None, n_y), dtype=tf.float32)
 
     return X, Y
 
 
-def forward_propagation(X, parameters, keep_prob):
+def forward_propagation(X, parameters, kp):
     A = X
     L = len(parameters) // 2
     for l in range(1, L):
         A_prev = A
         W = parameters['W' + str(l)]
         b = parameters['b' + str(l)]
-        A = tf.nn.relu(tf.add(tf.matmul(W, A_prev), b))
-        # A = tf.layers.batch_normalization(A, axis=0)
-        A = tf.nn.dropout(A, keep_prob)
-    A = tf.nn.dropout(A, keep_prob)
-    ZL = tf.add(tf.matmul(parameters['W' + str(L)], A), parameters['b' + str(L)])
-    ZL = tf.layers.batch_normalization(ZL, axis=0)
+        A = tf.nn.relu(tf.add(tf.matmul(A_prev, tf.transpose(W)), b))
+        A = tf.layers.batch_normalization(A, axis=-1)
+        A = tf.nn.dropout(A, kp)
+    ZL = tf.add(tf.matmul(A, tf.transpose(parameters['W' + str(L)])), parameters['b' + str(L)])
     return ZL
-
-
-def compute_cost(ZL, Y):
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=tf.transpose(ZL), labels=tf.transpose(Y)))
-    return cost
-
-
-def random_mini_batches(X, Y, mini_batch_size=64):
-    m = X.shape[1]
-    mini_batches = []
-
-    permutation = list(np.random.permutation(m))
-    shuffled_X = X[:, permutation]
-    shuffled_Y = Y[:, permutation]
-
-    num_complete_minibatches = math.floor(m / mini_batch_size)
-    for k in range(0, num_complete_minibatches):
-        mini_batch_X = shuffled_X[:, k * mini_batch_size: k * mini_batch_size + mini_batch_size]
-        mini_batch_Y = shuffled_Y[:, k * mini_batch_size: k * mini_batch_size + mini_batch_size]
-        mini_batch = (mini_batch_X, mini_batch_Y)
-        mini_batches.append(mini_batch)
-    if m % mini_batch_size != 0:
-        mini_batch_X = shuffled_X[:, num_complete_minibatches * mini_batch_size: m]
-        mini_batch_Y = shuffled_Y[:, num_complete_minibatches * mini_batch_size: m]
-        mini_batch = (mini_batch_X, mini_batch_Y)
-        mini_batches.append(mini_batch)
-    return mini_batches
-
-
-def data_check(data):
-    res = list(np.argmax(data.T, 1))
-    num = len(res)
-    classes = data.shape[0]
-    for i in range(classes):
-        print(str(i) + '的比例', round(100.0 * res.count(i) / num, 2), '%')
-    print('<------------------分割线---------------------->')
 
 
 def accuracy_cal(train_pre_val, train_cor_val):
@@ -140,24 +81,26 @@ def accuracy_cal(train_pre_val, train_cor_val):
     return correct / len(train_cor_val), real_correct / len(train_cor_val)
 
 
-def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, minibatch_size=64,
-          initial_learning_rate=0.5, print_cost=True):
+def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
+          initial_learning_rate=0.5, minest_learning_rate=0.01):
     ops.reset_default_graph()
-    n_x, m = X_train.shape
-    n_y = Y_train.shape[0]
+
+    m, n_x = X_train.shape
+    n_y = Y_train.shape[1]
+
+    kp = tf.placeholder(tf.float32)
+    global_step = tf.Variable(0, trainable=False)
 
     X, Y = create_placeholders(n_x, n_y)
-    keep_prob = tf.placeholder(tf.float32)
-
     parameters = initialize_parameters_deep(layer_dims)
-    global_step = tf.Variable(0, trainable=False)
-    # layer_dims = [5, 4, 3]
+
     ZL = forward_propagation(X, parameters, keep_prob)
 
-    cost = compute_cost(ZL, Y)
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
     tf.summary.scalar(name='cost', tensor=cost)
-    predict_op = tf.argmax(tf.transpose(ZL), 1)
-    correct_op = tf.argmax(tf.transpose(Y), 1)
+
+    predict_op = tf.argmax(ZL, 1)
+    correct_op = tf.argmax(Y, 1)
 
     correct_pred = tf.equal(predict_op, correct_op)
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
@@ -193,31 +136,31 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, kp=1.0, epochs=2000, min
                 (minibatch_X, minibatch_Y) = minibatch
                 acc, summary_op, zl, par, _, temp_cost, _ = sess.run(
                     [accuracy, merged_summary_op, ZL, parameters, optimizer, cost, add_global],
-                    feed_dict={X: minibatch_X, Y: minibatch_Y, keep_prob: kp})
+                    feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
                 summary.add_summary(summary_op, epoch)
                 minibatch_cost += temp_cost / num_minibatches
 
-            if print_cost and epoch % 50 == 0:
+            if epoch % 50 == 0:
                 print("Cost|Acc after epoch %i: %f | %f" % (epoch, temp_cost, acc))
 
-                train_pre_val = predict_op.eval({X: X_train, Y: Y_train, keep_prob: 1})
-                train_cor_val = correct_op.eval({X: X_train, Y: Y_train, keep_prob: 1})
+                train_pre_val = predict_op.eval({X: X_train, Y: Y_train, kp: 1})
+                train_cor_val = correct_op.eval({X: X_train, Y: Y_train, kp: 1})
                 train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
 
-                test_pre_val = predict_op.eval({X: X_test, Y: Y_test, keep_prob: 1})
-                test_cor_val = correct_op.eval({X: X_test, Y: Y_test, keep_prob: 1})
+                test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
+                test_cor_val = correct_op.eval({X: X_test, Y: Y_test, kp: 1})
                 test_accuracy, test_real_accuracy = accuracy_cal(test_pre_val, test_cor_val)
 
                 print("Train Accuracy:", train_accuracy, train_real_accuracy)
                 print("Test Accuracy:", test_accuracy, test_real_accuracy)
                 print("----------------------------------------------------------")
 
-        train_pre_val = predict_op.eval({X: X_train, Y: Y_train, keep_prob: 1})
-        train_cor_val = correct_op.eval({X: X_train, Y: Y_train, keep_prob: 1})
+        train_pre_val = predict_op.eval({X: X_train, Y: Y_train, kp: 1})
+        train_cor_val = correct_op.eval({X: X_train, Y: Y_train, kp: 1})
         train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
 
-        test_pre_val = predict_op.eval({X: X_test, Y: Y_test, keep_prob: 1})
-        test_cor_val = correct_op.eval({X: X_test, Y: Y_test, keep_prob: 1})
+        test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
+        test_cor_val = correct_op.eval({X: X_test, Y: Y_test, kp: 1})
         test_accuracy, test_real_accuracy = accuracy_cal(test_pre_val, test_cor_val)
 
         print("Train Accuracy:", train_accuracy, train_real_accuracy)
@@ -233,19 +176,18 @@ if __name__ == '__main__':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY'
-    # load_data(file)
 
-    data_train = scio.loadmat(file + '64DNN2_train')
-    X_train = data_train['X'] / 255.
-    Y_train = data_train['Y']
+    # load data
+    X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
+    # preprocessing
+    X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
+    data_check(Y_train)
+    data_check(Y_test)
 
-    data_test = scio.loadmat(file + '64DNN2_test')
-    X_test = data_test['X'] / 255.
-    Y_test = data_test['Y']
-    layer_dims = [X_train.shape[0], Y_train.shape[0]]
+    layer_dims = [X_train.shape[1], Y_train.shape[1]]
     data_check(Y_test)
     data_check(Y_train)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, kp=.8, epochs=2000, initial_learning_rate=0.5)
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.7, epochs=200, initial_learning_rate=0.5)
 
     scio.savemat(file + '64DNN2_parameter', parameters)
