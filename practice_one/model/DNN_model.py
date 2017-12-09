@@ -8,7 +8,7 @@ import os
 import tensorflow as tf
 from tensorflow.python.framework import ops
 import numpy as np
-import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 import scipy.io as scio
 import math
 
@@ -52,8 +52,8 @@ def initialize_parameters_deep(layer_dims):
 
 
 def create_placeholders(n_x, n_y):
-    X = tf.placeholder(name='X', shape=(n_x, None), dtype=tf.float32)
-    Y = tf.placeholder(name='Y', shape=(n_y, None), dtype=tf.float32)
+    X = tf.placeholder(name='X', shape=(None, n_x), dtype=tf.float32)
+    Y = tf.placeholder(name='Y', shape=(None, n_y), dtype=tf.float32)
 
     return X, Y
 
@@ -182,18 +182,11 @@ if __name__ == '__main__':
         file = 'F:/dataSets/MNIST/mnist_data_small'
     elif name == 'Syh':
         file = ''
-    load_data(file)
+    # load_data(file)
+    data_train = scio.loadmat(file)
+    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=0.2)
 
-    data_train = scio.loadmat(file + 'DNN_train')
-    X_train = data_train['X']
-    Y_train = data_train['Y']
-    # (784, 16000)
-    # print(Y_train.shape)
-    data_test = scio.loadmat(file + 'DNN_test')
-    X_test = data_test['X']
-    Y_test = data_test['Y']
-
-    layer_dims = [784,64, 10]
+    layer_dims = [784, 64, 10]
     data_check(Y_train)
     data_check(Y_test)
 

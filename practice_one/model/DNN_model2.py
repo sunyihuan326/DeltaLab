@@ -233,7 +233,7 @@ if __name__ == '__main__':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY'
-    load_data(file)
+    # load_data(file)
 
     data_train = scio.loadmat(file + '64DNN2_train')
     X_train = data_train['X'] / 255.

@@ -52,12 +52,12 @@ def main():
     files = os.listdir(logdir)
     num = len(files)
     print('total num ------>', num)
-    data_X = np.zeros((num, 64, 64))
+    data_X = np.zeros((num, 64 * 64))
     data_Y = np.zeros((num, 9))
     for i, file in enumerate(files):
         print('read_{}_data------->loading----->start'.format(file))
         points = scio.loadmat(logdir + '/' + file)['Points']
-        data_X[i, :, :] = get_face_box(points)
+        data_X[i, :] = np.array(get_face_box(points)).reshape(1, -1)
         data_Y[i, :] = scio.loadmat(label_dir + '/' + file.replace('Point', 'Label'))['Label']
         print('read_{}_data------->loading----->end'.format(file))
 
@@ -65,5 +65,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-    # pass
+    # main()
+    pass

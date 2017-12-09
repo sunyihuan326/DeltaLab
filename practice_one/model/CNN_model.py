@@ -8,14 +8,55 @@ Created on 2017/12/5.
 from __future__ import division, print_function, absolute_import
 
 import tensorflow as tf
-import scipy.io as scio
-import os
-import numpy as np
 from tensorflow.python.framework import ops
+import numpy as np
 import math
-import matplotlib.pyplot as plt
-from PIL import Image
-from sklearn.model_selection import train_test_split
+
+from practice_one.model.utils import *
+
+
+def preprocessing(trX, teX, trY, teY):
+    return trX / 255., teX / 255., trY, teY
+
+
+def data_check(data):
+    res = list(np.argmax(data, 1))
+    num = len(res)
+    classes = data.shape[1]
+    for i in range(classes):
+        print(str(i) + '的比例', round(100.0 * res.count(i) / num, 2), '%')
+    print('<------------------分割线---------------------->')
+
+
+def create_placeholders(n_x, n_y):
+    X = tf.placeholder(name='X', shape=(None, n_x), dtype=tf.float32)
+    Y = tf.placeholder(name='Y', shape=(None, n_y), dtype=tf.float32)
+
+    return X, Y
+
+
+def initialize_parameters(n_y):
+    weights = {
+        # 5x5 conv, 1 input, 32 outputs
+        'wc1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
+        # 5x5 conv, 32 inputs, 64 outputs
+        'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
+        # 5x5 conv, 32 inputs, 64 outputs
+        'wc3': tf.Variable(tf.random_normal([5, 5, 64, 128])),
+        # fully connected, 7*7*64 inputs, 1024 outputs
+        'wd1': tf.Variable(tf.random_normal([16 * 16 * 64, 1024])),
+        # 1024 inputs, 10 outputs (class prediction)
+        'out': tf.Variable(tf.random_normal([1024, n_y]))
+    }
+
+    biases = {
+        'bc1': tf.Variable(tf.random_normal([32])),
+        'bc2': tf.Variable(tf.random_normal([64])),
+        'bc3': tf.Variable(tf.random_normal([128])),
+        'bd1': tf.Variable(tf.random_normal([1024])),
+        'out': tf.Variable(tf.random_normal([n_y]))
+    }
+    return weights, biases
 
 
 def conv2d(x, W, b, strides=1):
@@ -55,47 +96,6 @@ def conv_net(x, weights, biases, dropout):
     return out
 
 
-def init_sets(X, Y, file, distribute):
-    m = X.shape[1]
-    permutation = list(np.random.permutation(m))
-    shuffled_X = X[:, permutation]
-    shuffled_Y = Y[:, permutation]
-    assert len(distribute) == 2
-    assert sum(distribute) == 1
-    scio.savemat(file + '64CNN_train',
-                 {'X': shuffled_X[:, :int(m * distribute[0])], 'Y': shuffled_Y[:, :int(m * distribute[0])]})
-    scio.savemat(file + '64CNN_test',
-                 {'X': shuffled_X[:, int(m * distribute[0]):], 'Y': shuffled_Y[:, int(m * distribute[0]):]})
-    return True
-
-
-def load_data(file):
-    if not os.path.exists(file + '64CNN_test.mat'):
-        data = scio.loadmat(file)
-        data_check(data['Y'].T)
-        m = data['X'].shape[0]
-        x = data['X'].reshape(m, -1).T
-        y = np.squeeze(data['Y']).T
-        init_sets(x, y, file, distribute=[0.8, 0.2])
-    return True
-
-
-def data_check(data):
-    res = list(np.argmax(data.T, 1))
-    num = len(res)
-    classes = data.shape[0]
-    for i in range(classes):
-        print(str(i) + '的比例', round(100.0 * res.count(i) / num, 2), '%')
-    print('<------------------分割线---------------------->')
-
-
-def create_placeholders(n_x, n_y):
-    X = tf.placeholder(name='X', shape=(None, n_x), dtype=tf.float32)
-    Y = tf.placeholder(name='Y', shape=(None, n_y), dtype=tf.float32)
-
-    return X, Y
-
-
 def random_mini_batches(X, Y, mini_batch_size=64):
     m = X.shape[0]
     mini_batches = []
@@ -118,56 +118,20 @@ def random_mini_batches(X, Y, mini_batch_size=64):
     return mini_batches
 
 
-def initialize_parameters(n_y):
-    weights = {
-        # 5x5 conv, 1 input, 32 outputs
-        'wc1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
-        # 5x5 conv, 32 inputs, 64 outputs
-        'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
-        # 5x5 conv, 32 inputs, 64 outputs
-        'wc3': tf.Variable(tf.random_normal([5, 5, 64, 128])),
-        # fully connected, 7*7*64 inputs, 1024 outputs
-        'wd1': tf.Variable(tf.random_normal([16 * 16 * 64, 1024])),
-        # 1024 inputs, 10 outputs (class prediction)
-        'out': tf.Variable(tf.random_normal([1024, n_y]))
-    }
-
-    biases = {
-        'bc1': tf.Variable(tf.random_normal([32])),
-        'bc2': tf.Variable(tf.random_normal([64])),
-        'bc3': tf.Variable(tf.random_normal([128])),
-        'bd1': tf.Variable(tf.random_normal([1024])),
-        'out': tf.Variable(tf.random_normal([n_y]))
-    }
-    return weights, biases
-
-
-def cost_fig(costs, learning_rate):
-    costs = np.squeeze(costs)
-    plt.plot(costs)
-    plt.ylabel('cost')
-    plt.xlabel('epochs (per hundreds)')
-    plt.title("Learning rate =" + str(learning_rate))
-    plt.show()
-    return True
-
-
-def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=64, initial_learning_rate=0.5,
-          print_cost=True):
+def model(X_train, Y_train, X_test, Y_test, keep_prob=1.0, epochs=2000, minibatch_size=64,
+          initial_learning_rate=0.5, minest_learning_rate=0.01):
     ops.reset_default_graph()
+
     m, n_x = X_train.shape
-    # 16384,1201
     n_y = Y_train.shape[1]
-    # 9
-    costs = []
-    weights, biases = initialize_parameters(n_y)
+
+    kp = tf.placeholder(tf.float32)
     global_step = tf.Variable(0, trainable=False)
+
+    weights, biases = initialize_parameters(n_y)
     X, Y = create_placeholders(n_x, n_y)
-    # (?, 16384) (?, 9)
-    keep_prob = tf.placeholder(tf.float32)
 
     logits = conv_net(X, weights, biases, keep_prob)
-    prediction = tf.nn.softmax(logits)
 
     # Define loss and optimizer
     loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
@@ -176,11 +140,14 @@ def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
                                                decay_steps=10, decay_rate=0.9)
+    learning_rate = tf.maximum(learning_rate, minest_learning_rate)
 
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate + 0.01)
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(loss_op)
     add_global = global_step.assign_add(1)
+
     # Evaluate model
+    prediction = tf.nn.softmax(logits)
     correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
@@ -190,7 +157,6 @@ def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=
     with tf.Session() as sess:
         sess.run(init)
         for epoch in range(epochs):
-
             minibatch_cost = 0.
             num_minibatches = m // minibatch_size
             minibatches = random_mini_batches(X_train, Y_train, minibatch_size)
@@ -198,51 +164,41 @@ def model(X_train, Y_train, X_test, Y_test, kp=1.0, epochs=2000, minibatch_size=
             for minibatch in minibatches:
                 minibatch_X, minibatch_Y = minibatch
                 _, loss, acc, par, _ = sess.run([train_op, loss_op, accuracy, weights, add_global],
-                                                feed_dict={X: minibatch_X,
-                                                           Y: minibatch_Y,
-                                                           keep_prob: kp})
+                                                feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
                 minibatch_cost += loss / num_minibatches
 
-            if print_cost and epoch % 5 == 0:
+            if epoch % 5 == 0:
                 print("Cost after epoch %i: %f" % (epoch, loss))
-            if print_cost and epoch % 1 == 0:
-                costs.append(minibatch_cost)
+
             print("Step " + str(epoch) + ", Minibatch Loss= " + \
                   "{:.4f}".format(minibatch_cost) + ", Training Accuracy= " + \
                   "{:.3f}".format(acc))
 
         print("Optimization Finished!")
 
-        # train_accuracy = accuracy.eval({X: X_train.T, Y: Y_train.T, keep_prob: 1})
-        test_accuracy = accuracy.eval({X: X_test.T, Y: Y_test.T, keep_prob: 1})
-        # print('train_accuracy', train_accuracy)
+        train_accuracy = accuracy.eval({X: X_train.T, Y: Y_train.T, kp: 1})
+        test_accuracy = accuracy.eval({X: X_test.T, Y: Y_test.T, kp: 1})
+        print('train_accuracy', train_accuracy)
         print('test_accuracy', test_accuracy)
     return par
 
 
-def draw_pic(data):
-    data = data.reshape([64, 64])
-    Image.fromarray(data).show()
-
-
 if __name__ == '__main__':
-    name = 'Syh'
+    name = 'Dxq'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY64'
 
-    load_data(file)
-    data_train = scio.loadmat(file)
-    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=0.2)
-    X_train = X_train / 255.
-    X_test = X_test / 255.
+    # load data
+    X_train, X_test, Y_train, Y_test = load_data(file)
 
-    X_train = X_train.reshape([-1, X_train.shape[1] * X_train.shape[2]])
-    X_test = X_test.reshape([-1, X_test.shape[1] * X_test.shape[2]])
-    # print(X_test.shape, X_train.shape, Y_train.shape)
-    # data_check(Y_test)
-    # data_check(Y_train)
+    # preprocess
+    X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, kp=1, epochs=200, initial_learning_rate=0.5)
+    # check the distribution
+    data_check(Y_train)
+    data_check(Y_test)
+
+    parameters = model(X_train, Y_train, X_test, Y_test, keep_prob=1, epochs=100, initial_learning_rate=0.5)
     scio.savemat(file + '64CNN_parameter', parameters)
