@@ -42,12 +42,11 @@ def forward_propagation(X, parameters, kp):
     A = X
     L = len(parameters) // 2
     for l in range(1, L):
-        print('here')
         A_prev = A
         W = parameters['W' + str(l)]
         b = parameters['b' + str(l)]
         A = tf.nn.relu(tf.add(tf.matmul(A_prev, tf.transpose(W)), b))
-        A = tf.layers.batch_normalization(A, axis=0)
+        A = tf.layers.batch_normalization(A, axis=-1)
         A = tf.nn.dropout(A, kp)
     ZL = tf.add(tf.matmul(A, tf.transpose(parameters['W' + str(L)])), parameters['b' + str(L)])
     return ZL
@@ -79,7 +78,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
     tf.summary.scalar('learning_rate', learning_rate)
 
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
     # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
 
     add_global = global_step.assign_add(1)
@@ -103,7 +102,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                 (minibatch_X, minibatch_Y) = minibatch
                 summary, zl, par, _, temp_cost, _, acc = sess.run(
                     [merge_op, ZL, parameters, optimizer, cost, add_global, accuracy],
-                    feed_dict={X: minibatch_X, Y: minibatch_Y})
+                    feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
                 minibatch_cost += temp_cost / num_minibatches
                 writer.add_summary(summary)
             if epoch % 5 == 0:
@@ -114,8 +113,8 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
         # Calculate accuracy on the test set
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-        train_accuracy = accuracy.eval({X: X_train, Y: Y_train})
-        test_accuracy = accuracy.eval({X: X_test, Y: Y_test})
+        train_accuracy = accuracy.eval({X: X_train, Y: Y_train, kp: 1})
+        test_accuracy = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
 
         print("Train Accuracy:", train_accuracy)
         print("Test Accuracy:", test_accuracy)
@@ -137,7 +136,7 @@ if __name__ == '__main__':
     data_check(Y_train)
     data_check(Y_test)
 
-    layer_dims = [784, 10]
+    layer_dims = [784, 64, 10]
 
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20,
                        initial_learning_rate=0.5)
