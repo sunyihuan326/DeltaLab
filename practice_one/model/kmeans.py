@@ -7,36 +7,40 @@ Created on 2017/12/6
 from __future__ import print_function
 
 import tensorflow as tf
+from tensorflow.python.framework import ops
 from tensorflow.contrib.factorization import KMeans
 
 # Ignore all GPUs, tf random forest does not benefit from it.
 import os
-import scipy.io as scio
-import numpy as np
-from sklearn.model_selection import train_test_split
+from practice_one.model.utils import *
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
-def data_check(data):
-    res = list(np.argmax(data.T, 1))
-    num = len(res)
-    classes = data.shape[0]
-    for i in range(classes):
-        print(str(i) + '的比例', round(100.0 * res.count(i) / num, 2), '%')
-    print('<------------------分割线---------------------->')
+def preprocessing(trX, teX, trY, teY):
+    return trX / 255., teX / 255., trY, teY
+
+
+def create_placeholders(n_x, n_y):
+    X = tf.placeholder(name='X', shape=(None, n_x), dtype=tf.float32)
+    Y = tf.placeholder(name='Y', shape=(None, n_y), dtype=tf.float32)
+
+    return X, Y
 
 
 def main(Xtr, Ytr, Xte, Yte):
-    X = tf.placeholder(tf.float32, shape=[None, num_features])
-    Y = tf.placeholder(tf.float32, shape=[None, num_classes])
+    ops.reset_default_graph()
+    m, n_x = X_train.shape
+    n_y = Y_train.shape[1]
+
+    X, Y = create_placeholders(n_x, n_y)
 
     kmeans = KMeans(inputs=X, num_clusters=k,
                     distance_metric='cosine',
                     use_mini_batch=True)
 
-    res = kmeans.training_graph()
-    (all_scores, cluster_idx, scores, cluster_centers_initialized, init_op,
+    kmeans.training_graph()
+    (all_scores, cluster_idx, scores, cluster_centers_initialized, cluster_centers_var, init_op,
      train_op) = kmeans.training_graph()
     cluster_idx = cluster_idx[0]  # fix for cluster_idx being a tuple
     avg_distance = tf.reduce_mean(scores)
@@ -99,24 +103,20 @@ def main(Xtr, Ytr, Xte, Yte):
     print(round(100 * (c / test_y.shape[0]), 2), "%")
 
 
-num_steps = 30  # Total steps to train
-batch_size = 1024  # The number of samples per batch
-k = 22  # The number of clusters
-num_classes = 9  # The 10 digits
-num_features = 128 * 128  # Each image is 28x28 pixels
-
 if __name__ == '__main__':
+    num_steps = 30  # Total steps to train
+    batch_size = 1024  # The number of samples per batch
+    k = 22  # The number of clusters
+    num_classes = 9  # The 10 digits
 
-    name = 'Syh'
+    name = 'Dxq'
     if name == 'Dxq':
-        file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
+        file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY'
 
-    data_train = scio.loadmat(file)
-    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], train_size=0.8)
-    X_train = X_train / 255.
-    X_test = X_test / 255.
+    X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
 
+    X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
     # Parameters
-    main(X_train.reshape(-1,128*128), Y_train, X_test.reshape(-1,128*128), Y_test)
+    main(X_train, Y_train, X_test, Y_test)
