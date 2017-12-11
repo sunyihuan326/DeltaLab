@@ -10,6 +10,17 @@ import numpy as np
 
 from sklearn.model_selection import train_test_split
 
+accept_ans = [
+    [0, 1, 3],
+    [1, 0, 2, 4],
+    [2, 1, 5],
+    [3, 0, 4, 6],
+    [4, 1, 3, 5, 7],
+    [5, 2, 4, 8],
+    [6, 3, 7],
+    [7, 6, 4, 8],
+    [8, 7, 5],
+]
 
 
 def load_data(file, test_size=0.25):
@@ -24,7 +35,7 @@ def load_data(file, test_size=0.25):
     data_train = scio.loadmat(file)
 
     X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=test_size,
-                                                        shuffle=True)
+                                                        shuffle=True, random_state=42)
 
     return X_train, X_test, Y_train, Y_test
 
@@ -37,7 +48,11 @@ def data_check(data):
     num = len(res)
     classes = data.shape[1]
     for i in range(classes):
-        print(str(i) + '的比例', round(100.0 * res.count(i) / num, 2), '%')
+        tt = 0
+        for j in accept_ans[i]:
+            tt += res.count(j)
+        print(str(i) + '的比例', round(100.0 * res.count(i) / num, 2), '%', '全选' + str(i) + '的不出错比例',
+              round(100.0 * tt / num, 2), '%')
     print('<------------------分割线---------------------->')
 
 

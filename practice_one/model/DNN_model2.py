@@ -10,7 +10,7 @@ from practice_one.model.utils import *
 
 
 def preprocessing(trX, teX, trY, teY):
-    return trX, teX, trY, teY
+    return trX / 255., teX / 255., trY, teY
 
 
 def initialize_parameters_deep(layer_dims):
@@ -45,8 +45,8 @@ def forward_propagation(X, parameters, kp):
         W = parameters['W' + str(l)]
         b = parameters['b' + str(l)]
         A = tf.nn.relu(tf.add(tf.matmul(A_prev, tf.transpose(W)), b))
-        A = tf.layers.batch_normalization(A, axis=-1)
-        A = tf.nn.dropout(A, kp)
+        # A = tf.layers.batch_normalization(A, axis=-1)
+    A = tf.nn.dropout(A, kp)
     ZL = tf.add(tf.matmul(A, tf.transpose(parameters['W' + str(L)])), parameters['b' + str(L)])
     return ZL
 
@@ -82,7 +82,7 @@ def accuracy_cal(train_pre_val, train_cor_val):
 
 
 def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
-          initial_learning_rate=0.5, minest_learning_rate=0.01):
+          initial_learning_rate=0.5, minest_learning_rate=0.001):
     ops.reset_default_graph()
 
     m, n_x = X_train.shape
@@ -96,11 +96,12 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
     ZL = forward_propagation(X, parameters, keep_prob)
 
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
-    tf.summary.scalar(name='cost', tensor=cost)
-
     predict_op = tf.argmax(ZL, 1)
     correct_op = tf.argmax(Y, 1)
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
+    # cost = cost + tf.contrib.layers.l2_regularizer(.2)(parameters['W1'])
+    # cost = tf.reduce_mean(tf.square(ZL - Y))
+    tf.summary.scalar(name='cost', tensor=cost)
 
     correct_pred = tf.equal(predict_op, correct_op)
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
@@ -113,9 +114,9 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
-                                               decay_steps=10, decay_rate=0.9)
-
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate + 0.01).minimize(cost)
+                                               decay_steps=100, decay_rate=0.9)
+    learning_rate = tf.maximum(learning_rate, minest_learning_rate)
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
     # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
     add_global = global_step.assign_add(1)
     init = tf.global_variables_initializer()
@@ -142,7 +143,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
             if epoch % 50 == 0:
                 print("Cost|Acc after epoch %i: %f | %f" % (epoch, temp_cost, acc))
-
+            if epoch % 500 == 0:
                 train_pre_val = predict_op.eval({X: X_train, Y: Y_train, kp: 1})
                 train_cor_val = correct_op.eval({X: X_train, Y: Y_train, kp: 1})
                 train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
@@ -153,6 +154,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
                 print("Train Accuracy:", train_accuracy, train_real_accuracy)
                 print("Test Accuracy:", test_accuracy, test_real_accuracy)
+
                 print("----------------------------------------------------------")
 
         train_pre_val = predict_op.eval({X: X_train, Y: Y_train, kp: 1})
@@ -163,8 +165,9 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
         test_cor_val = correct_op.eval({X: X_test, Y: Y_test, kp: 1})
         test_accuracy, test_real_accuracy = accuracy_cal(test_pre_val, test_cor_val)
 
-        print("Train Accuracy:", train_accuracy, train_real_accuracy)
-        print("Test Accuracy:", test_accuracy, test_real_accuracy)
+        print("Train Accuracy:", round(train_accuracy, 2), '||', round(train_real_accuracy, 2))
+        print("Test Accuracy:", round(test_accuracy, 2), '||', round(test_real_accuracy, 2))
+        print("pred_ans", test_cor_val[list(np.random.permutation(20))])
         print("----------------------------------------------------------")
 
     return par
@@ -176,7 +179,7 @@ if __name__ == '__main__':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY'
-
+    file = 'res.mat'
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
     # preprocessing
@@ -185,9 +188,8 @@ if __name__ == '__main__':
     data_check(Y_test)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    data_check(Y_train)
-    data_check(Y_test)
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.7, epochs=200,
+
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=200,
                        initial_learning_rate=0.5)
 
     scio.savemat(file + '64DNN2_parameter', parameters)
