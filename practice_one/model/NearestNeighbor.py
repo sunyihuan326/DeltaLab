@@ -28,10 +28,11 @@ accept_ans = [
 def main(Xtr, Ytr, Xte, Yte):
     xtr = tf.placeholder(tf.float32, [None, 16384])
     xte = tf.placeholder(tf.float32, [16384])
-    distance = tf.reduce_sum(tf.abs(tf.add(xtr, tf.negative(xte))), reduction_indices=1)
+    distance = tf.reduce_sum(tf.square(tf.add(xtr, tf.negative(xte))), reduction_indices=1)
     # Prediction: Get min distance index (Nearest neighbor)
     pred = tf.arg_min(distance, 0)
 
+    accept_accuracy = 0.
     accuracy = 0.
 
     # Initialize the variables (i.e. assign their default value)
@@ -40,6 +41,7 @@ def main(Xtr, Ytr, Xte, Yte):
     with tf.Session() as sess:
         # Run the initializer
         sess.run(init)
+        classes = []
 
         # loop over test data
         for i in range(len(Xte)):
@@ -49,9 +51,14 @@ def main(Xtr, Ytr, Xte, Yte):
             print("Test", i, "Prediction:", np.argmax(Ytr[nn_index]), "True Class:", np.argmax(Yte[i]))
             # Calculate accuracy
             if np.argmax(Ytr[nn_index]) in accept_ans[np.argmax(Yte[i])]:
+                accept_accuracy += 1. / len(Xte)
+            if np.argmax(Ytr[nn_index]) == np.argmax(Yte[i]):
                 accuracy += 1. / len(Xte)
+            classes.append(np.argmax(Ytr[nn_index]))
         print("Done!")
+        print("Accept Accuracy:", accept_accuracy)
         print("Accuracy:", accuracy)
+        return classes
 
 
 if __name__ == '__main__':
@@ -63,9 +70,11 @@ if __name__ == '__main__':
 
     data_train = scio.loadmat(file)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=0.2)
+    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], random_state=42,
+                                                        test_size=0.2)
     X_train = X_train.reshape(-1, X_train.shape[1] * X_train.shape[2])
     X_test = X_test.reshape(-1, X_test.shape[1] * X_test.shape[2])
 
-
-    main(X_train, Y_train, X_test, Y_test)
+    classes = main(X_train, Y_train, X_test, Y_test)
+    for i in range(9):
+        print(str(i) + '的比例', round(100.0 * list(classes).count(i) / len(classes), 2), '%')
