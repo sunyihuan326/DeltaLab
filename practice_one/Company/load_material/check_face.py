@@ -46,16 +46,16 @@ def get_landmark72(full_path):
 # nose# data4 = data[47:58]
 # mouse# data5 = data[58:]
 if __name__ == '__main__':
-    file = 'check/6.jpg'
+    file = 'check/13.jpg'
 
     im = Image.open(file)
     drawSurface = ImageDraw.Draw(im)
     landmark72 = get_landmark72(file)
     landmark72 = tuple(tuple(t) for t in landmark72)
     drawSurface.line(landmark72[:13], fill=255, width=2)
-    drawSurface.line(landmark72[13:22], fill=100, width=10)
+    drawSurface.line(landmark72[13:22], fill=100, width=2)
     # drawSurface.line(landmark72[14], fill=100, width=10)
-    drawSurface.line(landmark72[30:39], fill=100, width=10)
+    drawSurface.line(landmark72[30:39], fill=100, width=2)
     # drawSurface.line(landmark72[34], fill=100, width=10)
 
     drawSurface.line(landmark72[22:30], fill=150, width=2)
