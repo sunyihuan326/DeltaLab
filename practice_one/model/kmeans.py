@@ -48,8 +48,9 @@ def main(Xtr, Ytr, Xte, Yte):
     X, Y = create_placeholders(n_x, n_y)
 
     kmeans = KMeans(inputs=X, num_clusters=k,
-                    distance_metric='squared_euclidean',
-                    use_mini_batch=True)
+                    distance_metric='cosine',
+                    use_mini_batch=True,
+                    mini_batch_steps_per_iteration=8,)
 
     kmeans.training_graph()
     (all_scores, cluster_idx, scores, cluster_centers_initialized, init_op,
@@ -57,10 +58,14 @@ def main(Xtr, Ytr, Xte, Yte):
     cluster_idx = cluster_idx[0]  # fix for cluster_idx being a tuple
     avg_distance = tf.reduce_mean(scores)
 
-    accept_accuracy = 0.
+    accept_train_accuracy = 0.
+    accept_test_accuracy = 0.
+
     tf.summary.scalar(name='avg_distance', tensor=avg_distance)
     tf.summary.histogram('cluster_idx', cluster_idx)
-    tf.summary.scalar('name=accept_accuracy', accept_accuracy)
+    with tf.name_scope('accuracy'):
+        tf.summary.scalar('name=accept_train_accuracy', accept_train_accuracy)
+        tf.summary.scalar('name=accept_test_accuracy', accept_test_accuracy)
     merge_all_op = tf.summary.merge_all()
 
     # Initialize the variables (i.e. assign their default value)
@@ -79,7 +84,7 @@ def main(Xtr, Ytr, Xte, Yte):
         summary_write, _, d, idx = sess.run(
             [merge_all_op, train_op, avg_distance, cluster_idx],
             feed_dict={X: Xtr})
-        if i % 10 == 0 or i == 1:
+        if i % 50 == 0 or i == 1:
             write.add_summary(summary_write, i)
             print("Step %i, Avg Distance: %f" % (i, d))
 
@@ -101,19 +106,34 @@ def main(Xtr, Ytr, Xte, Yte):
     # print(correct_prediction)
     accuracy_op = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+    with sess.as_default():
+        accuracy_train_op = accuracy_op.eval(feed_dict={X: Xtr, Y: Ytr})
+        cluster_train_label = cluster_label.eval(feed_dict={X: Xtr, Y: Ytr})
+        accuracy_test_op = accuracy_op.eval(feed_dict={X: Xte, Y: Yte})
+        cluster_test_label = cluster_label.eval(feed_dict={X: Xte, Y: Yte})
+        print("Train Accuracy:", accuracy_train_op)
+        print("Test Accuracy:", accuracy_test_op)
+
+
     # Test Model
-    test_x, test_y = Xte, Yte
-    Y, cluster_label, correct_prediction, accuracy_op = sess.run(
-        [tf.argmax(Y, 1), cluster_label, correct_prediction, accuracy_op],
-        feed_dict={X: test_x, Y: test_y})
-    print("Test Accuracy:", accuracy_op)
+    # test_x, test_y = Xte, Yte
+    # Y_tr, cluster_label, correct_prediction, accuracy_train_op = sess.run(
+    #     [tf.argmax(Y, 1), cluster_label, correct_prediction, accuracy_op],
+    #     feed_dict={X: Xtr, Y: Ytr})
+    # print("Train Accuracy:", accuracy_train_op)
+    Y_tr = np.argmax(Ytr, 1)
+    for i in range(len(Y_tr)):
+        if cluster_train_label[i] in accept_ans[Y_tr[i]]:
+            accept_train_accuracy += 1. / len(Y_tr)
+    print("Train accept Accuracy:", accept_train_accuracy)
 
-    for i in range(len(Y)):
-        if cluster_label[i] in accept_ans[Y[i]]:
-            accept_accuracy += 1. / len(Y)
-    print("Test accept Accuracy:", accept_accuracy)
+    Y_te = np.argmax(Yte, 1)
+    for i in range(len(Y_te)):
+        if cluster_test_label[i] in accept_ans[Y_te[i]]:
+            accept_test_accuracy += 1. / len(Y_te)
+    print("Test accept Accuracy:", accept_test_accuracy)
 
-    return correct_prediction, cluster_label
+    return correct_prediction, cluster_train_label
 
 
 def error_id(correct_prediction, Y, cluster_label=None):
@@ -127,16 +147,16 @@ def error_id(correct_prediction, Y, cluster_label=None):
 
 
 if __name__ == '__main__':
-    num_steps = 100  # Total steps to train
+    num_steps = 200  # Total steps to train
     batch_size = 32  # The number of samples per batch
-    k = 21  # The number of clusters
+    k = 600  # The number of clusters
     num_classes = 9  # The 10 digits
 
     name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_1_channel_XY64'
+        file = 'E:/deeplearning_Data/face_channel_XY64_res'
 
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
 
