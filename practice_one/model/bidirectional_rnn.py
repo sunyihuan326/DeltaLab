@@ -89,7 +89,7 @@ def BiRNN(x, weights, biases, num_hidden=128, timesteps=64):
     return tf.matmul(outputs[-1], weights['out']) + biases['out']
 
 
-def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001, training_steps=20, display_step=10,
+def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001, training_steps=400, display_step=100,
           batch_size=64):
     m, n_x0, n_x1 = X_train.shape
     n_y = Y_train.shape[1]
@@ -112,6 +112,9 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
 
     # Initialize the variables (i.e. assign their default value)
     init = tf.global_variables_initializer()
+    accept_train_accuracy = 0.
+    accept_test_accuracy = 0.
+    accuarcy_ = 0.
 
     # Start training
     with tf.Session() as sess:
@@ -134,10 +137,27 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
                           "{:.3f}".format(acc))
 
         print("Optimization Finished!")
+        pre_tr, accu = sess.run([prediction, accuracy], feed_dict={X: X_train, Y: Y_train})
+        pre_te, accu_test = sess.run([prediction, accuracy], feed_dict={X: X_test, Y: Y_test})
+
+        Y_tr = np.argmax(pre_tr, 1)
+        Y_te = np.argmax(pre_te, 1)
+
+        # print(len(np.argmax(Y_train)))
+        for j in range(len(Y_tr)):
+            if Y_tr[j] in accept_ans[np.argmax(Y_train[j])]:
+                accept_train_accuracy += 1. / len(Y_tr)
+
+        for k in range(len(Y_te)):
+            if Y_te[k] in accept_ans[np.argmax(Y_test[k])]:
+                accept_test_accuracy += 1. / len(Y_te)
+
 
         # Calculate accuracy for 128 mnist test images
-
-        print("Testing Accuracy:", sess.run(accuracy, feed_dict={X: X_test, Y: Y_test}))
+        print("Train Accuracy:", accu)
+        print("Train Accept Accuracy:", accept_train_accuracy)
+        print("Testing Accuracy:", accu_test)
+        print("Test Accept Accuracy:", accept_test_accuracy)
 
 
 if __name__ == '__main__':
@@ -145,13 +165,13 @@ if __name__ == '__main__':
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_1_channel_XY64'
+        file = 'E:/deeplearning_Data/face_channel_XY64_res'
 
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file)
     # preprocess
     X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
 
-    num_hidden = 110  # hidden layer num of features
+    num_hidden = 120  # hidden layer num of features
 
-    model(X_train, Y_train, X_test, Y_test, num_hidden=num_hidden, learning_rate=0.001)
+    model(X_train, Y_train, X_test, Y_test, learning_rate=0.001)
