@@ -119,7 +119,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                                                global_step=global_step,
                                                decay_steps=10, decay_rate=0.9)
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
     # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
     add_global = global_step.assign_add(1)
     init = tf.global_variables_initializer()
@@ -181,7 +181,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 if __name__ == '__main__':
     name = 'Dxq'
     if name == 'Dxq':
-        file = 'F:/dataSets/FaceChannel1/face_1_channel_XY_points_expend'
+        file = 'F:/dataSets/FaceChannel1/face_1_channel_sense15'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY'
     # load data
