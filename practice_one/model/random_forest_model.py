@@ -96,7 +96,7 @@ if __name__ == '__main__':
     batch_size = 128  # The number of samples per batch
     num_classes = 9  # The 10 digits
     num_features = 142  # Each image is 28x28 pixels
-    num_trees = 9
+    num_trees = 12
     max_nodes = 700
 
     # mnist = input_data.read_data_sets("../tmp/data/", one_hot=False)
@@ -104,4 +104,4 @@ if __name__ == '__main__':
 
     Y_train = np.argmax(Y_train, 1)
     Y_test = np.argmax(Y_test, 1)
-    model(X_train, X_test, Y_train, Y_test, num_features=num_features, max_nodes=max_nodes, num_steps=num_steps)
+    model(X_train, X_test, Y_train, Y_test, num_features=num_features, max_nodes=max_nodes, num_steps=num_steps,num_trees=num_trees)

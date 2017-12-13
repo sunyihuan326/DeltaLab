@@ -42,7 +42,7 @@ def create_placeholders(n_x, n_y):
 
 def main(Xtr, Ytr, Xte, Yte):
     ops.reset_default_graph()
-    m, n_x = X_train.shape
+    n_x = X_train.shape[1]
     n_y = Y_train.shape[1]
 
     X, Y = create_placeholders(n_x, n_y)
@@ -149,27 +149,27 @@ def error_id(correct_prediction, Y, cluster_label=None):
 if __name__ == '__main__':
     num_steps = 200  # Total steps to train
     batch_size = 32  # The number of samples per batch
-    k = 300  # The number of clusters
+    k = 500  # The number of clusters
     num_classes = 9  # The 10 digits
 
     name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_1_channel_XY_Points'
+        file = 'E:/deeplearning_Data/face_1_channel_XY64'
 
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
 
     X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
     # Parameters
-    correct_prediction, cluster_label = main(X_train, Y_train, X_test, Y_test)
-
-    for i in range(9):
-        print(str(i) + '的比例', round(100.0 * list(cluster_label).count(i) / len(cluster_label), 2), '%')
-
-    print("++++++++++++++++++++++++++++++")
+    # correct_prediction, cluster_label = main(X_train, Y_train, X_test, Y_test)
+    #
+    # for i in range(9):
+    #     print(str(i) + '的比例', round(100.0 * list(cluster_label).count(i) / len(cluster_label), 2), '%')
+    #
+    # print("++++++++++++++++++++++++++++++")
 
     data_check(Y_train)
 
-    Y_id = np.argmax(Y_test, 1)
+    # Y_id = np.argmax(Y_test, 1)
     # print(error_id(correct_prediction, Y_id, cluster_label=cluster_label))

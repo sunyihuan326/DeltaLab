@@ -86,25 +86,26 @@ def BiRNN(x, weights, biases, num_hidden=128, timesteps=64):
     # Get lstm cell output
     outputs, _, _ = rnn.static_bidirectional_rnn(lstm_fw_cell, lstm_bw_cell, x, dtype=tf.float32)
     # Apply Dropout
-    outputs = tf.nn.dropout(x=outputs, keep_prob=0.8)
+    # outputs = tf.nn.dropout(x=outputs, keep_prob=0.95)
 
     # Linear activation, using rnn inner loop last output
     return tf.matmul(outputs[-1], weights['out']) + biases['out']
 
 
-def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001, training_steps=300, display_step=50,
+def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001, training_steps=300, display_step=20,
           batch_size=128):
     m, n_x0, n_x1 = X_train.shape
     n_y = Y_train.shape[1]
     X, Y = creat_placeholder(n_x0, n_x1, n_y)
 
     weights, biases = creat_parameters(num_hidden, n_y)
+    l2_loss = tf.nn.l2_loss(weights['out'])
 
     logits = BiRNN(X, weights, biases, num_hidden, n_x0)
     prediction = tf.nn.softmax(logits)
     # Define loss and optimizer
     loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-        logits=logits, labels=Y))
+        logits=logits, labels=Y)) + 0.002 * l2_loss
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(loss_op)
 
@@ -177,7 +178,7 @@ if __name__ == '__main__':
     # preprocess
     X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
 
-    num_hidden = 100  # hidden layer num of features
+    num_hidden = 128  # hidden layer num of features
 
     model(X_train, Y_train, X_test, Y_test, learning_rate=0.001)
 
