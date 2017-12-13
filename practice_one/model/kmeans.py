@@ -149,14 +149,14 @@ def error_id(correct_prediction, Y, cluster_label=None):
 if __name__ == '__main__':
     num_steps = 200  # Total steps to train
     batch_size = 32  # The number of samples per batch
-    k = 600  # The number of clusters
+    k = 300  # The number of clusters
     num_classes = 9  # The 10 digits
 
     name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_channel_XY64_res'
+        file = 'E:/deeplearning_Data/face_1_channel_XY_Points'
 
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
 
