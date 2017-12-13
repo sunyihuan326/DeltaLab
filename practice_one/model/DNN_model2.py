@@ -83,7 +83,7 @@ def accuracy_cal(train_pre_val, train_cor_val):
 
 
 def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
-          initial_learning_rate=0.5, minest_learning_rate=0.015):
+          initial_learning_rate=0.5, minest_learning_rate=0.001):
     ops.reset_default_graph()
 
     m, n_x = X_train.shape
@@ -117,9 +117,9 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
-                                               decay_steps=100, decay_rate=0.9)
+                                               decay_steps=10, decay_rate=0.9)
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
     # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
     add_global = global_step.assign_add(1)
     init = tf.global_variables_initializer()
@@ -145,11 +145,12 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                 minibatch_cost += temp_cost / num_minibatches
 
             if epoch % 50 == 0:
-                print("Cost|Acc after epoch %i: %f | %f" % (epoch, temp_cost, acc))
+                print("Cost|Acc after epoch %i: %f" % (epoch, temp_cost))
                 print("wcost", wwc)
             if epoch % 100 == 0:
                 train_pre_val = predict_op.eval({X: X_train, Y: Y_train, kp: 1})
                 train_cor_val = correct_op.eval({X: X_train, Y: Y_train, kp: 1})
+
                 train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
 
                 test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
@@ -180,7 +181,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 if __name__ == '__main__':
     name = 'Dxq'
     if name == 'Dxq':
-        file = 'F:/dataSets/FaceChannel3/face_3_channel_XY64'
+        file = 'F:/dataSets/FaceChannel1/face_1_channel_XY_points_expend'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY'
     # load data
@@ -192,7 +193,7 @@ if __name__ == '__main__':
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.95, epochs=300,
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=1000,
                        initial_learning_rate=0.5)
 
     scio.savemat(file + '64DNN2_parameter', parameters)
