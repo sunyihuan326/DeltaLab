@@ -39,13 +39,14 @@ def create_placeholders(n_x, n_y):
 
 def forward_propagation(X, parameters, kp):
     A = X
+    # A = tf.layers.batch_normalization(A, axis=-1)
     L = len(parameters) // 2
     for l in range(1, L):
         A_prev = A
         W = parameters['W' + str(l)]
         b = parameters['b' + str(l)]
         A = tf.nn.relu(tf.add(tf.matmul(A_prev, tf.transpose(W)), b))
-        # A = tf.layers.batch_normalization(A, axis=-1)
+        A = tf.layers.batch_normalization(A, axis=-1)
     A = tf.nn.dropout(A, kp)
     ZL = tf.add(tf.matmul(A, tf.transpose(parameters['W' + str(L)])), parameters['b' + str(L)])
     return ZL
@@ -82,7 +83,7 @@ def accuracy_cal(train_pre_val, train_cor_val):
 
 
 def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
-          initial_learning_rate=0.5, minest_learning_rate=0.001):
+          initial_learning_rate=0.5, minest_learning_rate=0.015):
     ops.reset_default_graph()
 
     m, n_x = X_train.shape
@@ -98,8 +99,11 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
     predict_op = tf.argmax(ZL, 1)
     correct_op = tf.argmax(Y, 1)
+
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
-    # cost = cost + tf.contrib.layers.l2_regularizer(.2)(parameters['W1'])
+    wcost = tf.contrib.layers.l2_regularizer(.1)(parameters['W1'])
+
+    # cost = cost + wcost
     # cost = tf.reduce_mean(tf.square(ZL - Y))
     tf.summary.scalar(name='cost', tensor=cost)
 
@@ -110,7 +114,6 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     tf.summary.histogram(name='predict_op', values=predict_op)
     tf.summary.histogram(name='correct_op', values=correct_op)
 
-    # cost = compute_cost(Z1, Y) + tf.contrib.layers.l1_regularizer(.2)(parameters['W1'])
     # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
@@ -135,15 +138,16 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
             for minibatch in minibatches:
                 (minibatch_X, minibatch_Y) = minibatch
-                acc, summary_op, zl, par, _, temp_cost, _ = sess.run(
-                    [accuracy, merged_summary_op, ZL, parameters, optimizer, cost, add_global],
+                wwc, acc, summary_op, zl, par, _, temp_cost, _ = sess.run(
+                    [wcost, accuracy, merged_summary_op, ZL, parameters, optimizer, cost, add_global],
                     feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
                 summary.add_summary(summary_op, epoch)
                 minibatch_cost += temp_cost / num_minibatches
 
             if epoch % 50 == 0:
                 print("Cost|Acc after epoch %i: %f | %f" % (epoch, temp_cost, acc))
-            if epoch % 500 == 0:
+                print("wcost", wwc)
+            if epoch % 100 == 0:
                 train_pre_val = predict_op.eval({X: X_train, Y: Y_train, kp: 1})
                 train_cor_val = correct_op.eval({X: X_train, Y: Y_train, kp: 1})
                 train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
@@ -176,10 +180,9 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 if __name__ == '__main__':
     name = 'Dxq'
     if name == 'Dxq':
-        file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
+        file = 'F:/dataSets/FaceChannel3/face_3_channel_XY64'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY'
-    file = 'res.mat'
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
     # preprocessing
@@ -189,7 +192,7 @@ if __name__ == '__main__':
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=200,
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.95, epochs=300,
                        initial_learning_rate=0.5)
 
     scio.savemat(file + '64DNN2_parameter', parameters)

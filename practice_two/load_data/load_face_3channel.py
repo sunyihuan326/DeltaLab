@@ -29,7 +29,7 @@ def main():
     resList = fetch_source_data()
     num = len(resList)
     print('total num ------>', num)
-    data = np.zeros(shape=(num, 64, 64, 3))
+    data = np.zeros(shape=(num, 64 * 64 * 3))
     data_Y = np.zeros([num, 9])
     for i, res in enumerate(resList):
         point_dir = '../data/image3channel/Image-Point-{}.mat'.format(res['_id'])
@@ -45,7 +45,7 @@ def main():
         image = Image.open(BytesIO(response.content)).convert("RGB")
         region = get_face_box(points)
 
-        data[i, :, :, :] = np.array(image.crop(region).resize([64, 64]))
+        data[i, :] = np.array(image.crop(region).resize([64, 64])).reshape(1, 64 * 64 * 3)
         data_Y[i, :] = scio.loadmat(label_dir)['Label']
         print('read_{}_data------->loading----->end'.format(i))
 
@@ -53,5 +53,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    pass
+    main()
+    # pass
