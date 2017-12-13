@@ -118,4 +118,4 @@ if __name__ == '__main__':
         data_X[temp_x:temp_x + n, :] = data['X'].reshape(n, -1)
         data_Y[temp_x:temp_x + n, :] = data['Y'].reshape(n, -1)
         temp_x += n
-    scio.savemat('res', {"X": data_X, "Y": data_Y})
+    scio.savemat('face_1_channel_XY64_expend', {"X": data_X, "Y": data_Y})
