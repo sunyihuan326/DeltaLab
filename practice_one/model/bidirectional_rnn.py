@@ -140,7 +140,7 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
 
         print("Optimization Finished!")
         pre_tr, train_logits, accu = sess.run([prediction, logits, accuracy], feed_dict={X: X_train, Y: Y_train})
-        pre_te, test_logits, accu_test = sess.run([prediction, accuracy], feed_dict={X: X_test, Y: Y_test})
+        pre_te, test_logits, accu_test = sess.run([prediction, logits, accuracy], feed_dict={X: X_test, Y: Y_test})
 
         scio.savemat('train_logits.mat', {"res": train_logits})
         scio.savemat('test_logits.mat', {"res": test_logits})
@@ -165,9 +165,9 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
 
 
 if __name__ == '__main__':
-    name = 'Syh'
+    name = 'Dxq'
     if name == 'Dxq':
-        file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
+        file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64_expend'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_channel_XY64_res'
 
