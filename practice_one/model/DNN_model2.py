@@ -83,7 +83,7 @@ def accuracy_cal(train_pre_val, train_cor_val):
 
 
 def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
-          initial_learning_rate=0.5, minest_learning_rate=0.001):
+          initial_learning_rate=0.5, minest_learning_rate=0.01):
     ops.reset_default_graph()
 
     m, n_x = X_train.shape
@@ -181,7 +181,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 if __name__ == '__main__':
     name = 'Dxq'
     if name == 'Dxq':
-        file = 'F:/dataSets/FaceChannel1/face_1_channel_sense15'
+        file = '../../practice_two/load_data/face_1_channel_sense.mat'
     elif name == 'Syh':
         file = 'E:/deeplearning_Data/face_1_channel_XY'
     # load data
@@ -196,4 +196,4 @@ if __name__ == '__main__':
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=1000,
                        initial_learning_rate=0.5)
 
-    scio.savemat(file + '64DNN2_parameter', parameters)
+    scio.savemat('64DNN2_parameter', parameters)

@@ -18,17 +18,42 @@ SECRET_KEY = 'MneS2GDvPQ5QsGpVtSaHXGAlvwHu1XnC '
 client = AipFace(APP_ID, API_KEY, SECRET_KEY)
 root_dir = 'C:/Users/chk01/Desktop/Delta/image'
 TypOrgans = ['face', 'lip', 'nose', 'left_eye', 'right_eye', 'left_eyebrow', 'right_eyebrow']
-PointNum = {
-    'face': 13,
-    'lip': 14,
-    'nose': 11,
-    'left_eye': 9,
-    'right_eye': 9,
-    'left_eyebrow': 8,
-    'right_eyebrow': 8
-}
-outline_parameters = scio.loadmat('para/outline.mat')
-sense_parameters = scio.loadmat('para/sense.mat')
+
+accept_ans = [
+    [0, 1, 3],
+    [1, 0, 2, 4],
+    [2, 1, 5],
+    [3, 0, 4, 6],
+    [4, 1, 3, 5, 7],
+    [5, 2, 4, 8],
+    [6, 3, 7],
+    [7, 6, 4, 8],
+    [8, 7, 5],
+]
+low_accept_ans = [
+    [0, 1, 3, 4],
+    [1, 0, 2, 4, 3, 5],
+    [2, 1, 5, 4],
+    [3, 0, 4, 6, 1, 7],
+    [4, 1, 3, 5, 7, 0, 2, 6, 8],
+    [5, 2, 4, 8, 1, 7],
+    [6, 3, 7, 4],
+    [7, 6, 4, 8, 3, 5],
+    [8, 7, 5, 4],
+]
+absolute_error = [
+    [2, 5, 6, 7, 8],
+    [6, 7, 8],
+    [0, 3, 6, 7, 8],
+    [2, 5, 8],
+    [0, 2, 6, 8],
+    [0, 3, 6],
+    [0, 1, 2, 5, 8],
+    [0, 1, 2],
+    [0, 1, 2, 3, 6]
+]
+outline_parameters = scio.loadmat('para/outline2.mat')
+sense_parameters = scio.loadmat('para/sense5.mat')
 
 
 def get_file_content(filePath):
@@ -63,8 +88,8 @@ def landmark72_trans(points):
 def Img2Point(file):
     landmark72 = landmark72_trans(get_landmark72(file))
     points = list(landmark72[:13])
-    points.append(landmark72[21])
-    points.append(landmark72[38])
+    # points.append(landmark72[21])
+    # points.append(landmark72[38])
     return points
 
 
@@ -84,20 +109,59 @@ def get_sense(points):
     return np.squeeze(np.argmax(Z))
 
 
-if __name__ == '__main__':
+def sigle_pic(file):
+    point = Img2Point(file)
+    outline = get_outline(point[:13])
+    sense = get_sense(point)
+    return '轮廓：=====', outline, '质感：=========', sense
+
+
+def error2w():
+    pass
+
+
+def main():
     pointdir = '../../practice_two/data/image3channel'
+    labeldir = '../../practice_two/data/label'
     files = os.listdir(pointdir)
-    data = []
+    error = {
+        '0': [],
+        '1': [],
+        '2': [],
+        '3': [],
+        '4': [],
+        '5': [],
+        '6': [],
+        '7': [],
+        '8': []
+    }
+    cor = 0
+    low_cor = 0
     for i, file in enumerate(files):
         landmark72 = scio.loadmat(pointdir + '/' + file)['Points']
         points = list(landmark72[:13])
-        points.append(landmark72[21])
-        points.append(landmark72[38])
+        # points.append(landmark72[21])
+        # points.append(landmark72[38])
 
         outline = get_outline(points[:13])
         sense = get_sense(points)
-        res = 3 * int(sense) + int(outline)
-        data.append(res)
+        res = 3 * int(outline) + int(sense)
 
+        label = np.squeeze(np.argmax(scio.loadmat(labeldir + '/' + file.replace("Point", "Label"))['Label'], 1))
+        if res in accept_ans[label]:
+            cor += 1
+        if res in low_accept_ans[label]:
+            low_cor += 1
+
+        if res in absolute_error[label]:
+            error[str(label)].append(res)
+    print('可接受:===', round(cor * 100 / len(files), 2))
+    print('低要求可接受:===', round(low_cor * 100 / len(files), 2))
     for i in range(9):
-        print(i, round(data.count(i) * 100 / len(data), 2))
+        print('{}原则性错误:==='.format(i), round(len(error[str(i)]) * 100 / len(files), 2))
+    # print('总的原则性错误===', round(sum(error.values()) * 100 / len(files), 2))
+    return True
+
+
+if __name__ == '__main__':
+    main()
