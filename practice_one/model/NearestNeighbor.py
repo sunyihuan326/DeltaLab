@@ -32,7 +32,7 @@ def main(Xtr, Ytr, Xte, Yte):
     distance = tf.reduce_sum(tf.square(x=tf.add(xtr, tf.negative(xte))), reduction_indices=1)
     # Prediction: Get min distance index (Nearest neighbor)
     pred = tf.arg_min(distance, 0)
-    pred3 = tf.nn.top_k(-distance, k=1)
+    # pred3 = tf.nn.top_k(-distance, k=1)
 
     accept_accuracy = 0.
     accuracy = 0.
@@ -48,23 +48,19 @@ def main(Xtr, Ytr, Xte, Yte):
         # loop over test data
         for i in range(len(Xte)):
             # Get nearest neighbor
-            nn3_index = sess.run(pred3, feed_dict={xtr: Xtr, xte: Xte[i, :]})
+            nn3_index = sess.run(pred, feed_dict={xtr: Xtr, xte: Xte[i, :]})
             # Get nearest neighbor class label and compare it to its true label
-            # print("Test", i, "Prediction:", np.argmax(Ytr[nn_index]), "True Class:", np.argmax(Yte[i]))
-            pre3 = nn3_index.indices
+            print("Test", i, "Prediction:", np.argmax(Ytr[nn3_index]), "True Class:", np.argmax(Yte[i]))
+            # pre3 = nn3_index.indices
 
             # Calculate accuracy
-            for j in range(len(pre3)):
-                if np.argmax(Ytr[pre3[j]]) == np.argmax(Yte[i]):
-                    accuracy += 1. / len(Xte)
-            for k in range(len(pre3)):
-                if np.argmax(Ytr[pre3[k]]) in accept_ans[np.argmax(Yte[i])]:
-                    accept_accuracy += 1. / len(Xte)
-                    break
-            classes.append(np.argmax(Ytr[pre3[0]]))
+
+            if np.argmax(Ytr[nn3_index]) == np.argmax(Yte[i]):
+                 accuracy += 1. / len(Xte)
+            classes.append(np.argmax(Ytr[nn3_index]))
 
         print("Done!")
-        print("Accept Accuracy:", accept_accuracy)
+        # print("Accept Accuracy:", accept_accuracy)
         print("Accuracy:", accuracy)
         return classes
 
@@ -74,7 +70,7 @@ if __name__ == '__main__':
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_channel_XY64_res'
+        file = 'E:/deeplearning_Data/face_1_channel_outline13'
 
     data_train = scio.loadmat(file)
 
@@ -85,5 +81,5 @@ if __name__ == '__main__':
     # X_test = X_test.reshape(-1, X_test.shape[1] * X_test.shape[2])
 
     classes = main(X_train, Y_train, X_test, Y_test)
-    for i in range(9):
+    for i in range(3):
         print(str(i) + '的比例', round(100.0 * list(classes).count(i) / len(classes), 2), '%')

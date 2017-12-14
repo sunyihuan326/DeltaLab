@@ -50,7 +50,7 @@ def main(Xtr, Ytr, Xte, Yte):
     kmeans = KMeans(inputs=X, num_clusters=k,
                     distance_metric='cosine',
                     use_mini_batch=True,
-                    mini_batch_steps_per_iteration=8,)
+                    mini_batch_steps_per_iteration=8, )
 
     kmeans.training_graph()
     (all_scores, cluster_idx, scores, cluster_centers_initialized, init_op,
@@ -105,35 +105,39 @@ def main(Xtr, Ytr, Xte, Yte):
     correct_prediction = tf.equal(cluster_label, tf.cast(tf.argmax(Y, 1), tf.int32))
     # print(correct_prediction)
     accuracy_op = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-    with sess.as_default():
-        accuracy_train_op = accuracy_op.eval(feed_dict={X: Xtr, Y: Ytr})
-        cluster_train_label = cluster_label.eval(feed_dict={X: Xtr, Y: Ytr})
-        accuracy_test_op = accuracy_op.eval(feed_dict={X: Xte, Y: Yte})
-        cluster_test_label = cluster_label.eval(feed_dict={X: Xte, Y: Yte})
-        print("Train Accuracy:", accuracy_train_op)
-        print("Test Accuracy:", accuracy_test_op)
+    #
+    # with sess.as_default():
+    #     accuracy_train_op = accuracy_op.eval(feed_dict={X: Xtr, Y: Ytr})
+    #     cluster_train_label = cluster_label.eval(feed_dict={X: Xtr, Y: Ytr})
+    #     accuracy_test_op = accuracy_op.eval(feed_dict={X: Xte, Y: Yte})
+    #     cluster_test_label = cluster_label.eval(feed_dict={X: Xte, Y: Yte})
+    #     print("Train Accuracy:", accuracy_train_op)
+    #     print("Test Accuracy:", accuracy_test_op)
 
 
     # Test Model
-    # test_x, test_y = Xte, Yte
-    # Y_tr, cluster_label, correct_prediction, accuracy_train_op = sess.run(
-    #     [tf.argmax(Y, 1), cluster_label, correct_prediction, accuracy_op],
-    #     feed_dict={X: Xtr, Y: Ytr})
-    # print("Train Accuracy:", accuracy_train_op)
-    Y_tr = np.argmax(Ytr, 1)
+    test_x, test_y = Xte, Yte
+    Y_tr, cluster_label, correct_prediction, accuracy_train_op = sess.run(
+        [tf.argmax(Y, 1), cluster_label, correct_prediction, accuracy_op],
+        feed_dict={X: Xtr, Y: Ytr})
+    Y_te, accuracy_test_op = sess.run([tf.argmax(Y, 1), accuracy_op], feed_dict={X: test_x, Y: test_y})
     for i in range(len(Y_tr)):
-        if cluster_train_label[i] in accept_ans[Y_tr[i]]:
+        if Y_tr[i] - np.argmax(Y_train[i]) > 1:
             accept_train_accuracy += 1. / len(Y_tr)
-    print("Train accept Accuracy:", accept_train_accuracy)
-
-    Y_te = np.argmax(Yte, 1)
-    for i in range(len(Y_te)):
-        if cluster_test_label[i] in accept_ans[Y_te[i]]:
+    for j in range(len(Y_te)):
+        if Y_te[j] - np.argmax(Y_test[j]) > 1:
             accept_test_accuracy += 1. / len(Y_te)
-    print("Test accept Accuracy:", accept_test_accuracy)
+    print("Train Accuracy:", accuracy_train_op)
+    print("Train  error:", accept_train_accuracy)
+    print("Test Accuracy:", accuracy_test_op)
+    print("Test  error:", accept_test_accuracy)
+    # Y_tr = np.argmax(Ytr, 1)
+    # for i in range(len(Y_tr)):
+    #     if cluster_train_label[i] in accept_ans[Y_tr[i]]:
+    #         accept_train_accuracy += 1. / len(Y_tr)
+    # print("Train accept Accuracy:", accept_train_accuracy)
 
-    return correct_prediction, cluster_train_label
+    return correct_prediction, cluster_label
 
 
 def error_id(correct_prediction, Y, cluster_label=None):
@@ -147,22 +151,23 @@ def error_id(correct_prediction, Y, cluster_label=None):
 
 
 if __name__ == '__main__':
-    num_steps = 200  # Total steps to train
+    num_steps = 50  # Total steps to train
     batch_size = 32  # The number of samples per batch
-    k = 500  # The number of clusters
-    num_classes = 9  # The 10 digits
+    k = 900  # The number of clusters
+    num_classes = 3  # The 10 digits
 
     name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_1_channel_XY64'
+        file = 'E:/deeplearning_Data/face_1_channel_outline13'
 
-    X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
+    X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.3)
+    print(X_train.shape)
 
     X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
     # Parameters
-    # correct_prediction, cluster_label = main(X_train, Y_train, X_test, Y_test)
+    correct_prediction, cluster_label = main(X_train, Y_train, X_test, Y_test)
     #
     # for i in range(9):
     #     print(str(i) + '的比例', round(100.0 * list(cluster_label).count(i) / len(cluster_label), 2), '%')
