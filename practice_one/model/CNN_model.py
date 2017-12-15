@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
     # preprocess
     X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
-    print(X_train.shape,Y_train.shape)
+    print(X_train.shape, Y_train.shape)
 
     # check the distribution
     # data_check(Y_train)

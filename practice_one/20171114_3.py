@@ -27,7 +27,7 @@ def init_sets(X, Y, file, distribute):
     return True
 
 
-def random_mini_batches(X, Y, mini_batch_size=64,seed=0):
+def random_mini_batches(X, Y, mini_batch_size=64, seed=0):
     m = X.shape[0]  # number of training examples
     mini_batches = []
     np.random.seed(seed)
@@ -170,7 +170,7 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate=0.001,
             minibatch_cost = 0.
             num_minibatches = int(m / minibatch_size)  # number of minibatches of size minibatch_size in the train set
             seed = seed + 1
-            minibatches = random_mini_batches(X_train, Y_train, minibatch_size,seed)
+            minibatches = random_mini_batches(X_train, Y_train, minibatch_size, seed)
 
             for minibatch in minibatches:
                 # Select a minibatch

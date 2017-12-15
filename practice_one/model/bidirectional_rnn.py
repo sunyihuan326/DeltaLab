@@ -18,7 +18,6 @@ we will then handle 28 sequences of 28 steps for every sample.
 # Network Parameters
 
 
-
 # num_classes = 9  # MNIST total classes (0-9 digits)
 
 

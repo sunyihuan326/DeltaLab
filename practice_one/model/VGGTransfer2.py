@@ -201,6 +201,6 @@ if __name__ == '__main__':
                 #                          Y: minibatch_Y.T})
                 #
                 # minibatch_cost += cs / num_minibatches
-            a = accuracy.eval(feed_dict={X: X_train.T.reshape(-1, 64, 64, 3),Y: Y_train.T})
+            a = accuracy.eval(feed_dict={X: X_train.T.reshape(-1, 64, 64, 3), Y: Y_train.T})
             if epoch % 1 == 0:
                 print("Cost after epoch %i: %f" % (epoch, a))

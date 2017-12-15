@@ -56,7 +56,7 @@ def main(Xtr, Ytr, Xte, Yte):
             # Calculate accuracy
 
             if np.argmax(Ytr[nn3_index]) == np.argmax(Yte[i]):
-                 accuracy += 1. / len(Xte)
+                accuracy += 1. / len(Xte)
             classes.append(np.argmax(Ytr[nn3_index]))
 
         print("Done!")
