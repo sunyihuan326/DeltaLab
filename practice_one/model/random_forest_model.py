@@ -13,7 +13,7 @@ from tensorflow.contrib.tensor_forest.python import tensor_forest
 # Ignore all GPUs, tf random forest does not benefit from it.
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+#os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 # Import MNIST data
 from tensorflow.examples.tutorials.mnist import input_data
@@ -54,9 +54,10 @@ def model(X_train, X_test, Y_train, Y_test, num_features, max_nodes, num_steps, 
     train_op = forest_graph.training_graph(X, Y)
     loss_op = forest_graph.training_loss(X, Y)
 
+
     # Measure the accuracy
     infer_op = forest_graph.inference_graph(X)
-    correct_prediction = tf.equal(tf.argmax(infer_op, 1), tf.cast(Y, tf.int64))
+    correct_prediction = tf.equal(tf.argmax(infer_op[0], 1), tf.cast(Y, tf.int64))
     accuracy_op = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     # Initialize the variables (i.e. assign their default value)
@@ -94,13 +95,13 @@ if __name__ == '__main__':
     # Parameters
     num_steps = 160  # Total steps to train
     batch_size = 128  # The number of samples per batch
-    num_classes = 9  # The 10 digits
-    num_features = 142  # Each image is 28x28 pixels
-    num_trees = 12
+    num_classes = 3  # The 10 digits
+    num_features = 28  # Each image is 28x28 pixels
+    num_trees = 3
     max_nodes = 700
 
     # mnist = input_data.read_data_sets("../tmp/data/", one_hot=False)
-    X_train, X_test, Y_train, Y_test = load_data('E:/deeplearning_Data/face_1_channel_XY_points_expend')
+    X_train, X_test, Y_train, Y_test = load_data('face_1_channel_sense.mat')
 
     Y_train = np.argmax(Y_train, 1)
     Y_test = np.argmax(Y_test, 1)
