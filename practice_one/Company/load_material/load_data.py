@@ -113,16 +113,17 @@ def get_point_feature():
         n = PointNum[org] - 1
         data = np.zeros([m, n, 2])
         for i, sourceDir in enumerate(dir_path):
+            _id = int(sourceDir.split('.')[0]) - 1
             full_path = root_dir + '/src/' + org + '/' + sourceDir
             landmark72 = get_landmark72(full_path)
             _data = get_org_point(landmark72, org)
-            data[i] = _data
-            print('load--->{}---图{}'.format(org, i + 1))
+            data[_id] = _data
+            print('load--->{}---图{}'.format(org, _id))
         scio.savemat('feature_mat/' + org, {"data": data})
         print('完成{}导入'.format(org))
 
 
 if __name__ == '__main__':
-    # get_point_feature()
-    data = scio.loadmat('feature_mat/left_eye')
-    print(data['data'].shape)
+    get_point_feature()
+    # data = scio.loadmat('feature_mat/left_eye')
+    # print(data['data'].shape)

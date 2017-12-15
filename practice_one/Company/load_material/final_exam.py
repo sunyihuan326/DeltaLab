@@ -23,16 +23,16 @@ FaceId = {
     'triangle': 1,
     'heart': 0
 }
-FaceData = [[600, 833], [600, 920], [600, 841]]
+FaceData = [[383, 500], [383, 500], [383, 500]]
 # 最终需要文件导入
 CartoonPoint = {
-    'left_eye': [{'mp': [161, 361]}, {'mp': [141, 434]}, {'mp': [150, 400]}],
-    'right_eye': [{'mp': [436, 363]}, {'mp': [463, 436]}, {'mp': [450, 400]}],
-    'left_eyebrow': [{'mp': [150, 275]}, {'mp': [153, 321]}, {'mp': [147, 305]}],
-    'right_eyebrow': [{'mp': [450, 275]}, {'mp': [450, 321]}, {'mp': [457, 305]}],
-    'chin': [{'mp': [300, 833]}, {'mp': [300, 920]}, {'mp': [293, 841]}],
-    'nose': [{'mp': [300, 550]}, {'mp': [300, 628]}, {'mp': [293, 561]}],
-    'lip': [{'mp': [300, 670]}, {'mp': [300, 750]}, {'mp': [293, 695]}],
+    'left_eye': [{'mp': [67, 37]}]*20,
+    'right_eye': [{'mp': [61, 37]}]*20,
+    'left_eyebrow': [{'mp': [68, 29]}]*20,
+    'right_eyebrow': [{'mp': [77, 27]}]*20,
+    'chin': [{'mp': [191, 478]}]*20,
+    'nose': [{'mp': [47, 117]}]*20,
+    'lip': [{'mp': [67, 34]}]*20,
     'glasses': [300, 470]
 }
 
@@ -170,7 +170,7 @@ def merge_all(real_width, real_points, feature_index, face_id):
 
     for i, org in enumerate(TypOrgans):
         if org != 'chin':
-            organ = Image.open("cartoon/{}/{}_{}.png".format(org, org, feature_index[org] + 1))
+            organ = Image.open("cartoon/{}/{}.png".format(org, feature_index[org] + 1))
             image.paste(organ, list(boxes[i].astype(np.int)), mask=organ)
     if feature_index['glasses'] == 1:
         organ = Image.open("cartoon/{}/{}_{}.png".format('glasses', 'glasses', 1))
@@ -194,14 +194,15 @@ def main(file_path):
     feature_index = {
         'left_eye': left_eye_id,
         'right_eye': left_eye_id,
-        'left_eyebrow': 1,
-        'right_eyebrow': 1,
+        'left_eyebrow': left_eyebrow_id,
+        'right_eyebrow': left_eyebrow_id,
         'lip': lip_id,
         'nose': nose_id,
         'glasses': glasses,
         'chin': face_id
     }
     print(feature_index)
+    # assert 1==0
     image = merge_all(width, org_struct, feature_index, face_id)
     image.save('res' + file_path.replace('jpg', 'png'))
     image.show()
@@ -212,5 +213,5 @@ if __name__ == "__main__":
     # import tqdm
     # for i in tqdm(range(10), total=1, ncols=1, leave=False, unit='b'):
     #     print(i)
-    file_path = '2.jpg'
+    file_path = '1.jpg'
     main(file_path)
