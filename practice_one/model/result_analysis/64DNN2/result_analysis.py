@@ -17,7 +17,7 @@ def error_result():
     print('error_rate:==========', round(sum(error[:9]) / error[9], 2))
     for i in range(9):
         print('error_sample_{}'.format(i), '错误总占比===', round(100 * error[i] / error[9]), '%')
-        print('error_sample_{}'.format(i), '错误占个比===', round(100 * error[i] / error[i-9]), '%')
+        print('error_sample_{}'.format(i), '错误占个比===', round(100 * error[i] / error[i - 9]), '%')
         print('---------------==================---------------------------------------')
 
 

@@ -8,6 +8,7 @@ import scipy.io as scio
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+
 pathDir = 'F:/dataSets/wiki/'
 # data = scio.loadmat('wiki.mat')
 # img = np.squeeze(data['wiki'][0][0][2])
@@ -22,5 +23,3 @@ pathDir = 'F:/dataSets/wiki/'
 # data = scio.loadmat('gender.mat')
 # print(Image.open(pathDir + data['Img'][0]))
 # print(data['Gender'][0][0])
-
-

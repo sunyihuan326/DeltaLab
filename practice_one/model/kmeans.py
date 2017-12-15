@@ -114,7 +114,6 @@ def main(Xtr, Ytr, Xte, Yte):
     #     print("Train Accuracy:", accuracy_train_op)
     #     print("Test Accuracy:", accuracy_test_op)
 
-
     # Test Model
     test_x, test_y = Xte, Yte
     Y_tr, cluster_label, correct_prediction, accuracy_train_op = sess.run(

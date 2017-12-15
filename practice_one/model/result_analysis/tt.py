@@ -11,6 +11,7 @@ import numpy as np
 def main():
     return np.random.random()
 
+
 while len(data) < 10:
     res = main()
     if res > 0.5:

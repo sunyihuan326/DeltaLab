@@ -104,4 +104,5 @@ if __name__ == '__main__':
 
     Y_train = np.argmax(Y_train, 1)
     Y_test = np.argmax(Y_test, 1)
-    model(X_train, X_test, Y_train, Y_test, num_features=num_features, max_nodes=max_nodes, num_steps=num_steps,num_trees=num_trees)
+    model(X_train, X_test, Y_train, Y_test, num_features=num_features, max_nodes=max_nodes, num_steps=num_steps,
+          num_trees=num_trees)
