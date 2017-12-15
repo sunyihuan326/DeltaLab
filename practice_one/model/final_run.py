@@ -9,6 +9,7 @@ import urllib.request
 import numpy as np
 import scipy.io as scio
 import os
+
 # """ 你的 APPID AK SK """
 # APP_ID = '10365287'
 # API_KEY = 'G7q4m36Yic1vpFCl5t46yH5K'
@@ -166,35 +167,64 @@ def main():
     cor = 0
     low_cor = 0
     res_list = []
+    label_list = []
     for i, file in enumerate(files):
         landmark72 = scio.loadmat(pointdir + '/' + file)['Points']
-        points = list(landmark72[:13])
-        # points.append(landmark72[21])
-        # points.append(landmark72[38])
 
-        outline = get_outline(points[:13])
+        outline = get_outline(landmark72[:13])
         sense = get_sense(landmark72)
+
         res = 3 * int(outline) + int(sense)
         res_list.append(res)
 
         label = np.squeeze(np.argmax(scio.loadmat(labeldir + '/' + file.replace("Point", "Label"))['Label'], 1))
+        label_list.append(label)
+
         if res in accept_ans[label]:
             cor += 1
         if res in low_accept_ans[label]:
             low_cor += 1
-
         if res in absolute_error[label]:
             error[str(label)].append(res)
-    print('可接受:===', round(cor * 100 / len(files), 2))
-    print('低要求可接受:===', round(low_cor * 100 / len(files), 2))
+
+    sample_num = len(files)
+    print('可接受:===', round(cor * 100 / sample_num, 2))
+    print('低要求可接受:===', round(low_cor * 100 / sample_num, 2))
+    print('------------------------------------------------')
     for i in range(9):
-        print('{}原则性错误:==='.format(i), round(len(error[str(i)]) * 100 / len(files), 2))
-        print('{}原则性错误占样本:==='.format(i), round(len(error[str(i)]) * 100 / (res_list.count(i)), 2) if res_list.count(i) else 0)
-        print('{}出现比例:==='.format(i), round(res_list.count(i) * 100 / len(res_list), 2))
+        print('{}原则性错误:==='.format(i), round(len(error[str(i)]) * 100 / sample_num, 2))
+        print('{}原则性错误占样本:==='.format(i),
+              round(len(error[str(i)]) * 100 / (label_list.count(i)), 2))
+        print('{}在结果中出现比例:==='.format(i), round(res_list.count(i) * 100 / sample_num, 2))
+        print('{}在样本中出现比例:==='.format(i), round(label_list.count(i) * 100 / sample_num, 2))
         print('------------------------------------------------------------------------------')
+    print('曲在结果中出现的比例', (res_list.count(0) + res_list.count(1) + res_list.count(2)) / sample_num)
+    print('中在结果中出现的比例', (res_list.count(3) + res_list.count(4) + res_list.count(5)) / sample_num)
+    print('直在结果中出现的比例', (res_list.count(6) + res_list.count(7) + res_list.count(8)) / sample_num)
+    print('--------------------------------------------------------------------------------------------')
+    print('曲在样本中出现的比例', (label_list.count(0) + label_list.count(1) + label_list.count(2)) / sample_num)
+    print('中在样本中出现的比例', (label_list.count(3) + label_list.count(4) + label_list.count(5)) / sample_num)
+    print('直在样本中出现的比例', (label_list.count(6) + label_list.count(7) + label_list.count(8)) / sample_num)
+    print('--------------------------------------------------------------------------------------------')
+    print('小在结果中出现的比例', (res_list.count(0) + res_list.count(3) + res_list.count(6)) / sample_num)
+    print('中在结果中出现的比例', (res_list.count(1) + res_list.count(4) + res_list.count(7)) / sample_num)
+    print('大在结果中出现的比例', (res_list.count(2) + res_list.count(5) + res_list.count(8)) / sample_num)
+    print('--------------------------------------------------------------------------------------------')
+    print('小在样本中出现的比例', (label_list.count(0) + label_list.count(3) + label_list.count(6)) / sample_num)
+    print('中在样本中出现的比例', (label_list.count(1) + label_list.count(4) + label_list.count(7)) / sample_num)
+    print('大在样本中出现的比例', (label_list.count(2) + label_list.count(5) + label_list.count(8)) / sample_num)
     # print('总的原则性错误===', round(sum(error.values()) * 100 / len(files), 2))
     return True
 
 
 if __name__ == '__main__':
     main()
+    # 0的比例 2.41 %
+    # 1的比例 9.49 %
+    # 2的比例 11.24 %
+    # 3的比例 5.75 %
+    # 4的比例 23.48 %
+    # 5的比例 24.65 %
+    # 6的比例 2.25 %
+    # 7的比例 10.07 %
+    # 8的比例 10.66 %
