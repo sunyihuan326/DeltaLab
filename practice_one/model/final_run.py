@@ -4,20 +4,19 @@ Created on 2017/12/13.
 
 @author: chk01
 '''
-from aip import AipFace
+# from aip import AipFace
 import urllib.request
 import numpy as np
 import scipy.io as scio
 import os
-
-""" 你的 APPID AK SK """
-APP_ID = '10365287'
-API_KEY = 'G7q4m36Yic1vpFCl5t46yH5K'
-SECRET_KEY = 'MneS2GDvPQ5QsGpVtSaHXGAlvwHu1XnC '
-
-client = AipFace(APP_ID, API_KEY, SECRET_KEY)
-root_dir = 'C:/Users/chk01/Desktop/Delta/image'
-TypOrgans = ['face', 'lip', 'nose', 'left_eye', 'right_eye', 'left_eyebrow', 'right_eyebrow']
+# """ 你的 APPID AK SK """
+# APP_ID = '10365287'
+# API_KEY = 'G7q4m36Yic1vpFCl5t46yH5K'
+# SECRET_KEY = 'MneS2GDvPQ5QsGpVtSaHXGAlvwHu1XnC '
+#
+# client = AipFace(APP_ID, API_KEY, SECRET_KEY)
+# root_dir = 'C:/Users/chk01/Desktop/Delta/image'
+# TypOrgans = ['face', 'lip', 'nose', 'left_eye', 'right_eye', 'left_eyebrow', 'right_eyebrow']
 
 accept_ans = [
     [0, 1, 3],
@@ -54,6 +53,15 @@ absolute_error = [
 ]
 outline_parameters = scio.loadmat('para/outline2.mat')
 sense_parameters = scio.loadmat('para/sense5.mat')
+
+
+def get_area(p1, p2, p3):
+    a = np.sqrt(np.sum(np.square(p1 - p2)))
+    b = np.sqrt(np.sum(np.square(p1 - p3)))
+    c = np.sqrt(np.sum(np.square(p2 - p3)))
+    p = (a + b + c) / 2
+    area = np.sqrt(p * (p - a) * (p - b) * (p - c))
+    return area
 
 
 def get_file_content(filePath):
@@ -101,11 +109,31 @@ def get_outline(points):
     return np.squeeze(np.argmax(Z))
 
 
-def get_sense(points):
+def get_sense(landmark72):
+    p = landmark72[:13].reshape(1, -1)
+    p0 = landmark72[0]
+    p3 = landmark72[3]
+    p6 = landmark72[6]
+    p9 = landmark72[9]
+    p12 = landmark72[12]
+    p21 = landmark72[21]
+    p38 = landmark72[38]
+    p57 = landmark72[57]
+
+    area1 = get_area(p0, p3, p6)
+    area2 = get_area(p3, p6, p9)
+    area3 = get_area(p6, p9, p12)
+    area4 = get_area(p21, p38, p57)
+    area5 = get_area(p0, p6, p12)
+
+    features = np.zeros([1, 28])
+    features[:, :26] = p
+    features[:, 26] = area4 / (area1 + area3 + area5)
+    features[:, 27] = area2 / (area1 + area3 + area5)
+
     W = sense_parameters['W1']
     b = sense_parameters['b1']
-    X = np.array(points).reshape(1, -1)
-    Z = np.add(np.matmul(X, W.T), b)
+    Z = np.add(np.matmul(features, W.T), b)
     return np.squeeze(np.argmax(Z))
 
 
@@ -137,6 +165,7 @@ def main():
     }
     cor = 0
     low_cor = 0
+    res_list = []
     for i, file in enumerate(files):
         landmark72 = scio.loadmat(pointdir + '/' + file)['Points']
         points = list(landmark72[:13])
@@ -144,8 +173,9 @@ def main():
         # points.append(landmark72[38])
 
         outline = get_outline(points[:13])
-        sense = get_sense(points)
+        sense = get_sense(landmark72)
         res = 3 * int(outline) + int(sense)
+        res_list.append(res)
 
         label = np.squeeze(np.argmax(scio.loadmat(labeldir + '/' + file.replace("Point", "Label"))['Label'], 1))
         if res in accept_ans[label]:
@@ -159,6 +189,9 @@ def main():
     print('低要求可接受:===', round(low_cor * 100 / len(files), 2))
     for i in range(9):
         print('{}原则性错误:==='.format(i), round(len(error[str(i)]) * 100 / len(files), 2))
+        print('{}原则性错误占样本:==='.format(i), round(len(error[str(i)]) * 100 / (res_list.count(i)), 2) if res_list.count(i) else 0)
+        print('{}出现比例:==='.format(i), round(res_list.count(i) * 100 / len(res_list), 2))
+        print('------------------------------------------------------------------------------')
     # print('总的原则性错误===', round(sum(error.values()) * 100 / len(files), 2))
     return True
 
