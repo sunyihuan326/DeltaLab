@@ -26,13 +26,13 @@ FaceId = {
 FaceData = [[383, 500], [383, 500], [383, 500]]
 # 最终需要文件导入
 CartoonPoint = {
-    'left_eye': [{'mp': [67, 37]}]*20,
-    'right_eye': [{'mp': [61, 37]}]*20,
-    'left_eyebrow': [{'mp': [68, 29]}]*20,
-    'right_eyebrow': [{'mp': [77, 27]}]*20,
+    'left_eye': [{'mp': [50, 37]}]*20,
+    'right_eye': [{'mp': [75, 37]}]*20,
+    'left_eyebrow': [{'mp': [50, 27]}]*20,
+    'right_eyebrow': [{'mp': [100, 27]}]*20,
     'chin': [{'mp': [191, 478]}]*20,
-    'nose': [{'mp': [47, 117]}]*20,
-    'lip': [{'mp': [67, 34]}]*20,
+    'nose': [{'mp': [50, 117]}]*20,
+    'lip': [{'mp': [67, 42]}]*20,
     'glasses': [300, 470]
 }
 
@@ -213,5 +213,5 @@ if __name__ == "__main__":
     # import tqdm
     # for i in tqdm(range(10), total=1, ncols=1, leave=False, unit='b'):
     #     print(i)
-    file_path = '1.jpg'
+    file_path = '2.jpg'
     main(file_path)
