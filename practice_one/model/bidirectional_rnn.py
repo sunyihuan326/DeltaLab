@@ -29,8 +29,8 @@ def creat_placeholder(timesteps, num_input, num_classes):
 
 
 def preprocessing(Xtr, Xte, Ytr, Yte):
-    Xtr = Xtr.reshape([-1, 64, 64])
-    Xte = Xte.reshape([-1, 64, 64])
+    Xtr = Xtr.reshape([-1, 14, 2])
+    Xte = Xte.reshape([-1, 14, 2])
     return Xtr / 255., Xte / 255., Ytr, Yte
 
 
@@ -68,12 +68,13 @@ def random_mini_batches(X, Y, mini_batch_size=64):
     return mini_batches
 
 
-def BiRNN(x, weights, biases, num_hidden=128, timesteps=64):
+def BiRNN(x, weights, biases, num_hidden=128, timesteps=14):
     # Prepare data shape to match `rnn` function requirements
     # Current data input shape: (batch_size, timesteps, n_input)
     # Required shape: 'timesteps' tensors list of shape (batch_size, num_input)
 
     # Unstack to get a list of 'timesteps' tensors of shape (batch_size, num_input)
+    parameters={}
     x = tf.unstack(x, timesteps, 1)
 
     # Define lstm cells with tensorflow
@@ -91,7 +92,7 @@ def BiRNN(x, weights, biases, num_hidden=128, timesteps=64):
     return tf.matmul(outputs[-1], weights['out']) + biases['out']
 
 
-def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001, training_steps=300, display_step=20,
+def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001, training_steps=300, display_step=100,
           batch_size=128):
     m, n_x0, n_x1 = X_train.shape
     n_y = Y_train.shape[1]
@@ -148,6 +149,10 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
         Y_tr = np.argmax(pre_tr, 1)
         Y_te = np.argmax(pre_te, 1)
 
+        for i in range(3):
+            print(str(i) + '的比例', round(100.0 * list(Y_tr).count(i) / len(Y_tr), 2), '%')
+            print(str(i) + "的比例", round(100. * list(Y_te).count(i) / len(Y_te), 2), "%")
+
         # print(len(np.argmax(Y_train)))
         for j in range(len(Y_tr)):
             if Y_tr[j] in accept_ans[np.argmax(Y_train[j])]:
@@ -165,11 +170,11 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
 
 
 if __name__ == '__main__':
-    name = 'Dxq'
+    name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64_expend'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_channel_XY64_res'
+        file = 'face_1_channel_sense'
 
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file)

@@ -13,7 +13,7 @@ from tensorflow.contrib.tensor_forest.python import tensor_forest
 # Ignore all GPUs, tf random forest does not benefit from it.
 import os
 
-#os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 # Import MNIST data
 from tensorflow.examples.tutorials.mnist import input_data
@@ -52,7 +52,7 @@ def model(X_train, X_test, Y_train, Y_test, num_features, max_nodes, num_steps, 
     forest_graph = tensor_forest.RandomForestGraphs(hparams)
     # Get training graph and loss
     train_op = forest_graph.training_graph(X, Y)
-    loss_op = forest_graph.training_loss(X, Y)
+    # loss_op = forest_graph.training_loss(X, Y)
 
 
     # Measure the accuracy
@@ -74,10 +74,10 @@ def model(X_train, X_test, Y_train, Y_test, num_features, max_nodes, num_steps, 
         # Prepare Data
         # Get the next batch of MNIST data (only images are needed, not labels)
         # batch_x, batch_y = mnist.train.next_batch(batch_size)
-        _, l = sess.run([train_op, loss_op], feed_dict={X: X_train, Y: Y_train})
+        _ = sess.run([train_op], feed_dict={X: X_train, Y: Y_train})
         if i % 20 == 0 or i == 1:
             acc = sess.run(accuracy_op, feed_dict={X: X_train, Y: Y_train})
-            print('Step %i, Loss: %f, Acc: %f' % (i, l, acc))
+            print('Step %i, Loss: %f, Acc: %f' % (i, acc))
 
     # Test Model
     # test_x, test_y = mnist.test.images, mnist.test.labels
