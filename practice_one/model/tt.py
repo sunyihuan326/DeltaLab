@@ -57,7 +57,7 @@ num_classes = 3
 X = tf.placeholder(tf.float32, shape=[None, num_features])
 Y = tf.placeholder(tf.float32, shape=[None, num_classes])
 
-kmeans = KMeans(inputs=X, num_clusters=500,
+kmeans = KMeans(inputs=X, num_clusters=300,
                 distance_metric='cosine',
                 use_mini_batch=True)
 
@@ -73,26 +73,33 @@ sess = tf.Session()
 
 sess.run(init_vars, feed_dict={X: X_test})
 sess.run(init_op, feed_dict={X: X_test})
-print(sess.run(cluster_idx,feed_dict={X:X_test}))
+cl = sess.run(cluster_idx, feed_dict={X: X_test})
+print(cl)
 
 parameters = scio.loadmat('kmeans_parameters.mat')
-print(len(parameters['labels_map'][0]))
 labels_map = tf.convert_to_tensor(parameters['labels_map'][0])
 
 # Evaluation ops
 # Lookup: centroid_id -> label
 cluster_label = tf.nn.embedding_lookup(labels_map, cluster_idx)
 
-
 # Test Model
 test_x, test_y = X_test, Y_test
 with sess.as_default():
-    cluster_label = cluster_label.eval(feed_dict={X: X_train})
-    print(cluster_label)
+    cluster_label = cluster_label.eval(feed_dict={X: X_test})
 
 c = 0
 for i in range(len(cluster_label)):
     if abs(cluster_label[i] - np.argmax(Y_train, 1)[i]) > 1:
         c += 1. / len(cluster_label)
 print(c)
+
+tt = scio.loadmat("tt_cluster_label.mat")
+sense = scio.loadmat("sense_cluster.mat")
+tt = tt["tt"][0]
+se = sense["sense"][0]
+for i in range(len(tt)):
+    if tt[i] != se[i]:
+        print(i, tt[i], se[i])
+
 # print('correct_prediction', correct_prediction)

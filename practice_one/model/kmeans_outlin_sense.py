@@ -53,7 +53,6 @@ def main(Xtr, Ytr, Xte, Yte,k):
     # Run the initializer
     sess.run(init_vars, feed_dict={X: Xtr})
     sess.run(init_op, feed_dict={X: Xtr})
-    print(sess.run(cluster_idx,feed_dict={X:Xte}))
 
     # Training
     for i in range(1, num_steps + 1):
@@ -111,7 +110,7 @@ def load_data_train(file):
 
 num_steps = 50  # Total steps to train
 batch_size = 1024  # The number of samples per batch
-k = 500  # The number of clusters
+k = 300  # The number of clusters
 num_classes = 3  # The 10 digits
 num_features = 28  # Each image is 28x28 pixels
 
@@ -132,6 +131,11 @@ if __name__ == '__main__':
 
     # X_test0 = X_test0.reshape(-1, X_test0.shape[1] * X_test0.shape[2])
     cluster_sense = main(X_train0, Y_train0, X_test0, Y_test0,k=k)
+
+    cl={}
+    cl["sense"]=cluster_sense
+    scio.savemat("sense_cluster",cl)
+
     Y = np.argmax(Y_train0, 1)
     for i in range(3):
         print(str(i) + '的比例', round(100.0 * list(cluster_sense).count(i) / len(cluster_sense), 2), '%')
