@@ -72,7 +72,12 @@ def point_to_vector(points):
 
 
 def get_org_point(landmark72, org):
-    if org == 'left_eye':
+    if org == 'face':
+        data = np.zeros([len(landmark72[:13]), 2])
+        data[:, 0] = [p['x'] for p in landmark72[:13]]
+        data[:, 1] = [p['y'] for p in landmark72[:13]]
+        data = data - data[6]
+    elif org == 'left_eye':
         data = np.array(point_to_vector(landmark72[13:22]))
     elif org == 'right_eye':
         data = np.array(point_to_vector(landmark72[30:39]))
@@ -123,7 +128,26 @@ def get_point_feature():
         print('完成{}导入'.format(org))
 
 
+def get_face_feature():
+    for typ in ['D']:
+        print('开始{}型导入'.format(typ))
+        dir_path = os.listdir(root_dir + '/src/face_' + typ)
+        m = len(dir_path)
+        n = 13
+        data = np.zeros([m, n, 2])
+        for i, sourceDir in enumerate(dir_path):
+            _id = int(sourceDir.split('.')[0]) - 1
+            full_path = root_dir + '/src/face_' + typ + '/' + sourceDir
+            landmark72 = get_landmark72(full_path)
+            _data = get_org_point(landmark72, 'face')
+            data[_id] = _data
+            print('load--->{}---图{}'.format(typ, _id))
+        scio.savemat('feature_mat/face_' + typ, {"data": data})
+        print('完成{}导入'.format(typ))
+
+
 if __name__ == '__main__':
-    get_point_feature()
+    get_face_feature()
+    # get_point_feature()
     # data = scio.loadmat('feature_mat/left_eye')
     # print(data['data'].shape)
