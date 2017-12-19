@@ -11,6 +11,7 @@ import tensorflow as tf
 
 import scipy.io as scio
 from sklearn.model_selection import train_test_split
+from practice_one.model.utils import *
 
 accept_ans = [
     [0, 1, 3],
@@ -31,7 +32,7 @@ def main(Xtr, Ytr, Xte, Yte):
     xte = tf.placeholder(tf.float32, [n_x])
     distance = tf.reduce_sum(tf.square(x=tf.add(xtr, tf.negative(xte))), reduction_indices=1)
     # Prediction: Get min distance index (Nearest neighbor)
-    pred = tf.arg_min(distance, 0)
+    pred = tf.argmin(distance, 0)
     # pred3 = tf.nn.top_k(-distance, k=1)
 
     accept_accuracy = 0.
@@ -50,18 +51,21 @@ def main(Xtr, Ytr, Xte, Yte):
             # Get nearest neighbor
             nn3_index = sess.run(pred, feed_dict={xtr: Xtr, xte: Xte[i, :]})
             # Get nearest neighbor class label and compare it to its true label
-            print("Test", i, "Prediction:", np.argmax(Ytr[nn3_index]), "True Class:", np.argmax(Yte[i]))
+            if i % 10 == 0:
+                print("Test", i, "Prediction:", np.argmax(Ytr[nn3_index]), "True Class:", np.argmax(Yte[i]))
             # pre3 = nn3_index.indices
 
             # Calculate accuracy
-
-            if np.argmax(Ytr[nn3_index]) == np.argmax(Yte[i]):
+            if np.argmax(Ytr[nn3_index] == np.argmax(Yte[i])):
                 accuracy += 1. / len(Xte)
+            if abs(np.argmax(Ytr[nn3_index]) - np.argmax(Yte[i])) > 1:
+                accept_accuracy += 1. / len(Xte)
             classes.append(np.argmax(Ytr[nn3_index]))
 
         print("Done!")
         # print("Accept Accuracy:", accept_accuracy)
         print("Accuracy:", accuracy)
+        print("Accept accuracy error:", accept_accuracy)
         return classes
 
 
@@ -70,13 +74,9 @@ if __name__ == '__main__':
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_1_channel_outline13'
+        file = 'face_1_channel_sense'
 
-    data_train = scio.loadmat(file)
-
-    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], random_state=42,
-                                                        test_size=0.2)
-    print(X_train.shape, Y_train.shape)
+    X_train, X_test, Y_train, Y_test = load_data(file)
     # X_train = X_train.reshape(-1, X_train.shape[1] * X_train.shape[2])
     # X_test = X_test.reshape(-1, X_test.shape[1] * X_test.shape[2])
 

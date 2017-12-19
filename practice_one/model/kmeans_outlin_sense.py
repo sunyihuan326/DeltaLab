@@ -13,6 +13,7 @@ from tensorflow.contrib.factorization import KMeans
 import os
 import scipy.io as scio
 from sklearn.model_selection import train_test_split
+from practice_one.model.utils import *
 
 
 def data_check(data):
@@ -24,9 +25,10 @@ def data_check(data):
     print('<------------------分割线---------------------->')
 
 
-def main(Xtr, Ytr, Xte, Yte):
+def main(Xtr, Ytr, Xte, Yte,k):
     X = tf.placeholder(tf.float32, shape=[None, num_features])
     Y = tf.placeholder(tf.float32, shape=[None, num_classes])
+    parameters = {}
 
     kmeans = KMeans(inputs=X, num_clusters=k,
                     distance_metric='cosine',
@@ -64,12 +66,14 @@ def main(Xtr, Ytr, Xte, Yte):
 
     # Assign a label to each centroid
     # Count total number of labels per centroid, using the label of each training
-    # sample to their closest centroid (given by 'idx')
     counts = np.zeros(shape=(k, num_classes))
     for i in range(len(idx)):
         counts[idx[i]] += Ytr[i]
     # Assign the most frequent label to the centroid
     labels_map = [np.argmax(c) for c in counts]
+
+    parameters['labels_map'] = labels_map
+    scio.savemat('kmeans_parameters', parameters)
     labels_map = tf.convert_to_tensor(labels_map)
 
     # Evaluation ops
@@ -85,7 +89,7 @@ def main(Xtr, Ytr, Xte, Yte):
     with sess.as_default():
         accuracy_train_op = accuracy_op.eval(feed_dict={X: Xtr, Y: Ytr})
         accuracy_test_op = accuracy_op.eval(feed_dict={X: test_x, Y: test_y})
-        cluster_label = cluster_label.eval(feed_dict={X: Xtr, Y: Ytr})
+        cluster_label = cluster_label.eval(feed_dict={X: test_x})
         print("Train Accuracy:", accuracy_train_op)
         print("Test Accuracy:", accuracy_test_op)
     # print('correct_prediction', correct_prediction)
@@ -104,9 +108,9 @@ def load_data_train(file):
     return X_train, Y_train, X_test, Y_test
 
 
-num_steps = 30  # Total steps to train
+num_steps = 50  # Total steps to train
 batch_size = 1024  # The number of samples per batch
-k = 500  # The number of clusters
+k = 300  # The number of clusters
 num_classes = 3  # The 10 digits
 num_features = 28  # Each image is 28x28 pixels
 
@@ -116,29 +120,39 @@ if __name__ == '__main__':
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY'
     elif name == 'Syh':
-        file_sense = 'E:/deeplearning_Data/face_1_channel_sense_XY64'
-        file_outlin = 'face_1_channel_sense.mat'
+        file_sense = 'face_1_channel_sense.mat'
 
     # 样本比例检测
     # data_check(Y_test)
     # data_check(Y_train)
 
-    data_train = scio.loadmat(file_outlin)
-
-    X_train0, X_test0, Y_train0, Y_test0 = train_test_split(data_train['X'], data_train['Y'], test_size=0.2)
-    print(X_train0.shape)
+    X_train0, X_test0, Y_train0, Y_test0 = load_data(file_sense)
     # X_train0 = X_train0.reshape(-1, X_train0.shape[1] * X_train0.shape[2])
 
     # X_test0 = X_test0.reshape(-1, X_test0.shape[1] * X_test0.shape[2])
-    cluster_sense = main(X_train0, Y_train0, X_test0, Y_test0)
+    cluster_sense = main(X_train0, Y_train0, X_test0, Y_test0,k=k)
+
+    cl={}
+    cl["sense"]=cluster_sense
+    scio.savemat("sense_cluster",cl)
+
+    Y = np.argmax(Y_train0, 1)
     for i in range(3):
         print(str(i) + '的比例', round(100.0 * list(cluster_sense).count(i) / len(cluster_sense), 2), '%')
+
+    print("#################")
+
+    for i in range(3):
+        print(str(i) + '的比例', round(100.0 * list(Y).count(i) / len(Y), 2), '%')
+
     # 计算有多少小判断成大
     c = 0
     for i in range(len(cluster_sense)):
-        if abs(cluster_sense[i] - np.argmax(Y_train0[i])) > 1:
+        if abs(cluster_sense[i] - np.argmax(Y_test0,1)[i]) > 1:
             c = c + 1
     print(round(100 * (c / len(cluster_sense)), 2), "%")
+
+
 
     # cluster_sense = pd.DataFrame(cluster_sense)
     # cluster_sense.to_csv('cluster_outlin.csv')

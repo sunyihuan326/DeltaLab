@@ -105,7 +105,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                     feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
                 minibatch_cost += temp_cost / num_minibatches
                 writer.add_summary(summary)
-            if epoch % 5 == 0:
+            if epoch % 50 == 0:
                 print("Cost|Acc after epoch %i: %f | %f" % (epoch, temp_cost, acc))
 
         predict_op = tf.argmax(ZL, 1)
@@ -123,11 +123,11 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
 
 if __name__ == '__main__':
-    name = 'Dxq'
+    name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/MNIST/mnist_data_small'
     elif name == 'Syh':
-        file = ''
+        file = 'face_1_channel_sense'
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
     # preprocessing
@@ -138,6 +138,6 @@ if __name__ == '__main__':
 
     layer_dims = [X_train.shape[1], 64, Y_train.shape[1]]
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20,
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=800,
                        initial_learning_rate=0.5)
     scio.savemat(file + 'DNN_parameter', parameters)
