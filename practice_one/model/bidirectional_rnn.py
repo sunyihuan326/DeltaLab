@@ -18,7 +18,7 @@ we will then handle 28 sequences of 28 steps for every sample.
 # Network Parameters
 
 
-# num_classes = 9  # MNIST total classes (0-9 digits)
+#num_classes = 9  # MNIST total classes (0-9 digits)
 
 
 # tf Graph input
@@ -74,7 +74,6 @@ def BiRNN(x, weights, biases, num_hidden=128, timesteps=14):
     # Required shape: 'timesteps' tensors list of shape (batch_size, num_input)
 
     # Unstack to get a list of 'timesteps' tensors of shape (batch_size, num_input)
-    parameters={}
     x = tf.unstack(x, timesteps, 1)
 
     # Define lstm cells with tensorflow
@@ -89,7 +88,7 @@ def BiRNN(x, weights, biases, num_hidden=128, timesteps=14):
     # outputs = tf.nn.dropout(x=outputs, keep_prob=0.95)
 
     # Linear activation, using rnn inner loop last output
-    return tf.matmul(outputs[-1], weights['out']) + biases['out']
+    return tf.matmul(outputs[-1], weights['out']) + biases['out'], outputs
 
 
 def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001, training_steps=300, display_step=100,
@@ -99,9 +98,12 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
     X, Y = creat_placeholder(n_x0, n_x1, n_y)
 
     weights, biases = creat_parameters(num_hidden, n_y)
+    parameter = {}
+    parameter["weights"] = weights
+    parameter["biases"] = biases
     l2_loss = tf.nn.l2_loss(weights['out'])
 
-    logits = BiRNN(X, weights, biases, num_hidden, n_x0)
+    logits ,outputs= BiRNN(X, weights, biases, num_hidden, n_x0)
     prediction = tf.nn.softmax(logits)
     # Define loss and optimizer
     loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
@@ -117,7 +119,6 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
     init = tf.global_variables_initializer()
     accept_train_accuracy = 0.
     accept_test_accuracy = 0.
-    accuarcy_ = 0.
 
     # Start training
     with tf.Session() as sess:
@@ -131,7 +132,7 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
 
             for minibatch in minibatches:
                 (minibatch_X, minibatch_Y) = minibatch
-                sess.run(train_op, feed_dict={X: minibatch_X, Y: minibatch_Y})
+                _, par = sess.run([train_op, parameter], feed_dict={X: minibatch_X, Y: minibatch_Y})
                 if step % display_step == 0 or step == 1:
                     # Calculate batch loss and accuracy
                     loss, acc = sess.run([loss_op, accuracy], feed_dict={X: minibatch_X,
@@ -140,14 +141,17 @@ def model(X_train, Y_train, X_test, Y_test, num_hidden=128, learning_rate=0.001,
                           "{:.3f}".format(acc))
 
         print("Optimization Finished!")
+        scio.savemat("rnn_parameters.mat", par)
         pre_tr, train_logits, accu = sess.run([prediction, logits, accuracy], feed_dict={X: X_train, Y: Y_train})
-        pre_te, test_logits, accu_test = sess.run([prediction, logits, accuracy], feed_dict={X: X_test, Y: Y_test})
+        pre_te, test_logits,outputs, accu_test = sess.run([prediction, logits, outputs,accuracy], feed_dict={X: X_test, Y: Y_test})
 
         scio.savemat('train_logits.mat', {"res": train_logits})
         scio.savemat('test_logits.mat', {"res": test_logits})
 
         Y_tr = np.argmax(pre_tr, 1)
         Y_te = np.argmax(pre_te, 1)
+        print(Y_te)
+        print(outputs)
 
         for i in range(3):
             print(str(i) + '的比例', round(100.0 * list(Y_tr).count(i) / len(Y_tr), 2), '%')

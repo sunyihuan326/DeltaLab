@@ -115,6 +115,9 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         train_accuracy = accuracy.eval({X: X_train, Y: Y_train, kp: 1})
         test_accuracy = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
+        predict_op=predict_op.eval({X: X_test, Y: Y_test, kp: 1})
+
+        print(predict_op)
 
         print("Train Accuracy:", train_accuracy)
         print("Test Accuracy:", test_accuracy)
@@ -125,7 +128,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 if __name__ == '__main__':
     name = 'Syh'
     if name == 'Dxq':
-        file = 'F:/dataSets/MNIST/mnist_data_small'
+        file = 'F:/dataSets/MNIST/mnist_data_small.mat'
     elif name == 'Syh':
         file = 'face_1_channel_sense'
     # load data
@@ -140,4 +143,5 @@ if __name__ == '__main__':
 
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=800,
                        initial_learning_rate=0.5)
-    scio.savemat(file + 'DNN_parameter', parameters)
+
+    #scio.savemat(file + 'DNN_parameter', parameters)
