@@ -78,8 +78,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
     tf.summary.scalar('learning_rate', learning_rate)
 
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-    # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
+    optimizer = tf.train.AdadeltaOptimizer(learning_rate=learning_rate).minimize(cost)
 
     add_global = global_step.assign_add(1)
     merge_op = tf.summary.merge_all()
@@ -115,7 +114,6 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         train_accuracy = accuracy.eval({X: X_train, Y: Y_train, kp: 1})
         test_accuracy = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
-
         print("Train Accuracy:", train_accuracy)
         print("Test Accuracy:", test_accuracy)
 
@@ -125,9 +123,9 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 if __name__ == '__main__':
     name = 'Syh'
     if name == 'Dxq':
-        file = 'F:/dataSets/MNIST/mnist_data_small'
+        file = 'F:/dataSets/MNIST/mnist_data_small.mat'
     elif name == 'Syh':
-        file = 'face_1_channel_sense'
+        file = 'face_1_channel_outline13'
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
     # preprocessing
@@ -136,8 +134,9 @@ if __name__ == '__main__':
     data_check(Y_train)
     data_check(Y_test)
 
-    layer_dims = [X_train.shape[1], 64, Y_train.shape[1]]
+    layer_dims = [X_train.shape[1], Y_train.shape[1]]
 
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=800,
                        initial_learning_rate=0.5)
-    scio.savemat(file + 'DNN_parameter', parameters)
+
+    #scio.savemat(file + 'DNN_parameter', parameters)

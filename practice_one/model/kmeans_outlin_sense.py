@@ -56,7 +56,7 @@ def main(Xtr, Ytr, Xte, Yte,k):
 
     # Training
     for i in range(1, num_steps + 1):
-        summary_write, _, d, idx = sess.run(
+        summary_write, _, d,idx = sess.run(
             [merge_all_op, train_op, avg_distance, cluster_idx],
             feed_dict={X: Xtr})
 
@@ -73,7 +73,7 @@ def main(Xtr, Ytr, Xte, Yte,k):
     labels_map = [np.argmax(c) for c in counts]
 
     parameters['labels_map'] = labels_map
-    scio.savemat('kmeans_parameters', parameters)
+    # scio.savemat('kmeans_parameters', parameters)
     labels_map = tf.convert_to_tensor(labels_map)
 
     # Evaluation ops

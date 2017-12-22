@@ -73,10 +73,11 @@ sess = tf.Session()
 
 sess.run(init_vars, feed_dict={X: X_test})
 sess.run(init_op, feed_dict={X: X_test})
-cl = sess.run(cluster_idx, feed_dict={X: X_test})
-print(cl)
-
+cl = sess.run(cluster_idx, feed_dict={X: X_train})
+print("cl",cl)
+print(len(cl))
 parameters = scio.loadmat('kmeans_parameters.mat')
+print("parameters",parameters['labels_map'][0])
 labels_map = tf.convert_to_tensor(parameters['labels_map'][0])
 
 # Evaluation ops
@@ -98,8 +99,8 @@ tt = scio.loadmat("tt_cluster_label.mat")
 sense = scio.loadmat("sense_cluster.mat")
 tt = tt["tt"][0]
 se = sense["sense"][0]
-for i in range(len(tt)):
-    if tt[i] != se[i]:
-        print(i, tt[i], se[i])
+# for i in range(len(tt)):
+#     if tt[i] != se[i]:
+#         print(i, tt[i], se[i])
 
 # print('correct_prediction', correct_prediction)
