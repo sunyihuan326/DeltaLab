@@ -24,8 +24,8 @@ def p2f(landmarks):
     hei1 = max(y1) - min(y1)
 
     center1 = landmarks[67]
-    # feature1 = (point1 - center1) / np.array([wid1, hei1])
-    feature1 = (point1 - center1)
+    feature1 = (point1 - center1) / np.array([wid1, hei1])
+    # feature1 = (point1 - center1)
 
     point2 = [landmarks[58], landmarks[65], landmarks[64], landmarks[63],
               landmarks[71], landmarks[70], landmarks[69]]
@@ -35,8 +35,8 @@ def p2f(landmarks):
     hei2 = max(y2) - min(y2)
 
     center2 = landmarks[70]
-    # feature2 = (point2 - center2) / np.array([wid2, hei2])
-    feature2 = (point2 - center2)
+    feature2 = (point2 - center2) / np.array([wid2, hei2])
+    # feature2 = (point2 - center2)
     feature = np.zeros([14, 2])
     feature[:7, :] = feature1
     feature[7:, :] = feature2
@@ -89,8 +89,8 @@ def check_load_correct():
 
 
 if __name__ == '__main__':
-    # get_point_feature()
-    check_load_correct()
+    get_point_feature()
+    # check_load_correct()
 
     # file = '3.jpg'
     # main(file)

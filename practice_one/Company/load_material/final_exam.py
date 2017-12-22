@@ -16,7 +16,7 @@ import math
 APP_ID = '10365287'
 API_KEY = 'G7q4m36Yic1vpFCl5t46yH5K'
 SECRET_KEY = 'MneS2GDvPQ5QsGpVtSaHXGAlvwHu1XnC '
-
+root_dir = 'C:/Users/chk01/Desktop/Delta/image'
 client = AipFace(APP_ID, API_KEY, SECRET_KEY)
 FaceShape = {
     'oval': "C",
@@ -86,6 +86,7 @@ def point2feature_ebr(points):
     hei = max(y) - min(y)
     center = (points[0] + points[4]) / 2
     feature = (points - center) / np.array([wid, hei])
+    # feature = (points - center)
     return feature
 
 
@@ -95,8 +96,8 @@ def point2feature_eye(points):
     wid = max(x) - min(x)
     hei = max(y) - min(y)
     center = points[-1]
-    # feature = (points - center) / np.array([wid, hei])
-    feature = (points - center)
+    feature = (points - center) / np.array([wid, hei])
+    # feature = (points - center)
     return feature
 
 
@@ -108,6 +109,7 @@ def point2feature_nose(landmarks):
     hei = max(y) - min(y)
     center = landmarks[57]
     feature = (points - center) / np.array([wid, hei])
+    # feature = (points - center)
     return feature
 
 
@@ -121,6 +123,7 @@ def point2feature_lip(landmarks):
 
     center1 = landmarks[67]
     feature1 = (point1 - center1) / np.array([wid1, hei1])
+    # feature1 = (point1 - center1)
 
     point2 = [landmarks[58], landmarks[65], landmarks[64], landmarks[63],
               landmarks[71], landmarks[70], landmarks[69]]
@@ -131,6 +134,7 @@ def point2feature_lip(landmarks):
 
     center2 = landmarks[70]
     feature2 = (point2 - center2) / np.array([wid2, hei2])
+    # feature2 = (point2 - center2)
     feature = np.zeros([14, 2])
     feature[:7, :] = feature1
     feature[7:, :] = feature2
@@ -175,8 +179,9 @@ def read_feature(file_path):
 
     # step2 数据预处理
     landmark72 = landmark72_trans(landmark72)
-
+    # print(angle)
     if -30 < angle < 30:
+        print('-------------Normal--------------')
         pass
     else:
         # angle = angle / 180 * math.pi
@@ -200,7 +205,7 @@ def compare_feature(org, feature):
     features = scio.loadmat('feature_mat/{}'.format(org))
     target = features['data'][:] - feature
     top_index = np.argmin(np.linalg.norm(target, axis=(1, 2)))
-    print(org, np.linalg.norm(target, axis=(1, 2))[top_index])
+    # print(org, np.linalg.norm(target, axis=(1, 2))[top_index])
     return top_index
 
 
@@ -209,7 +214,7 @@ def compare_face(faceshape, feature):
     features = scio.loadmat('feature_mat/face_{}'.format(typ))
     target = features['data'][:] - feature
     top_index = np.argmin(np.linalg.norm(target, axis=(1, 2)))
-    print('11', faceshape, np.linalg.norm(target, axis=(1, 2))[top_index])
+    # print('11', faceshape, np.linalg.norm(target, axis=(1, 2))[top_index])
     return typ + '-' + str(top_index + 1)
 
 
@@ -228,7 +233,7 @@ def get_carton_points(feature_index):
 
 def merge_all(real_width, real_points, feature_index, face_id):
     cartoon_points = get_carton_points(feature_index)
-    image = Image.open('cartoon/face/{}.png'.format(face_id)).convert('RGBA')
+    image = Image.open(root_dir + '/cartoon/face/{}.png'.format(face_id)).convert('RGBA')
 
     typ, fid = face_id.split('-')
     face_data = CartoonPoint[typ + '_shape'][int(fid) - 1]
@@ -257,10 +262,10 @@ def merge_all(real_width, real_points, feature_index, face_id):
     glasses_box = norm_real_glasses + [0, 35] + chin_point - Glasses
     for i, org in enumerate(TypOrgans):
         if org != 'chin':
-            organ = Image.open("cartoon/{}/{}.png".format(org, feature_index[org] + 1))
+            organ = Image.open(root_dir + "/cartoon/{}/{}.png".format(org, feature_index[org] + 1))
             image.paste(organ, list(boxes[i].astype(np.int)), mask=organ)
     if feature_index['glasses'] == 1:
-        organ = Image.open("cartoon/{}/{}_{}.png".format('glasses', 'glasses', 1))
+        organ = Image.open(root_dir + "/cartoon/{}/{}_{}.png".format('glasses', 'glasses', 1))
         image.paste(organ, list(glasses_box.astype(np.int)), mask=organ)
     return image
 
@@ -277,7 +282,7 @@ def main(file_path, face_id=None):
     lip_id = compare_feature('lip', lip)
     nose_id = compare_feature('nose', nose)
     face_id = compare_face(faceshape, chin) if not face_id else face_id
-    print(face_id)
+    # print(face_id)
     feature_index = {
         'left_eye': left_eye_id,
         'right_eye': left_eye_id,
@@ -297,7 +302,7 @@ def main(file_path, face_id=None):
 
 
 def final_eye_try():
-    face_dir = 'C:/Users/chk01/Desktop/final_eye_test'
+    face_dir = 'C:/Users/chk01/Desktop/tt'
     # for face in ['A-1', 'A-2', 'A-3', 'A-4', 'B-1', 'B-2', 'B-3', 'B-4', 'C-1', 'C-2', 'C-3', 'C-4', 'E-3']:
     face = 'A-1'
     # 'A-2', 'A-3', 'A-4', 'B-1', 'B-2', 'B-3', 'B-4', 'C-1', 'C-2', 'C-3', 'C-4', 'E-3'
