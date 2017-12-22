@@ -9,6 +9,8 @@ import urllib.request
 import numpy as np
 import scipy.io as scio
 from PIL import Image
+import os
+import math
 
 """ 你的 APPID AK SK """
 APP_ID = '10365287'
@@ -17,14 +19,14 @@ SECRET_KEY = 'MneS2GDvPQ5QsGpVtSaHXGAlvwHu1XnC '
 
 client = AipFace(APP_ID, API_KEY, SECRET_KEY)
 FaceShape = {
-    'oval': "D",
+    'oval': "C",
     'round': "E",
     'square': "C",
     'triangle': "B",
-    'heart': "D"
+    'heart': "C"
 }
 CartoonPoint = scio.loadmat("CartoonPoint")
-Glasses = [300, 470]
+Glasses = [164, 65]
 
 
 # 本地图片
@@ -60,7 +62,9 @@ def get_baseInfo(full_path):
     faceshape = sorted(result['faceshape'], key=lambda x: -x['probability'])
     # oval,round,square,triangle,heart
     # print(faceshape)
-    return landmark72, gender, glasses, faceshape[0]['type']
+    angle = result['rotation_angle']
+
+    return landmark72, angle, gender, glasses, faceshape[0]['type']
 
 
 def landmark72_trans(points):
@@ -73,6 +77,65 @@ def landmark72_trans(points):
 
 def point_to_vector(points):
     return points[1:] - points[:-1]
+
+
+def point2feature_ebr(points):
+    x = [p[0] for p in points]
+    y = [p[1] for p in points]
+    wid = max(x) - min(x)
+    hei = max(y) - min(y)
+    center = (points[0] + points[4]) / 2
+    feature = (points - center) / np.array([wid, hei])
+    return feature
+
+
+def point2feature_eye(points):
+    x = [p[0] for p in points]
+    y = [p[1] for p in points]
+    wid = max(x) - min(x)
+    hei = max(y) - min(y)
+    center = points[-1]
+    # feature = (points - center) / np.array([wid, hei])
+    feature = (points - center)
+    return feature
+
+
+def point2feature_nose(landmarks):
+    points = landmarks[49:55]
+    x = [p[0] for p in points]
+    y = [p[1] for p in points]
+    wid = max(x) - min(x)
+    hei = max(y) - min(y)
+    center = landmarks[57]
+    feature = (points - center) / np.array([wid, hei])
+    return feature
+
+
+def point2feature_lip(landmarks):
+    point1 = [landmarks[58], landmarks[59], landmarks[60], landmarks[61],
+              landmarks[68], landmarks[67], landmarks[66]]
+    x1 = [p[0] for p in point1]
+    y1 = [p[1] for p in point1]
+    wid1 = max(x1) - min(x1)
+    hei1 = max(y1) - min(y1)
+
+    center1 = landmarks[67]
+    feature1 = (point1 - center1) / np.array([wid1, hei1])
+
+    point2 = [landmarks[58], landmarks[65], landmarks[64], landmarks[63],
+              landmarks[71], landmarks[70], landmarks[69]]
+    x2 = [p[0] for p in point2]
+    y2 = [p[1] for p in point2]
+    wid2 = max(x2) - min(x2)
+    hei2 = max(y2) - min(y2)
+
+    center2 = landmarks[70]
+    feature2 = (point2 - center2) / np.array([wid2, hei2])
+    feature = np.zeros([14, 2])
+    feature[:7, :] = feature1
+    feature[7:, :] = feature2
+
+    return feature
 
 
 def organ_struct(landmark72):
@@ -108,15 +171,23 @@ def org_alignment(org_struct):
 
 def read_feature(file_path):
     # step1 Api 获取脸型，五官点阵，是否有眼镜，脸型，性别
-    landmark72, gender, glasses, faceshape = get_baseInfo(file_path)
+    landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
 
     # step2 数据预处理
     landmark72 = landmark72_trans(landmark72)
 
-    left_eyebrow = point_to_vector(landmark72[22:30])
+    if -30 < angle < 30:
+        pass
+    else:
+        # angle = angle / 180 * math.pi
+        Image.open(file_path).rotate(angle, expand=1).save(file_path)
+        landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
+        landmark72 = landmark72_trans(landmark72)
+
+    left_eyebrow = point2feature_ebr(landmark72[22:30])
     left_eye = point_to_vector(landmark72[13:22])
-    nose = point_to_vector(landmark72[47:58])
-    lip = point_to_vector(landmark72[58:])
+    nose = point2feature_nose(landmark72)
+    lip = point2feature_lip(landmark72)
     width = landmark72[12][0] - landmark72[0][0]
     right_eyebrow = point_to_vector(landmark72[39:47])
     right_eye = point_to_vector(landmark72[30:39])
@@ -184,18 +255,17 @@ def merge_all(real_width, real_points, feature_index, face_id):
 
     norm_real_glasses = (norm_real_points[1] + norm_real_points[-1]) / 2
     glasses_box = norm_real_glasses + [0, 35] + chin_point - Glasses
-
     for i, org in enumerate(TypOrgans):
         if org != 'chin':
             organ = Image.open("cartoon/{}/{}.png".format(org, feature_index[org] + 1))
             image.paste(organ, list(boxes[i].astype(np.int)), mask=organ)
     if feature_index['glasses'] == 1:
         organ = Image.open("cartoon/{}/{}_{}.png".format('glasses', 'glasses', 1))
-        image.paste(organ, list(np.squeeze(glasses_box).astype(np.int)), mask=organ)
+        image.paste(organ, list(glasses_box.astype(np.int)), mask=organ)
     return image
 
 
-def main(file_path):
+def main(file_path, face_id=None):
     # step1 获取所有特征数据
     left_eye, _ry, left_eyebrow, _rb, lip, nose, chin, org_struct, width, glasses, faceshape = read_feature(file_path)
 
@@ -206,8 +276,7 @@ def main(file_path):
     # right_eyebrow_id = compare_feature('right_eyebrow', right_eyebrow)
     lip_id = compare_feature('lip', lip)
     nose_id = compare_feature('nose', nose)
-    face_id = compare_face(faceshape, chin)
-
+    face_id = compare_face(faceshape, chin) if not face_id else face_id
     print(face_id)
     feature_index = {
         'left_eye': left_eye_id,
@@ -222,11 +291,31 @@ def main(file_path):
     print(feature_index)
 
     image = merge_all(width, org_struct, feature_index, face_id)
-    image.save('res' + file_path.replace('jpg', 'png'))
-    image.show()
-    return True
+    # image.save('res' + file_path.replace('jpg', 'png'))
+    # image.show()
+    return image, feature_index
+
+
+def final_eye_try():
+    face_dir = 'C:/Users/chk01/Desktop/final_eye_test'
+    # for face in ['A-1', 'A-2', 'A-3', 'A-4', 'B-1', 'B-2', 'B-3', 'B-4', 'C-1', 'C-2', 'C-3', 'C-4', 'E-3']:
+    face = 'A-1'
+    # 'A-2', 'A-3', 'A-4', 'B-1', 'B-2', 'B-3', 'B-4', 'C-1', 'C-2', 'C-3', 'C-4', 'E-3'
+    dir_path = os.listdir(face_dir)
+    for file in dir_path:
+        if file.endswith('jpg'):
+            file_path = face_dir + '/{}'.format(file)
+            if not os.path.exists(file_path.replace('.jpg', '-old.png')):
+                print(file, 'OK')
+
+                image, feature_index = main(file_path, face)
+                image.save(file_path.replace('.jpg', '-old.png'))
+                with open(file_path.replace('jpg', 'txt'), 'a') as text_file:
+                    text_file.writelines('---------------old------------------\n')
+                    for org, item in feature_index.items():
+                        if org != 'chin':
+                            text_file.writelines(org + ':' + str(int(item) + 1) + '\n')
 
 
 if __name__ == "__main__":
-    file_path = 'D1.jpg'
-    main(file_path)
+    final_eye_try()

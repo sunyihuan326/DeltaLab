@@ -129,7 +129,7 @@ def get_point_feature():
 
 
 def get_face_feature():
-    for typ in ['D']:
+    for typ in ['A', 'B', 'C', 'D', 'E']:
         print('开始{}型导入'.format(typ))
         dir_path = os.listdir(root_dir + '/src/face_' + typ)
         m = len(dir_path)

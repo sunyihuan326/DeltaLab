@@ -37,7 +37,7 @@ def get_landmark72(full_path):
     }
     result = client.detect(get_file_content(full_path), options=options)
     landmark72 = landmark72_trans(result['result'][0]['landmark72'])
-    return landmark72
+    return landmark72, result['result'][0]['rotation_angle']
 
 
 # chin 13# data1 = data[:13]
@@ -46,23 +46,43 @@ def get_landmark72(full_path):
 # nose# data4 = data[47:58]
 # mouse# data5 = data[58:]
 if __name__ == '__main__':
-    file = 'check/fs.jpg'
+    file = 'bug/3.jpg'
+    # org = 'left_eye'
+    for i in [0]:
+        # file = 'C:/Users/chk01/Desktop/Delta/image/check/src/{}/{}.jpg'.format(org, i + 1)
+        im = Image.open(file)
+        import math
 
-    im = Image.open(file)
-    drawSurface = ImageDraw.Draw(im)
-    landmark72 = get_landmark72(file)
-    landmark72 = tuple(tuple(t) for t in landmark72)
-    drawSurface.line(landmark72[:13], fill=255, width=1)
-    drawSurface.line(landmark72[13:22], fill=255, width=1)
-    # drawSurface.line(landmark72[14], fill=100, width=10)
-    drawSurface.line(landmark72[30:39], fill=255, width=1)
-    # drawSurface.line(landmark72[34], fill=100, width=10)
+        wid, hei = im.size
+        landmark72, angle = get_landmark72(file)
 
-    drawSurface.line(landmark72[22:30], fill=255, width=1)
-    drawSurface.line(landmark72[39:47], fill=255, width=1)
-    drawSurface.line(landmark72[47:58], fill=255, width=1)
-    drawSurface.line(landmark72[58:66], fill=255, width=1)
-    drawSurface.line(landmark72[69:], fill=255, width=1)
-    drawSurface.line(landmark72[66:69], fill=255, width=1)
-    drawSurface.point(landmark72, fill=0)
-    im.show()
+        print(angle)
+        if -30 < angle < 30:
+            pass
+        else:
+            # angle = angle / 180 * math.pi
+            im = im.rotate(angle, expand=1)
+            im.show()
+            im.save(file)
+            im = Image.open(file)
+            landmark72, angle = get_landmark72(file)
+            print(angle)
+            # tran_matrix = np.array([[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]])
+            # landmark72 = np.matmul(landmark72, tran_matrix)
+        drawSurface = ImageDraw.Draw(im)
+        landmark72 = tuple(tuple(t) for t in landmark72)
+        drawSurface.line(landmark72[:13], fill=255, width=10)
+        drawSurface.line(landmark72[13:22], fill=255, width=10)
+        # drawSurface.line(landmark72[14], fill=100, width=10)
+        drawSurface.line(landmark72[30:39], fill=255, width=10)
+        # drawSurface.line(landmark72[34], fill=100, width=10)
+
+        drawSurface.line(landmark72[22:30], fill=255, width=10)
+        drawSurface.line(landmark72[39:47], fill=255, width=10)
+        drawSurface.line(landmark72[47:58], fill=255, width=10)
+        drawSurface.line(landmark72[58:66], fill=255, width=10)
+        drawSurface.line(landmark72[69:], fill=255, width=10)
+        # drawSurface.line(landmark72[66:69], fill=255, width=1)
+        drawSurface.point(landmark72, fill=0)
+        # im.save(file.replace('src', 'cartoon'))
+        im.show()
