@@ -185,7 +185,7 @@ def read_feature(file_path):
         landmark72 = landmark72_trans(landmark72)
 
     left_eyebrow = point2feature_ebr(landmark72[22:30])
-    left_eye = point_to_vector(landmark72[13:22])
+    left_eye = point2feature_eye(landmark72[13:22])
     nose = point2feature_nose(landmark72)
     lip = point2feature_lip(landmark72)
     width = landmark72[12][0] - landmark72[0][0]
@@ -305,13 +305,13 @@ def final_eye_try():
     for file in dir_path:
         if file.endswith('jpg'):
             file_path = face_dir + '/{}'.format(file)
-            if not os.path.exists(file_path.replace('.jpg', '-old.png')):
+            if not os.path.exists(file_path.replace('.jpg', '.png')):
                 print(file, 'OK')
 
                 image, feature_index = main(file_path, face)
-                image.save(file_path.replace('.jpg', '-old.png'))
+                image.save(file_path.replace('.jpg', '.png'))
                 with open(file_path.replace('jpg', 'txt'), 'a') as text_file:
-                    text_file.writelines('---------------old------------------\n')
+                    text_file.writelines('---------------------------------\n')
                     for org, item in feature_index.items():
                         if org != 'chin':
                             text_file.writelines(org + ':' + str(int(item) + 1) + '\n')
