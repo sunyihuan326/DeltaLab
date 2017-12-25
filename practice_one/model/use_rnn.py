@@ -13,7 +13,6 @@ import numpy as np
 
 parameters = scio.loadmat("rnn_parameters")
 
-
 print(len(parameters["weights"]["out"][0][0]))
 # print(parameters["biases"]["out"][0][0])
 
@@ -74,6 +73,7 @@ def model(X_train, X_test, Y_train, Y_test, num_hidden=128, timesteps=14):
         results = np.squeeze(b1)
         print("length of outputs", len(results))
         print(b1[1].shape)
+        print("pre2",pre2)
 
     return True
 

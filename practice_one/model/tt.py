@@ -48,59 +48,66 @@ from tensorflow.contrib.factorization import KMeans
 #         print(sess.run(tf.argmax(ZL, 1)))
 #         1.37195
 #           2.37195
-parameters = scio.loadmat('kmeans_parameters.mat')
-X_train, X_test, Y_train, Y_test = load_data("face_1_channel_sense.mat")
-print(X_test.shape)
-num_features = 28
-num_classes = 3
+# parameters = scio.loadmat('kmeans_parameters.mat')
+# X_train, X_test, Y_train, Y_test = load_data("face_1_channel_sense.mat")
+# print(X_test.shape)
+# num_features = 28
+# num_classes = 3
+#
+# X = tf.placeholder(tf.float32, shape=[None, num_features])
+# Y = tf.placeholder(tf.float32, shape=[None, num_classes])
+#
+# kmeans = KMeans(inputs=X, num_clusters=300,
+#                 distance_metric='cosine',
+#                 use_mini_batch=True)
+#
+# (all_scores, cluster_idx, scores, cluster_centers_initialized, cluster_centers_var, init_op,
+#  train_op) = kmeans.training_graph()
+# cluster_idx = cluster_idx[0]  # fix for cluster_idx being a tuple
+#
+# # Initialize the variables (i.e. assign their default value)
+# init_vars = tf.global_variables_initializer()
+#
+# # Start TensorFlow session
+# sess = tf.Session()
 
-X = tf.placeholder(tf.float32, shape=[None, num_features])
-Y = tf.placeholder(tf.float32, shape=[None, num_classes])
+# sess.run(init_vars, feed_dict={X: X_test})
+# sess.run(init_op, feed_dict={X: X_test})
+# cl = sess.run(cluster_idx, feed_dict={X: X_train})
+# print("cl",cl)
+# print(len(cl))
+# parameters = scio.loadmat('kmeans_parameters.mat')
+# print("parameters",parameters['labels_map'][0])
+# labels_map = tf.convert_to_tensor(parameters['labels_map'][0])
+#
+# # Evaluation ops
+# # Lookup: centroid_id -> label
+# cluster_label = tf.nn.embedding_lookup(labels_map, cluster_idx)
+#
+# # Test Model
+# test_x, test_y = X_test, Y_test
+# with sess.as_default():
+#     cluster_label = cluster_label.eval(feed_dict={X: X_test})
+#
+# c = 0
+# for i in range(len(cluster_label)):
+#     if abs(cluster_label[i] - np.argmax(Y_train, 1)[i]) > 1:
+#         c += 1. / len(cluster_label)
+# print(c)
 
-kmeans = KMeans(inputs=X, num_clusters=300,
-                distance_metric='cosine',
-                use_mini_batch=True)
-
-(all_scores, cluster_idx, scores, cluster_centers_initialized, cluster_centers_var, init_op,
- train_op) = kmeans.training_graph()
-cluster_idx = cluster_idx[0]  # fix for cluster_idx being a tuple
-
-# Initialize the variables (i.e. assign their default value)
-init_vars = tf.global_variables_initializer()
-
-# Start TensorFlow session
-sess = tf.Session()
-
-sess.run(init_vars, feed_dict={X: X_test})
-sess.run(init_op, feed_dict={X: X_test})
-cl = sess.run(cluster_idx, feed_dict={X: X_train})
-print("cl",cl)
-print(len(cl))
-parameters = scio.loadmat('kmeans_parameters.mat')
-print("parameters",parameters['labels_map'][0])
-labels_map = tf.convert_to_tensor(parameters['labels_map'][0])
-
-# Evaluation ops
-# Lookup: centroid_id -> label
-cluster_label = tf.nn.embedding_lookup(labels_map, cluster_idx)
-
-# Test Model
-test_x, test_y = X_test, Y_test
-with sess.as_default():
-    cluster_label = cluster_label.eval(feed_dict={X: X_test})
-
-c = 0
-for i in range(len(cluster_label)):
-    if abs(cluster_label[i] - np.argmax(Y_train, 1)[i]) > 1:
-        c += 1. / len(cluster_label)
-print(c)
-
-tt = scio.loadmat("tt_cluster_label.mat")
-sense = scio.loadmat("sense_cluster.mat")
-tt = tt["tt"][0]
-se = sense["sense"][0]
+# tt = scio.loadmat("tt_cluster_label.mat")
+# sense = scio.loadmat("sense_cluster.mat")
+# tt = tt["tt"][0]
+# se = sense["sense"][0]
 # for i in range(len(tt)):
 #     if tt[i] != se[i]:
 #         print(i, tt[i], se[i])
 
 # print('correct_prediction', correct_prediction)
+index = [1, 2, 0, 2, 1, 2]
+indice = [[0, 2, 1, 1, 1], [0, 1, 1, 2, 1]]
+a = tf.one_hot(index, 3, axis=0)
+b = tf.one_hot(indice, 3, axis=1)
+with tf.Session() as sess:
+    print(sess.run(a))
+    print("b", sess.run(b))

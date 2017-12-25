@@ -12,6 +12,22 @@ import tensorflow as tf
 import scipy.io as scio
 from sklearn.model_selection import train_test_split
 from practice_one.model.utils import *
+from imblearn.over_sampling import ADASYN, SMOTE, RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
+from sklearn.metrics import classification_report
+
+
+def preprocessing(trX, teX, trY, teY):
+    res = RandomOverSampler(random_state=42)
+    trY = np.argmax(trY, 1)
+    teY = np.argmax(teY, 1)
+    trX, trY = res.fit_sample(trX, trY)
+    teX, teY = res.fit_sample(teX, teY)
+
+    trY = np.eye(3)[trY]
+    teY = np.eye(3)[teY]
+    return trX, teX, trY, teY
+
 
 accept_ans = [
     [0, 1, 3],
@@ -80,6 +96,14 @@ if __name__ == '__main__':
     # X_train = X_train.reshape(-1, X_train.shape[1] * X_train.shape[2])
     # X_test = X_test.reshape(-1, X_test.shape[1] * X_test.shape[2])
 
+    X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
+
+    for i in range(3):
+        print(str(i) + '的比例', round(100.0 * list(np.argmax(Y_train, 1)).count(i) / len(np.argmax(Y_train, 1)), 2), '%')
+
     classes = main(X_train, Y_train, X_test, Y_test)
     for i in range(3):
         print(str(i) + '的比例', round(100.0 * list(classes).count(i) / len(classes), 2), '%')
+
+
+    print(classification_report(y_true=np.argmax(Y_test, 1), y_pred=classes, target_names=["0", "1", "2"]))

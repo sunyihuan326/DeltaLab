@@ -174,16 +174,19 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
         print("Test Accuracy:", round(test_accuracy, 2), '||', round(test_real_accuracy, 2))
         print("pred_ans", test_cor_val[list(np.random.permutation(20))])
         print("----------------------------------------------------------")
+        test_pre_val = list(test_pre_val)
+        for i in range(3):
+            print(str(i) + "比例", round(100 * test_pre_val.count(i) / len(test_pre_val), 2), "%")
 
     return par
 
 
 if __name__ == '__main__':
-    name = 'Dxq'
+    name = 'Syh'
     if name == 'Dxq':
         file = '../../practice_two/load_data/face_1_channel_sense.mat'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_1_channel_XY'
+        file = 'face_1_channel_sense'
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
     # preprocessing
@@ -191,9 +194,9 @@ if __name__ == '__main__':
     data_check(Y_train)
     data_check(Y_test)
 
-    layer_dims = [X_train.shape[1], Y_train.shape[1]]
+    layer_dims = [X_train.shape[1], 00, Y_train.shape[1]]
 
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=1000,
                        initial_learning_rate=0.5)
 
-    scio.savemat('64DNN2_parameter', parameters)
+    # scio.savemat('64DNN2_parameter', parameters)

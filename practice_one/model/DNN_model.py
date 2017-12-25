@@ -8,9 +8,20 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 
 from practice_one.model.utils import *
+from imblearn.over_sampling import ADASYN, SMOTE, RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
+from sklearn.metrics import classification_report
 
 
 def preprocessing(trX, teX, trY, teY):
+    res = RandomUnderSampler(random_state=42)
+    trY = np.argmax(trY, 1)
+    teY = np.argmax(teY, 1)
+    trX, trY = res.fit_sample(trX, trY)
+    teX, teY = res.fit_sample(teX, teY)
+
+    trY = np.eye(3)[trY]
+    teY = np.eye(3)[teY]
     return trX, teX, trY, teY
 
 
@@ -107,17 +118,17 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
             if epoch % 50 == 0:
                 print("Cost|Acc after epoch %i: %f | %f" % (epoch, temp_cost, acc))
 
-        predict_op = tf.argmax(ZL, 1)
-        correct_prediction = tf.equal(predict_op, tf.argmax(Y, 1))
-
-        # Calculate accuracy on the test set
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         train_accuracy = accuracy.eval({X: X_train, Y: Y_train, kp: 1})
         test_accuracy = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
+        ZL = ZL.eval({X: X_test, Y: Y_test, kp: 1})
+        ZY = list(np.argmax(ZL, 1))
+        for i in range(3):
+            print(str(i) + "比例", round(100 * ZY.count(i) / len(ZY), 2), "%")
+
         print("Train Accuracy:", train_accuracy)
         print("Test Accuracy:", test_accuracy)
 
-    return par
+    return par, ZY
 
 
 if __name__ == '__main__':
@@ -125,7 +136,7 @@ if __name__ == '__main__':
     if name == 'Dxq':
         file = 'F:/dataSets/MNIST/mnist_data_small.mat'
     elif name == 'Syh':
-        file = 'face_1_channel_outline13'
+        file = 'face_1_channel_sense'
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
     # preprocessing
@@ -136,7 +147,13 @@ if __name__ == '__main__':
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=800,
-                       initial_learning_rate=0.5)
+    parameters, z1 = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.9, epochs=800,
+                           initial_learning_rate=0.5)
+    c = 0.
+    for i in range(len(z1)):
+        if abs(z1[i] - np.argmax(Y_test, 1)[i]) > 1:
+            c += 1./len(z1)
+    print(c)
 
-    #scio.savemat(file + 'DNN_parameter', parameters)
+    print(classification_report(y_pred=z1,y_true=np.argmax(Y_test, 1)))
+    # scio.savemat(file + 'DNN_parameter', parameters)
