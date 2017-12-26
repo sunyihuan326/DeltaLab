@@ -6,7 +6,6 @@ Created on 2017/12/8.
 '''
 import scipy.io as scio
 
-# file = 'F:/dataSets/MNIST/mnist_data_small'
 # data = scio.loadmat(file)
 # from sklearn.model_selection import train_test_split
 #
@@ -22,6 +21,7 @@ import scipy.io as scio
 import tensorflow as tf
 from practice_one.model.utils import *
 from tensorflow.contrib.factorization import KMeans
+from sklearn.ensemble import AdaBoostClassifier
 
 # print(np.e)
 # print(-np.log(np.e / (np.e + 8)))
@@ -103,11 +103,22 @@ from tensorflow.contrib.factorization import KMeans
 #     if tt[i] != se[i]:
 #         print(i, tt[i], se[i])
 
-# print('correct_prediction', correct_prediction)
-index = [1, 2, 0, 2, 1, 2]
-indice = [[0, 2, 1, 1, 1], [0, 1, 1, 2, 1]]
-a = tf.one_hot(index, 3, axis=0)
-b = tf.one_hot(indice, 3, axis=1)
-with tf.Session() as sess:
-    print(sess.run(a))
-    print("b", sess.run(b))
+# # print('correct_prediction', correct_prediction)
+# index = [1, 2, 0, 2, 1, 2]
+# indice = [[0, 2, 1, 1, 1], [0, 1, 1, 2, 1]]
+# a = tf.one_hot(index, 3, axis=0)
+# b = tf.one_hot(indice, 3, axis=1)
+# with tf.Session() as sess:
+#     print(sess.run(a))
+#     print("b", sess.run(b))
+
+
+file = "face_1_channel_sense"
+
+X_train, X_test, Y_train, Y_test = load_data(file)
+clf = AdaBoostClassifier(n_estimators=100)
+Y_train = np.argmax(Y_train, 1)
+
+c = clf.fit(X_train, Y_train)
+
+print(c)
