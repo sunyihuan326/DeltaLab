@@ -14,6 +14,21 @@ import os
 import scipy.io as scio
 from sklearn.model_selection import train_test_split
 from practice_one.model.utils import *
+from imblearn.over_sampling import ADASYN, SMOTE, RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
+from sklearn.metrics import classification_report,hamming_loss
+
+
+def preprocessing(trX, teX, trY, teY):
+    res = RandomOverSampler(random_state=42)
+    trY = np.argmax(trY, 1)
+    teY = np.argmax(teY, 1)
+    trX, trY = res.fit_sample(trX, trY)
+    teX, teY = res.fit_sample(teX, teY)
+
+    trY = np.eye(3)[trY]
+    teY = np.eye(3)[teY]
+    return trX, teX, trY, teY
 
 
 def data_check(data):
@@ -25,7 +40,7 @@ def data_check(data):
     print('<------------------分割线---------------------->')
 
 
-def main(Xtr, Ytr, Xte, Yte,k):
+def main(Xtr, Ytr, Xte, Yte, k):
     X = tf.placeholder(tf.float32, shape=[None, num_features])
     Y = tf.placeholder(tf.float32, shape=[None, num_classes])
     parameters = {}
@@ -56,7 +71,7 @@ def main(Xtr, Ytr, Xte, Yte,k):
 
     # Training
     for i in range(1, num_steps + 1):
-        summary_write, _, d,idx = sess.run(
+        summary_write, _, d, idx = sess.run(
             [merge_all_op, train_op, avg_distance, cluster_idx],
             feed_dict={X: Xtr})
 
@@ -108,7 +123,7 @@ def load_data_train(file):
     return X_train, Y_train, X_test, Y_test
 
 
-num_steps = 50  # Total steps to train
+num_steps = 500  # Total steps to train
 batch_size = 1024  # The number of samples per batch
 k = 300  # The number of clusters
 num_classes = 3  # The 10 digits
@@ -127,32 +142,33 @@ if __name__ == '__main__':
     # data_check(Y_train)
 
     X_train0, X_test0, Y_train0, Y_test0 = load_data(file_sense)
-    # X_train0 = X_train0.reshape(-1, X_train0.shape[1] * X_train0.shape[2])
+    X_train0, X_test0, Y_train0, Y_test0 = preprocessing(X_train0, X_test0, Y_train0, Y_test0)
 
     # X_test0 = X_test0.reshape(-1, X_test0.shape[1] * X_test0.shape[2])
-    cluster_sense = main(X_train0, Y_train0, X_test0, Y_test0,k=k)
+    cluster_sense = main(X_train0, Y_train0, X_test0, Y_test0, k=k)
 
-    cl={}
-    cl["sense"]=cluster_sense
-    scio.savemat("sense_cluster",cl)
+    # cl = {}
+    # cl["sense"] = cluster_sense
+    # scio.savemat("sense_cluster", cl)
 
-    Y = np.argmax(Y_train0, 1)
     for i in range(3):
         print(str(i) + '的比例', round(100.0 * list(cluster_sense).count(i) / len(cluster_sense), 2), '%')
 
     print("#################")
-
+    Y_train0 = list(np.argmax(Y_train0, 1))
     for i in range(3):
-        print(str(i) + '的比例', round(100.0 * list(Y).count(i) / len(Y), 2), '%')
+        print(str(i) + '的比例', round(100.0 * list(Y_train0).count(i) / len(Y_train0), 2), '%')
 
     # 计算有多少小判断成大
+    Y_test0 = list(np.argmax(Y_test0, 1))
     c = 0
     for i in range(len(cluster_sense)):
-        if abs(cluster_sense[i] - np.argmax(Y_test0,1)[i]) > 1:
+        if abs(cluster_sense[i] - Y_test0[i]) > 1:
             c = c + 1
     print(round(100 * (c / len(cluster_sense)), 2), "%")
 
-
+    print(classification_report(y_pred=cluster_sense, y_true=Y_test0))
+    print(hamming_loss(y_pred=cluster_sense, y_true=Y_test0))
 
     # cluster_sense = pd.DataFrame(cluster_sense)
     # cluster_sense.to_csv('cluster_outlin.csv')
