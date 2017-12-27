@@ -11,6 +11,12 @@ import scipy.io as scio
 from PIL import Image
 import os
 import math
+from practice_one.Company.load_material.urils import *
+
+eye_data = scio.loadmat('feature_matrix/{}'.format('eyebr'))
+eye = NearestNeighbor()
+print('sss', eye_data['X'].shape)
+eye.train(X=eye_data['X'], Y=eye_data['Y'])
 
 """ 你的 APPID AK SK """
 APP_ID = '10365287'
@@ -145,7 +151,7 @@ def point2feature_lip(landmarks):
 def organ_struct(landmark72):
     # reb,reye,nose,lip,chin,leb,leye
     return [(landmark72[24] + landmark72[28]) / 2, landmark72[21],
-            landmark72[57], landmark72[70],
+            (landmark72[51] + landmark72[52]) / 2, landmark72[60],
             landmark72[6], (landmark72[41] + landmark72[45]) / 2,
             landmark72[38]]
 
@@ -206,6 +212,10 @@ def compare_feature(org, feature):
     features = scio.loadmat('feature_mat/{}'.format(org))
     target = features['data'][:] - feature
     top_index = np.argmin(np.linalg.norm(target, axis=(1, 2)))
+    print('top', top_index)
+    if org == 'left_eyebrow':
+        ss = eye.predict(feature)
+        print('ss', ss)
     # print(org, np.linalg.norm(target, axis=(1, 2))[top_index])
     return top_index
 
@@ -270,7 +280,7 @@ def merge_all(real_width, real_height, real_points, feature_index, face_id):
     return image
 
 
-def main(file_path, face_id=None, ebr_id=None):
+def main(file_path, face_id=None, ebrid=None):
     # step1 获取所有特征数据
     left_eye, _ry, left_eyebrow, _rb, lip, nose, chin, org_struct, width, height, glasses, faceshape = read_feature(
         file_path)
@@ -284,8 +294,8 @@ def main(file_path, face_id=None, ebr_id=None):
     nose_id = compare_feature('nose', nose)
     face_id = compare_face(faceshape, chin) if not face_id else face_id
     # print(face_id)
-    if ebr_id != None:
-        left_eyebrow_id = ebr_id
+    if ebrid != None:
+        left_eyebrow_id = ebrid
 
     feature_index = {
         'left_eye': left_eye_id,
@@ -314,21 +324,21 @@ def final_eye_try():
     for file in dir_path:
         if file.endswith('jpg'):
             file_path = face_dir + '/{}'.format(file)
-            # if not os.path.exists(file_path.replace('.jpg', '.png')):
-            print(file, 'OK')
+            if not os.path.exists(file_path.replace('.jpg', '.png')):
+                print(file, 'OK')
 
-            image, feature_index = main(file_path, face)
-            image.save(file_path.replace('.jpg', '.png'))
-            with open(file_path.replace('jpg', 'txt'), 'a') as text_file:
-                text_file.writelines('---------------------------------\n')
-                for org, item in feature_index.items():
-                    if org != 'chin':
-                        text_file.writelines(org + ':' + str(int(item) + 1) + '\n')
+                image, feature_index = main(file_path, face)
+                image.save(file_path.replace('.jpg', '.png'))
+                with open(file_path.replace('jpg', 'txt'), 'a') as text_file:
+                    text_file.writelines('---------------------------------\n')
+                    for org, item in feature_index.items():
+                        if org != 'chin':
+                            text_file.writelines(org + ':' + str(int(item) + 1) + '\n')
 
 
 if __name__ == "__main__":
-    # final_eye_try()
-    face_dir = 'C:/Users/chk01/Desktop/eye_test/1.jpg'
-    for i in range(25):
-        image, feature_index = main(face_dir, face_id="A-1", ebr_id=i)
-        image.save(face_dir.replace('1.jpg', str(feature_index['left_eyebrow'] + 1) + '.png'))
+    final_eye_try()
+    # face_dir = 'C:/Users/chk01/Desktop/tt/1.jpg'
+    # for i in range(25):
+    #     image, feature_index = main(face_dir, face_id="A-1", ebrid=i)
+    #     image.save(face_dir.replace('1.jpg', str(feature_index['left_eyebrow'] + 1) + '.png'))

@@ -143,9 +143,9 @@ def point2feature_lip(landmarks):
 
 
 def organ_struct(landmark72):
-    # reb,reye,nose,lip,chin,leb,leye
+    # leb,leye,nose,lip,chin,reb,reye
     return [(landmark72[24] + landmark72[28]) / 2, landmark72[21],
-            landmark72[57], landmark72[70],
+            landmark72[57], (landmark72[70] + landmark72[67]) / 2,
             landmark72[6], (landmark72[41] + landmark72[45]) / 2,
             landmark72[38]]
 
@@ -173,6 +173,59 @@ def org_alignment(org_struct):
     return org_struct
 
 
+def get_box(points):
+    x = points[:, 0]
+    y = points[:, 1]
+    return max(x) - min(x), max(y) - min(y)
+
+
+def get_relative_position(points):
+    wid, hei = get_box(points[0:13])
+    chin = points[6]
+
+    left_eyebr_point = points[22:30]
+    left_eyebr_wid, left_eyebr_hei = get_box(left_eyebr_point)
+    left_eyebr = [(points[24] + points[28]) / 2, left_eyebr_wid / wid, left_eyebr_hei / hei]
+
+    right_eyebr_point = points[39:47]
+    right_eyebr_wid, right_eyebr_hei = get_box(right_eyebr_point)
+    right_eyebr = [(points[41] + points[45]) / 2, right_eyebr_wid / wid, right_eyebr_hei / hei]
+
+    eyebrs_width_ratio = (right_eyebr[0][0] - left_eyebr[0][0]) / wid
+    eyebrs_height_ratio = np.abs((right_eyebr[0][1] + left_eyebr[0][1]) / 2 - chin[1]) / hei
+
+    left_eye_point = points[13:22]
+    left_eye_wid, left_eye_hei = get_box(left_eye_point)
+    left_eye = [points[21], left_eye_wid / wid, left_eye_hei / hei]
+
+    right_eye_point = points[30:39]
+    right_eye_wid, right_eye_hei = get_box(right_eye_point)
+    right_eye = [points[38], right_eye_wid / wid, right_eye_hei / hei]
+
+    eyes_width_ratio = (right_eye[0][0] - left_eye[0][0]) / wid
+    eyes_height_ratio = np.abs((right_eye[0][1] + left_eye[0][1]) / 2 - chin[1]) / hei
+
+    nose_point = points[49:55]
+    nose_wid, nose_hei = get_box(nose_point)
+    nose = [points[57], nose_wid / wid, nose_hei / hei]
+    nose_height_ratio = np.abs(nose[0][1] - chin[1]) / hei
+
+    lip_point = points[58:72]
+    lip_wid, lip_hei = get_box(lip_point)
+    lip = [(points[67] + points[70]) / 2, lip_wid / wid, lip_hei / hei]
+    lip_height_ratio = np.abs(lip[0][1] - chin[1]) / hei
+
+    organ_boxes = {
+        'eye_br': [eyebrs_width_ratio, eyebrs_height_ratio, (left_eyebr[1] + right_eyebr[1]) / 2,
+                   (left_eyebr[2] + right_eyebr[2]) / 2],  # [眉间距比例，眉高比例，眉毛宽比，眉毛高比]
+        'eye': [eyes_width_ratio, eyes_height_ratio, (left_eye[1] + right_eye[1]) / 2,
+                (left_eye[2] + right_eye[2]) / 2],  # [眼间距比例，眼高比例，眼宽比，眼高比]
+        'nose': [nose_height_ratio, nose[1], nose[2]],  # [鼻位置高比例，鼻大小宽比，鼻大小高比]
+        'lip': [lip_height_ratio, lip[1], lip[2]]  # [唇位置高比例，唇大小宽比例，唇大小高比]
+    }
+    return organ_boxes
+
+
 def read_feature(file_path):
     # step1 Api 获取脸型，五官点阵，是否有眼镜，脸型，性别
     landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
@@ -180,7 +233,7 @@ def read_feature(file_path):
     # step2 数据预处理
     landmark72 = landmark72_trans(landmark72)
     # print(angle)
-    if -30 < angle < 30:
+    if -20 < angle < 20:
         print('-------------Normal--------------')
         pass
     else:
@@ -194,12 +247,13 @@ def read_feature(file_path):
     nose = point2feature_nose(landmark72)
     lip = point2feature_lip(landmark72)
     width = landmark72[12][0] - landmark72[0][0]
-    height = np.abs((landmark72[12][1] + landmark72[0][1]) / 2 - landmark72[6][1])
     right_eyebrow = point_to_vector(landmark72[39:47])
     right_eye = point_to_vector(landmark72[30:39])
     chin = landmark72[:13] - landmark72[6]
-    org_struct = org_alignment(organ_struct(landmark72))
-    return left_eye, right_eye, left_eyebrow, right_eyebrow, lip, nose, chin, org_struct, width, height, glasses, faceshape
+
+    relative_box = get_relative_position(landmark72)
+    # org_struct = org_alignment(organ_struct(landmark72))
+    return left_eye, right_eye, left_eyebrow, right_eyebrow, lip, nose, chin, relative_box, width, glasses, faceshape
 
 
 def compare_feature(org, feature):
@@ -222,58 +276,82 @@ def compare_face(faceshape, feature):
 def get_carton_points(feature_index):
     cartoon_points = []
     # 顺序固定
-    for org in ['left_eyebrow', 'left_eye', 'nose', 'lip', 'chin', 'right_eyebrow', 'right_eye']:
-        if org == 'chin':
-            typ, _id = feature_index[org].split('-')
-            data = CartoonPoint[typ + '_shape'][int(_id) - 1][2:]
-        else:
-            data = CartoonPoint[org][feature_index[org]]
+    for org in ['left_eyebrow', 'left_eye', 'nose', 'lip', 'right_eyebrow', 'right_eye']:
+        data = CartoonPoint[org][feature_index[org]]
         cartoon_points.append(data)
     return cartoon_points
 
 
-def merge_all(real_width, real_height, real_points, feature_index, face_id):
+def merge_all(relative_box, feature_index, face_id):
     cartoon_points = get_carton_points(feature_index)
     image = Image.open(root_dir + '/cartoon/face/{}.png'.format(face_id)).convert('RGBA')
 
+    # organ_boxes = {
+    #     'eye_br': [eyebrs_width_ratio, eyebrs_height_ratio, (left_eyebr[1] + right_eyebr[1]) / 2,
+    #                (left_eyebr[2] + right_eyebr[2]) / 2],  # [眉间距比例，眉高比例，眉毛宽比，眉毛高比]
+    #     'eye': [eyes_width_ratio, eyes_height_ratio, (left_eye[1] + right_eye[1]) / 2,
+    #             (left_eye[2] + right_eye[2]) / 2],  # [眼间距比例，眼高比例，眼宽比，眼高比]
+    #     'nose': [nose_height_ratio, nose[1], nose[2]],  # [鼻位置高比例，鼻大小宽比，鼻大小高比]
+    #     'lip': [lip_height_ratio, lip[1], lip[2]]  # [唇位置高比例，唇大小宽比例，唇大小高比]
+    # }
+
     typ, fid = face_id.split('-')
     face_data = CartoonPoint[typ + '_shape'][int(fid) - 1]
-    ratio_x = face_data[0] / real_width
-    # print(ratio_x)
-    ear_height = face_data[1]
-    chin_point = cartoon_points[4]
-    real_chin_point = real_points[4]
 
-    ratio_y = (ear_height - chin_point[1]) / (np.array(real_points) - real_chin_point)[1][1]
-    # ratio_y = 250/real_height
-    norm_real_points = (np.array(real_points) - real_chin_point) * [ratio_x, ratio_y]
+    eyebr_data = relative_box['eye_br']
+    eyebr_dis = eyebr_data[0] * 297
+    eyebr_y = eyebr_data[1] * 210
+    left_eyebr = [face_data[2] - eyebr_dis / 2, face_data[3] - eyebr_y]
+    right_eyebr = [face_data[2] + eyebr_dis / 2, face_data[3] - eyebr_y]
 
-    boxes = norm_real_points - cartoon_points + chin_point
+    eye_data = relative_box['eye']
+    eye_dis = eye_data[0] * 297
+    eye_y = eye_data[1] * 210
+    left_eye = [face_data[2] - eye_dis / 2, face_data[3] - eye_y]
+    right_eye = [face_data[2] + eye_dis / 2, face_data[3] - eye_y]
 
+    nose_data = relative_box['nose']
+    nose_y = nose_data[0] * 210
+    nose = [face_data[2], face_data[3] - nose_y]
+
+    lip_data = relative_box['lip']
+    lip_y = lip_data[0] * 210
+    lip = [face_data[2], face_data[3] - lip_y]
+
+    print(face_data)  # [290 265 185 475]
+    norm_real_points = np.array([left_eyebr, left_eye, nose, lip, right_eyebr, right_eye])
+
+    boxes = norm_real_points - cartoon_points
+
+    print([int(eye_data[2] * 297), int(eye_data[3] * 210)])
+    print([int(eyebr_data[2] * 297), int(eyebr_data[3] * 210)])
+    print([int(nose_data[1] * 297), int(nose_data[2] * 210)])
+    print([int(lip_data[1] * 297), int(lip_data[2] * 210)])
     # 调整位置和耳朵平齐
     # eye_height = boxes[1][1]
     # cartoon_eye = cartoon_points[1][1] + eye_height
     # print(ear_height - cartoon_eye)
     # boxes = boxes + [0, ear_height - cartoon_eye]
     # print('boxes===', boxes)
-    TypOrgans = ['left_eyebrow', 'left_eye', 'nose', 'lip', 'chin', 'right_eyebrow', 'right_eye']
+    TypOrgans = ['left_eyebrow', 'left_eye', 'nose', 'lip', 'right_eyebrow', 'right_eye']
 
     norm_real_glasses = (norm_real_points[1] + norm_real_points[-1]) / 2
-    glasses_box = norm_real_glasses + [0, 35] + chin_point - Glasses
+    # glasses_box = norm_real_glasses + [0, 35] + chin_point - Glasses
     for i, org in enumerate(TypOrgans):
-        if org != 'chin':
-            organ = Image.open(root_dir + "/cartoon/{}/{}.png".format(org, feature_index[org] + 1))
-            image.paste(organ, list(boxes[i].astype(np.int)), mask=organ)
-    if feature_index['glasses'] == 1:
-        organ = Image.open(root_dir + "/cartoon/{}/{}_{}.png".format('glasses', 'glasses', 1))
-        image.paste(organ, list(glasses_box.astype(np.int)), mask=organ)
+        organ = Image.open(root_dir + "/cartoon/{}/{}.png".format(org, feature_index[org] + 1))
+        # if org == 'nose':
+        #     print([int(nose_data[1]*297), int(nose_data[2]*210)])
+        #     organ = organ.resize([int(nose_data[1]*297), int(nose_data[2]*210)])
+        image.paste(organ, list(boxes[i].astype(np.int)), mask=organ)
+    # if feature_index['glasses'] == 1:
+    #     organ = Image.open(root_dir + "/cartoon/{}/{}_{}.png".format('glasses', 'glasses', 1))
+    #     image.paste(organ, list(glasses_box.astype(np.int)), mask=organ)
     return image
 
 
 def main(file_path, face_id=None, ebr_id=None):
     # step1 获取所有特征数据
-    left_eye, _ry, left_eyebrow, _rb, lip, nose, chin, org_struct, width, height, glasses, faceshape = read_feature(
-        file_path)
+    left_eye, _ry, left_eyebrow, _rb, lip, nose, chin, relative_box, width, glasses, faceshape = read_feature(file_path)
 
     # step2 获取Cartoon匹配序号
     left_eye_id = compare_feature('left_eye', left_eye)
@@ -284,8 +362,8 @@ def main(file_path, face_id=None, ebr_id=None):
     nose_id = compare_feature('nose', nose)
     face_id = compare_face(faceshape, chin) if not face_id else face_id
     # print(face_id)
-    if ebr_id != None:
-        left_eyebrow_id = ebr_id
+    # if ebr_id != None:
+    #     left_eyebrow_id = ebr_id
 
     feature_index = {
         'left_eye': left_eye_id,
@@ -299,7 +377,7 @@ def main(file_path, face_id=None, ebr_id=None):
     }
     print(feature_index)
 
-    image = merge_all(width, height, org_struct, feature_index, face_id)
+    image = merge_all(relative_box, feature_index, face_id)
     # image.save('res' + file_path.replace('jpg', 'png'))
     # image.show()
     return image, feature_index
@@ -327,8 +405,8 @@ def final_eye_try():
 
 
 if __name__ == "__main__":
-    # final_eye_try()
-    face_dir = 'C:/Users/chk01/Desktop/eye_test/1.jpg'
-    for i in range(25):
-        image, feature_index = main(face_dir, face_id="A-1", ebr_id=i)
-        image.save(face_dir.replace('1.jpg', str(feature_index['left_eyebrow'] + 1) + '.png'))
+    final_eye_try()
+    # face_dir = 'C:/Users/chk01/Desktop/eye_test/2.jpg'
+    # for i in range(25):
+    #     image, feature_index = main(face_dir, face_id="A-1", ebr_id=i)
+    #     image.save(face_dir.replace('2.jpg', str(feature_index['left_eyebrow'] + 1) + '.png'))

@@ -134,15 +134,17 @@ def get_face_feature():
         dir_path = os.listdir(root_dir + '/src/face_' + typ)
         m = len(dir_path)
         n = 13
-        data = np.zeros([m, n, 2])
+        X = np.zeros([m, n, 2])
+        Y = np.zeros([m, ])
         for i, sourceDir in enumerate(dir_path):
             _id = int(sourceDir.split('.')[0]) - 1
             full_path = root_dir + '/src/face_' + typ + '/' + sourceDir
             landmark72 = get_landmark72(full_path)
             _data = get_org_point(landmark72, 'face')
-            data[_id] = _data
+            X[_id] = _data
+            Y[_id] = _id + 1
             print('load--->{}---图{}'.format(typ, _id))
-        scio.savemat('feature_mat/face_' + typ, {"data": data})
+        scio.savemat('feature_matrix/face_' + typ, {"X": X, "Y": Y})
         print('完成{}导入'.format(typ))
 
 

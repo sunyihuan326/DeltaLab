@@ -12,7 +12,7 @@ from practice_one.Company.match_check.utils import *
 org = 'nose'
 
 root_dir = 'C:/Users/chk01/Desktop/Delta/image'
-save_dir = '../load_material/feature_mat/' + org
+save_dir = '../load_material/feature_matrix/' + org
 
 
 def p2f(landmarks):
@@ -40,16 +40,19 @@ def get_point_feature():
     dir_path = os.listdir(root_dir + '/src/' + org)
     m = len(dir_path)
     n = 6
-    data = np.zeros([m, n, 2])
+    X = np.zeros([m, n, 2])
+    Y = np.zeros([m, ])
     for i, sourceDir in enumerate(dir_path):
         _id = int(sourceDir.split('.')[0]) - 1
         full_path = root_dir + '/src/' + org + '/' + sourceDir
         landmark72 = get_baseInfo(full_path)
         landmark72 = landmark72_trans(landmark72)
         feature = p2f(landmark72)
-        data[_id] = feature
+        X[_id] = feature
+        Y[_id] = _id + 1
+        # p2f(landmark72[39:47])
         print('load--->{}---图{}'.format(org, _id))
-    scio.savemat(save_dir, {"data": data})
+    scio.savemat(save_dir, {"X": X, "Y": Y})
     print('完成{}导入'.format(org))
 
 
