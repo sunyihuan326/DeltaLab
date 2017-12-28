@@ -85,7 +85,7 @@ def get_carton_points(feature_index):
     for org in ['left_eyebrow', 'left_eye', 'nose', 'lip', 'chin', 'right_eyebrow', 'right_eye']:
         if org == 'chin':
             typ, _id = feature_index[org].split('-')
-            data = CartoonPoint[typ + '_shape'][int(_id) - 1][2:]
+            data = CartoonPoint[typ + '_shape'][int(_id) - 1][2:4]
         else:
             data = CartoonPoint[org][feature_index[org] - 1]
         cartoon_points.append(data)
@@ -99,6 +99,7 @@ def merge_all(real_width, real_height, real_points, feature_index):
 
     typ, fid = face_id.split('-')
     face_data = CartoonPoint[typ + '_shape'][int(fid) - 1]
+
     ratio_x = face_data[0] / real_width
     # print(ratio_x)
     ear_height = face_data[1]

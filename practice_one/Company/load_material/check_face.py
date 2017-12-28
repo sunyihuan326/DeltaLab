@@ -46,10 +46,10 @@ def get_landmark72(full_path):
 # nose# data4 = data[47:58]
 # mouse# data5 = data[58:]
 if __name__ == '__main__':
-    # file = 'check/8.jpg'
+    file = 'check/9.jpg'
     org = 'lip'
     for i in range(20):
-        file = 'C:/Users/chk01/Desktop/Delta/image/check/src/{}/{}.jpg'.format(org, i + 1)
+        # file = 'C:/Users/chk01/Desktop/Delta/image/check/src/{}/{}.jpg'.format(org, i + 1)
         im = Image.open(file)
 
         wid, hei = im.size
@@ -70,7 +70,7 @@ if __name__ == '__main__':
             # landmark72 = np.matmul(landmark72, tran_matrix)
         drawSurface = ImageDraw.Draw(im)
         landmark72 = tuple(tuple(t) for t in landmark72)
-        # drawSurface.line(landmark72[:13], fill=255, width=10)
+        drawSurface.line(landmark72[:13], fill=255, width=10)
         # drawSurface.line(landmark72[13:21], fill=255, width=3)
         # drawSurface.line([landmark72[13], landmark72[20]], fill=255, width=3)
         # drawSurface.line(landmark72[14], fill=100, width=10)
@@ -80,13 +80,13 @@ if __name__ == '__main__':
         # drawSurface.line(landmark72[22:30], fill=255, width=3)
         # drawSurface.line([landmark72[22], landmark72[29]], fill=255, width=3)
         # drawSurface.line(landmark72[39:47], fill=255, width=10)
-        point1 = [landmark72[58], landmark72[59], landmark72[60], landmark72[61], landmark72[62],
-                  landmark72[68], landmark72[67], landmark72[66], landmark72[58]]
-        drawSurface.line(point1, fill=255, width=3)
-
-        point2 = [landmark72[58], landmark72[65], landmark72[64], landmark72[63], landmark72[62],
-                  landmark72[69], landmark72[70], landmark72[71], landmark72[58]]
-        drawSurface.line(point2, fill=255, width=3)
+        # point1 = [landmark72[58], landmark72[59], landmark72[60], landmark72[61], landmark72[62],
+        #           landmark72[68], landmark72[67], landmark72[66], landmark72[58]]
+        # drawSurface.line(point1, fill=255, width=3)
+        #
+        # point2 = [landmark72[58], landmark72[65], landmark72[64], landmark72[63], landmark72[62],
+        #           landmark72[69], landmark72[70], landmark72[71], landmark72[58]]
+        # drawSurface.line(point2, fill=255, width=3)
 
         # drawSurface.line(landmark72[49:55], fill=255, width=3)
         # drawSurface.line(landmark72[58:66], fill=255, width=3)
@@ -94,5 +94,5 @@ if __name__ == '__main__':
         # drawSurface.line(landmark72[69:], fill=255, width=10)
         # drawSurface.line(landmark72[66:69], fill=255, width=1)
         # drawSurface.point(landmark72, fill=0)
-        im.save(file.replace('src', 'cartoon'))
-        # im.show()
+        # im.save(file.replace('src', 'cartoon'))
+        im.show()

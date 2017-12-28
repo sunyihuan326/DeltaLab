@@ -16,11 +16,11 @@ def main():
     left_eyebrow = [[0, 0]] * 25
     right_eyebrow = [[0, 0]] * 25
     # chin = [[0, 0]] * 25
-    A_shape = [[0, 0, 0, 0]] * 5
-    B_shape = [[0, 0, 0, 0]] * 5
-    C_shape = [[0, 0, 0, 0]] * 5
-    D_shape = [[0, 0, 0, 0]] * 5
-    E_shape = [[0, 0, 0, 0]] * 5
+    A_shape = [[0, 0, 0, 0, 0, 0]] * 7
+    B_shape = [[0, 0, 0, 0, 0, 0]] * 6
+    C_shape = [[0, 0, 0, 0, 0, 0]] * 3
+    D_shape = [[0, 0, 0, 0, 0, 0]] * 2
+    E_shape = [[0, 0, 0, 0, 0, 0]] * 7
     nose = [[0, 0]] * 12
     lip = [[0, 0]] * 20
     for res in resList['feature_list']:
@@ -29,18 +29,19 @@ def main():
         typ = res['type']
         _id = res['title']
         if typ == 'lianxing':
-            [typ, wid, hei, _id] = str(_id).split('-')
+            [typ, wid, hei, chin_x, chin_y, _id] = str(_id).split('-')
             # chin[int(_id) - 1] = [x, y]
+            chin_data = [int(wid), int(hei), int(chin_x), int(chin_y), int(x), int(y)]
             if typ == 'A':
-                A_shape[int(_id) - 1] = [int(wid), int(hei), x, y]
+                A_shape[int(_id) - 1] = chin_data
             elif typ == 'B':
-                B_shape[int(_id) - 1] = [int(wid), int(hei), x, y]
+                B_shape[int(_id) - 1] = chin_data
             elif typ == 'C':
-                C_shape[int(_id) - 1] = [int(wid), int(hei), x, y]
+                C_shape[int(_id) - 1] = chin_data
             elif typ == 'D':
-                D_shape[int(_id) - 1] = [int(wid), int(hei), x, y]
+                D_shape[int(_id) - 1] = chin_data
             else:
-                E_shape[int(_id) - 1] = [int(wid), int(hei), x, y]
+                E_shape[int(_id) - 1] = chin_data
         elif typ == 'zuiba':
             lip[int(_id) - 1] = [x, y]
         elif typ == 'yanjing':
