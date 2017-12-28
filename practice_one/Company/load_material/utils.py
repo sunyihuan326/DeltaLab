@@ -4,12 +4,13 @@ Created on 2017/12/27.
 
 @author: chk01
 '''
+import os
 import numpy as np
 import scipy.io as scio
+
+from PIL import Image
 from aip import AipFace
 import urllib.request
-from PIL import Image
-import os
 
 """ 你的 APPID AK SK """
 APP_ID = '10365287'
@@ -17,6 +18,7 @@ API_KEY = 'G7q4m36Yic1vpFCl5t46yH5K'
 SECRET_KEY = 'MneS2GDvPQ5QsGpVtSaHXGAlvwHu1XnC '
 root_dir = 'C:/Users/chk01/Desktop/Delta/image'
 client = AipFace(APP_ID, API_KEY, SECRET_KEY)
+SHAPE_TRANS = {'oval': "A", 'heart': "B", 'square': "C", 'triangle': "D", 'round': "E"}
 
 
 class NearestNeighbor(object):
@@ -25,12 +27,12 @@ class NearestNeighbor(object):
 
     def train(self, X, Y):
         self.trX = X
-        self.trY = np.transpose(Y)
+        self.trY = Y
 
     def predict(self, X):
         distinces = np.linalg.norm(self.trX - X, axis=(1, 2))
         min_index = np.argmin(distinces)
-        Ypred = self.trY[min_index]
+        Ypred = np.squeeze(self.trY[min_index])
         return int(Ypred)
 
 
@@ -111,16 +113,36 @@ def get_baseInfo(full_path):
     landmark72 = result['landmark72']
     gender = result['gender']
     glasses = result['glasses']
-    faceshape = sorted(result['faceshape'], key=lambda x: -x['probability'])
+    # faceshape = sorted(result['faceshape'], key=lambda x: -x['probability'])
     # oval,round,square,triangle,heart
     # print(faceshape)
     angle = result['rotation_angle']
 
-    return landmark72, angle, gender, glasses, faceshape[0]['type']
+    return landmark72, angle, gender, glasses, result['faceshape']
 
 
 def get_real_faceshape(faceshape):
-    return "A-1"
+    _faceshape = sorted(faceshape, key=lambda x: -x['probability'])
+    default_shape = _faceshape[0]['type']
+
+    feature_dict = {}
+    for i in range(len(faceshape)):
+        feature_dict.update({faceshape[i]['type']: faceshape[i]['probability']})
+
+    if feature_dict['triangle'] > 0.45:
+        new_shape = 'D'
+    elif feature_dict['oval'] > 0.30:
+        new_shape = 'A'
+    elif feature_dict['heart'] > 0.60:
+        new_shape = 'B'
+    elif feature_dict['square'] > 0.20:
+        new_shape = 'C'
+    elif feature_dict['round'] > 0.15:
+        new_shape = 'E'
+    else:
+        new_shape = SHAPE_TRANS[default_shape]
+
+    return new_shape
 
 
 def point2feature_ebr(landmarks):
@@ -160,7 +182,7 @@ def point2feature_nose(landmarks):
 
 
 def point2feature_lip(landmarks):
-    point1 = [landmarks[58], landmarks[59], landmarks[60], landmarks[61],
+    point1 = [landmarks[58], landmarks[59], landmarks[60], landmarks[61], landmarks[62],
               landmarks[68], landmarks[67], landmarks[66]]
     x1 = [p[0] for p in point1]
     y1 = [p[1] for p in point1]
@@ -171,8 +193,8 @@ def point2feature_lip(landmarks):
     feature1 = (point1 - center1) / np.array([wid1, hei1])
     # feature1 = (point1 - center1)
 
-    point2 = [landmarks[58], landmarks[65], landmarks[64], landmarks[63],
-              landmarks[71], landmarks[70], landmarks[69]]
+    point2 = [landmarks[58], landmarks[65], landmarks[64], landmarks[63], landmarks[62],
+              landmarks[69], landmarks[70], landmarks[71]]
     x2 = [p[0] for p in point2]
     y2 = [p[1] for p in point2]
     wid2 = max(x2) - min(x2)
@@ -181,9 +203,9 @@ def point2feature_lip(landmarks):
     center2 = landmarks[70]
     feature2 = (point2 - center2) / np.array([wid2, hei2])
     # feature2 = (point2 - center2)
-    feature = np.zeros([14, 2])
-    feature[:7, :] = feature1
-    feature[7:, :] = feature2
+    feature = np.zeros([16, 2])
+    feature[:8, :] = feature1
+    feature[8:, :] = feature2
 
     return feature
 

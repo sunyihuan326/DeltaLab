@@ -4,9 +4,11 @@ Created on 2017/12/27.
 
 @author: chk01
 '''
-from practice_one.Company.load_material.urils import *
+from practice_one.Company.load_material.utils import *
 
 eyebr, eye, nose, lip, chinA, chinB, chinC, chinD, chinE = load_feature_matrix()
+
+ChinData = {"A": chinA, "B": chinB, "C": chinC, "D": chinD, "E": chinE}
 CartoonPoint = load_cartoon_center()
 Glasses = [164, 65]
 
@@ -46,9 +48,6 @@ def read_feature(file_path):
     # step1 Api 获取脸型，五官点阵，是否有眼镜，脸型，性别
     landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
 
-    # step2 数据预处理
-    landmark72 = landmark72_trans(landmark72)
-
     # # 图片矫正待优化
     if -10 < angle < 10:
         pass
@@ -59,6 +58,10 @@ def read_feature(file_path):
         Image.open(file_path).rotate(angle, expand=1).save(file_path)
         landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
         landmark72 = landmark72_trans(landmark72)
+
+    # step2 数据预处理
+    landmark72 = landmark72_trans(landmark72)
+    faceshape = get_real_faceshape(faceshape)
 
     # tran_matrix = np.array([[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]])
     # landmark72 = np.matmul(landmark72-landmark72[6], tran_matrix)+landmark72[6]
@@ -138,7 +141,7 @@ def main(file_path):
     lip_id = lip.predict(_lip)
     nose_id = nose.predict(_nose)
 
-    chin_id = get_real_faceshape(faceshape)
+    chin_id = faceshape + '-' + str(ChinData[faceshape].predict(_chin))
 
     feature_index = {
         'left_eye': eye_id,
@@ -174,19 +177,20 @@ def one_dir(dir):
     for file in dir_path:
         if file.endswith('jpg'):
             file_path = face_dir + '/{}'.format(file)
-            if not os.path.exists(file_path.replace('.jpg', '.png')):
+            # if not os.path.exists(file_path.replace('.jpg', '.png')):
+            if True:
                 print(file, 'OK')
                 image, feature_index = main(file_path)
                 image.save(file_path.replace('.jpg', '.png'))
                 with open(file_path.replace('jpg', 'txt'), 'a') as text_file:
                     text_file.writelines('---------------------------------\n')
                     for org, item in feature_index.items():
-                        if org != 'chin':
-                            text_file.writelines(org + ':' + str(int(item) + 1) + '\n')
+                        text_file.writelines(org + ':' + str(item) + '\n')
 
 
 if __name__ == "__main__":
     # final_eye_try()
-    face_dir = 'C:/Users/chk01/Desktop/tt'
-    # one_file(face_dir)
-    one_dir(face_dir)
+    # face_dir = 'C:/Users/chk01/Desktop/tt'
+    face_dir = '5.jpg'
+    one_file(face_dir)
+    # one_dir(face_dir)
