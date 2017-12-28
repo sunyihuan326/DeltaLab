@@ -10,7 +10,7 @@ eyebr, eye, nose, lip, chinA, chinB, chinC, chinD, chinE = load_feature_matrix()
 
 ChinData = {"A": chinA, "B": chinB, "C": chinC, "D": chinD, "E": chinE}
 CartoonPoint = load_cartoon_center()
-Glasses = [164, 65]
+Glasses = [164, 75]
 
 
 def organ_struct(landmark72):
@@ -190,7 +190,7 @@ def one_dir(dir):
 
 if __name__ == "__main__":
     # final_eye_try()
-    # face_dir = 'C:/Users/chk01/Desktop/tt'
-    face_dir = '5.jpg'
-    one_file(face_dir)
-    # one_dir(face_dir)
+    face_dir = 'C:/Users/chk01/Desktop/real_test'
+    # face_dir = '5.jpg'
+    # one_file(face_dir)
+    one_dir(face_dir)

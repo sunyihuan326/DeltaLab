@@ -59,7 +59,7 @@ def main():
                 right_eyebrow[int(_id) - 1] = [x, y]
         else:
             pass
-    scio.savemat("CartoonPoint", {
+    scio.savemat("feature_matrix/CartoonPoint", {
         'left_eye': left_eye,
         'right_eye': right_eye,
         'left_eyebrow': left_eyebrow,

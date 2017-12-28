@@ -12,7 +12,6 @@ save_dir = '../load_material/feature_matrix/' + org
 
 matrix = 'eye'
 
-
 org_data = scio.loadmat('../load_material/feature_matrix/{}'.format(matrix))
 org_ob = NearestNeighbor()
 org_ob.train(X=org_data['X'], Y=org_data['Y'])
@@ -26,7 +25,7 @@ def compare_feature(feature):
 def get_point_feature():
     print('开始{}导入'.format(org))
     dir_path = os.listdir(root_dir + '/src/' + org)
-    m = len(dir_path)
+    m = 32
     n = 9
     X = np.zeros([m, n, 2])
     Y = np.zeros([m, 1])
@@ -58,13 +57,16 @@ def main(file):
 def check_load_correct():
     for i in range(32):
         print('input::', i + 1)
-        file = root_dir + '/src/left_eye/{}.jpg'.format(i + 1)
-        main(file)
+        try:
+            file = root_dir + '/src/left_eye/{}.jpg'.format(i + 1)
+            main(file)
+        except:
+            print('Error', file)
 
 
 if __name__ == '__main__':
     # get_point_feature()
-    # check_load_correct()
+    check_load_correct()
 
-    file = '1001.jpg'
-    main(file)
+    # file = '1001.jpg'
+    # main(file)
