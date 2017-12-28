@@ -45,54 +45,81 @@ def get_landmark72(full_path):
 # browns# data3 = data[22:30]# data3.extend(data[39:47])
 # nose# data4 = data[47:58]
 # mouse# data5 = data[58:]
+def chin_check():
+    import os
+    test_dir = 'C:/Users/chk01/Desktop/chin_check'
+    for file in os.listdir(test_dir):
+        if file.endswith('jpg'):
+            print(file, 'start')
+            full_path = test_dir + '/' + file
+            im = Image.open(full_path)
+            landmark72, angle = get_landmark72(full_path)
+            if -30 < angle < 30:
+                pass
+            else:
+                im = im.rotate(angle, expand=1)
+                im.show()
+                im.save(full_path)
+                im = Image.open(full_path)
+                landmark72, angle = get_landmark72(full_path)
+
+            drawSurface = ImageDraw.Draw(im)
+            landmark72 = tuple(tuple(t) for t in landmark72)
+            drawSurface.line(landmark72[:13], fill=255, width=3)
+            im.save(full_path)
+            print(file, 'end')
+            print('----------------')
+
+
 if __name__ == '__main__':
-    file = 'check/9.jpg'
-    org = 'lip'
-    for i in range(20):
-        # file = 'C:/Users/chk01/Desktop/Delta/image/check/src/{}/{}.jpg'.format(org, i + 1)
-        im = Image.open(file)
-
-        wid, hei = im.size
-        landmark72, angle = get_landmark72(file)
-
-        print(angle)
-        if -30 < angle < 30:
-            pass
-        else:
-            # angle = angle / 180 * math.pi
-            im = im.rotate(angle, expand=1)
-            im.show()
-            im.save(file)
-            im = Image.open(file)
-            landmark72, angle = get_landmark72(file)
-            print(angle)
-            # tran_matrix = np.array([[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]])
-            # landmark72 = np.matmul(landmark72, tran_matrix)
-        drawSurface = ImageDraw.Draw(im)
-        landmark72 = tuple(tuple(t) for t in landmark72)
-        drawSurface.line(landmark72[:13], fill=255, width=10)
-        # drawSurface.line(landmark72[13:21], fill=255, width=3)
-        # drawSurface.line([landmark72[13], landmark72[20]], fill=255, width=3)
-        # drawSurface.line(landmark72[14], fill=100, width=10)
-        # drawSurface.line(landmark72[30:39], fill=255, width=10)
-        # drawSurface.line(landmark72[34], fill=100, width=10)
-
-        # drawSurface.line(landmark72[22:30], fill=255, width=3)
-        # drawSurface.line([landmark72[22], landmark72[29]], fill=255, width=3)
-        # drawSurface.line(landmark72[39:47], fill=255, width=10)
-        # point1 = [landmark72[58], landmark72[59], landmark72[60], landmark72[61], landmark72[62],
-        #           landmark72[68], landmark72[67], landmark72[66], landmark72[58]]
-        # drawSurface.line(point1, fill=255, width=3)
-        #
-        # point2 = [landmark72[58], landmark72[65], landmark72[64], landmark72[63], landmark72[62],
-        #           landmark72[69], landmark72[70], landmark72[71], landmark72[58]]
-        # drawSurface.line(point2, fill=255, width=3)
-
-        # drawSurface.line(landmark72[49:55], fill=255, width=3)
-        # drawSurface.line(landmark72[58:66], fill=255, width=3)
-        # drawSurface.line([landmark72[58], landmark72[65]], fill=255, width=3)
-        # drawSurface.line(landmark72[69:], fill=255, width=10)
-        # drawSurface.line(landmark72[66:69], fill=255, width=1)
-        # drawSurface.point(landmark72, fill=0)
-        # im.save(file.replace('src', 'cartoon'))
-        im.show()
+    chin_check()
+    # file = 'check/9.jpg'
+    # org = 'lip'
+    # for i in range(20):
+    #     # file = 'C:/Users/chk01/Desktop/Delta/image/check/src/{}/{}.jpg'.format(org, i + 1)
+    #     im = Image.open(file)
+    #
+    #     wid, hei = im.size
+    #     landmark72, angle = get_landmark72(file)
+    #
+    #     print(angle)
+    #     if -30 < angle < 30:
+    #         pass
+    #     else:
+    #         # angle = angle / 180 * math.pi
+    #         im = im.rotate(angle, expand=1)
+    #         im.show()
+    #         im.save(file)
+    #         im = Image.open(file)
+    #         landmark72, angle = get_landmark72(file)
+    #         print(angle)
+    #         # tran_matrix = np.array([[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]])
+    #         # landmark72 = np.matmul(landmark72, tran_matrix)
+    #     drawSurface = ImageDraw.Draw(im)
+    #     landmark72 = tuple(tuple(t) for t in landmark72)
+    #     drawSurface.line(landmark72[:13], fill=255, width=10)
+    #     # drawSurface.line(landmark72[13:21], fill=255, width=3)
+    #     # drawSurface.line([landmark72[13], landmark72[20]], fill=255, width=3)
+    #     # drawSurface.line(landmark72[14], fill=100, width=10)
+    #     # drawSurface.line(landmark72[30:39], fill=255, width=10)
+    #     # drawSurface.line(landmark72[34], fill=100, width=10)
+    #
+    #     # drawSurface.line(landmark72[22:30], fill=255, width=3)
+    #     # drawSurface.line([landmark72[22], landmark72[29]], fill=255, width=3)
+    #     # drawSurface.line(landmark72[39:47], fill=255, width=10)
+    #     # point1 = [landmark72[58], landmark72[59], landmark72[60], landmark72[61], landmark72[62],
+    #     #           landmark72[68], landmark72[67], landmark72[66], landmark72[58]]
+    #     # drawSurface.line(point1, fill=255, width=3)
+    #     #
+    #     # point2 = [landmark72[58], landmark72[65], landmark72[64], landmark72[63], landmark72[62],
+    #     #           landmark72[69], landmark72[70], landmark72[71], landmark72[58]]
+    #     # drawSurface.line(point2, fill=255, width=3)
+    #
+    #     # drawSurface.line(landmark72[49:55], fill=255, width=3)
+    #     # drawSurface.line(landmark72[58:66], fill=255, width=3)
+    #     # drawSurface.line([landmark72[58], landmark72[65]], fill=255, width=3)
+    #     # drawSurface.line(landmark72[69:], fill=255, width=10)
+    #     # drawSurface.line(landmark72[66:69], fill=255, width=1)
+    #     # drawSurface.point(landmark72, fill=0)
+    #     # im.save(file.replace('src', 'cartoon'))
+    #     im.show()
