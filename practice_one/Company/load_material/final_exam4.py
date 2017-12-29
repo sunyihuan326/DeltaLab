@@ -57,7 +57,6 @@ def read_feature(file_path):
         # angle = -angle / 180 * math.pi
         Image.open(file_path).rotate(angle, expand=1).save(file_path)
         landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
-        landmark72 = landmark72_trans(landmark72)
 
     # step2 数据预处理
     landmark72 = landmark72_trans(landmark72)
@@ -176,14 +175,13 @@ def one_dir(dir):
     face_dir = dir
     dir_path = os.listdir(face_dir)
     for file in dir_path:
-        if file.endswith('jpg'):
-            file_path = face_dir + '/{}'.format(file)
-            # if not os.path.exists(file_path.replace('.jpg', '.png')):
-            if True:
+        file_path = face_dir + '/{}'.format(file)
+        if file.endswith('png') and not file.endswith('-res.png'):
+            if not os.path.exists(file_path.replace('.png', '-res.png')):
                 print(file, 'OK')
                 image, feature_index = main(file_path)
-                image.save(file_path.replace('.jpg', '.png'))
-                with open(file_path.replace('jpg', 'txt'), 'a') as text_file:
+                image.save(file_path.replace('.png', '-res.png'))
+                with open(file_path.replace('png', 'txt'), 'a') as text_file:
                     text_file.writelines('---------------------------------\n')
                     for org, item in feature_index.items():
                         text_file.writelines(org + ':' + str(item) + '\n')

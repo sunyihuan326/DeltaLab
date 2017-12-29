@@ -72,32 +72,32 @@ def chin_check():
 
 
 if __name__ == '__main__':
-    chin_check()
-    # file = 'check/9.jpg'
+    # chin_check()
+    file = 'check/10.png'
     # org = 'lip'
     # for i in range(20):
     #     # file = 'C:/Users/chk01/Desktop/Delta/image/check/src/{}/{}.jpg'.format(org, i + 1)
-    #     im = Image.open(file)
-    #
-    #     wid, hei = im.size
-    #     landmark72, angle = get_landmark72(file)
-    #
-    #     print(angle)
-    #     if -30 < angle < 30:
-    #         pass
-    #     else:
-    #         # angle = angle / 180 * math.pi
-    #         im = im.rotate(angle, expand=1)
-    #         im.show()
-    #         im.save(file)
-    #         im = Image.open(file)
-    #         landmark72, angle = get_landmark72(file)
-    #         print(angle)
-    #         # tran_matrix = np.array([[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]])
-    #         # landmark72 = np.matmul(landmark72, tran_matrix)
-    #     drawSurface = ImageDraw.Draw(im)
-    #     landmark72 = tuple(tuple(t) for t in landmark72)
-    #     drawSurface.line(landmark72[:13], fill=255, width=10)
+    im = Image.open(file)
+
+    wid, hei = im.size
+    landmark72, angle = get_landmark72(file)
+
+    print(angle)
+    if -30 < angle < 30:
+        pass
+    else:
+        # angle = angle / 180 * math.pi
+        im = im.rotate(angle, expand=1)
+        im.show()
+        im.save(file)
+        im = Image.open(file)
+        landmark72, angle = get_landmark72(file)
+        print(angle)
+        # tran_matrix = np.array([[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]])
+        # landmark72 = np.matmul(landmark72, tran_matrix)
+    drawSurface = ImageDraw.Draw(im)
+    landmark72 = tuple(tuple(t) for t in landmark72)
+    drawSurface.line(landmark72[:13], fill=255, width=3)
     #     # drawSurface.line(landmark72[13:21], fill=255, width=3)
     #     # drawSurface.line([landmark72[13], landmark72[20]], fill=255, width=3)
     #     # drawSurface.line(landmark72[14], fill=100, width=10)
@@ -122,4 +122,4 @@ if __name__ == '__main__':
     #     # drawSurface.line(landmark72[66:69], fill=255, width=1)
     #     # drawSurface.point(landmark72, fill=0)
     #     # im.save(file.replace('src', 'cartoon'))
-    #     im.show()
+    im.show()

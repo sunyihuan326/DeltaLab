@@ -211,4 +211,9 @@ def point2feature_lip(landmarks):
 
 
 def point2feature_chin(landmarks):
+    # points = landmarks[:13]
+    # x = [p[0] for p in points]
+    # y = [p[1] for p in points]
+    # wid = max(x) - min(x)
+    # hei = max(y) - min(y)
     return landmarks[:13] - landmarks[6]

@@ -26,14 +26,22 @@ accept_ans = [
 
 
 def preprocessing(trX, teX, trY, teY):
-    res = RandomUnderSampler(random_state=42)
-    trY = np.argmax(trY, 1)
-    teY = np.argmax(teY, 1)
-    trX, trY = res.fit_sample(trX, trY)
-    teX, teY = res.fit_sample(teX, teY)
+    # res1 = RandomOverSampler(ratio={0: 900, 1: 1000, 2: 800})
+    # trY = np.argmax(trY, 1)
+    # trX, trY = res1.fit_sample(trX, trY)
+    # trY = np.eye(3)[trY]
+    #
+    # # minority
+    # # majority
+    # # all
+    # # auto
+    # # {0: 26, 1: 100, 2: 100}
+    # res2 = RepeatedEditedNearestNeighbours(ratio="majority")
+    # teY = np.argmax(teY, 1)
+    # teX, teY = res2.fit_sample(teX, teY)
+    #
 
-    trY = np.eye(3)[trY]
-    teY = np.eye(3)[teY]
+    # teY = np.eye(3)[teY]
     return trX, teX, trY, teY
 
 
@@ -76,7 +84,7 @@ def forward_propagation(X, parameters, kp):
 
 
 def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
-          initial_learning_rate=0.5, minest_learning_rate=0.01):
+          initial_learning_rate=0.5, minest_learning_rate=0.001):
     ops.reset_default_graph()
 
     m, n_x = X_train.shape
@@ -98,11 +106,11 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
-                                               decay_steps=10, decay_rate=0.9)
+                                               decay_steps=1000, decay_rate=0.95)
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
     tf.summary.scalar('learning_rate', learning_rate)
 
-    optimizer = tf.train.AdadeltaOptimizer(learning_rate=learning_rate).minimize(cost)
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
 
     add_global = global_step.assign_add(1)
     merge_op = tf.summary.merge_all()
@@ -149,7 +157,7 @@ if __name__ == '__main__':
     if name == 'Dxq':
         file = 'F:/dataSets/MNIST/mnist_data_small.mat'
     elif name == 'Syh':
-        file = 'face_1_channel_sense'
+        file = 'face_1_channel_outline13.mat'
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
 
@@ -161,15 +169,15 @@ if __name__ == '__main__':
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
 
-    parameters, z1 = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.99, epochs=10000,
+    parameters, z1 = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=3000,
                            initial_learning_rate=0.5)
-    c = 0.
+    # c = 0.
     # for i in range(len(z1)):
     #     if z1[i] not in accept_ans[np.argmax(Y_test, 1)[i]]:
     #         c += 1. / len(z1)
     # print(c)
     fpr, tpr, thresholds = roc_curve(y_true=np.argmax(Y_test, 1), y_score=z1, pos_label=2)
-    print(fpr, tpr, thresholds)
+    # print(fpr, tpr, thresholds)
     print(confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=z1))
     print(accuracy_score(y_pred=z1, y_true=np.argmax(Y_test, 1)))
 

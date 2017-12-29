@@ -55,14 +55,12 @@ def main(typ):
     files = os.listdir(logdir)
     num = len(files)
     print('total num ------>', num)
-    data_X = np.zeros((num, 15 * 2))
+    data_X = np.zeros((num, 13 * 2))
     data_Y = np.zeros((num, 3))
     for i, file in enumerate(files):
         print('read_{}_data------->loading----->start'.format(file))
         points = scio.loadmat(logdir + '/' + file)['Points']
-        tt = list(points[:13])
-        tt.append(points[21])
-        tt.append(points[38])
+        tt = points[:13] - points[6]
 
         data_X[i, :] = np.array(tt).reshape(1, -1)
         label = np.argmax(scio.loadmat(label_dir + '/' + file.replace('Point', 'Label'))['Label'])
@@ -72,12 +70,12 @@ def main(typ):
             data_Y[i, :] = convert_to_one_hot(LabelToSense[label], 3)
         print('read_{}_data------->loading----->end'.format(file))
 
-    scio.savemat('../data/outline/face_1_channel_{}'.format(typ), {"X": data_X, "Y": data_Y})
+    scio.savemat('../data/outline/face_1_channel_vec{}'.format(typ), {"X": data_X, "Y": data_Y})
 
 
 if __name__ == '__main__':
-    main('sense')
+    main('outline')
     # pass
-    tt = scio.loadmat('../data/outline/face_1_channel_sense.mat')
-    print(tt['X'].shape)
-    print(tt['Y'].shape)
+    # tt = scio.loadmat('../data/outline/face_1_channel_sense.mat')
+    # print(tt['X'].shape)
+    # print(tt['Y'].shape)

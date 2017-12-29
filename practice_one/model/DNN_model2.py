@@ -7,10 +7,14 @@ Created on 2017/11/15.
 import tensorflow as tf
 from tensorflow.python.framework import ops
 from practice_one.model.utils import *
+from imblearn.over_sampling import RandomOverSampler,SMOTE
 
 
 def preprocessing(trX, teX, trY, teY):
-    return trX / 255., teX / 255., trY, teY
+    res = RandomOverSampler(ratio="all")
+    trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
+    trY = np.eye(3)[trY]
+    return trX, teX, trY, teY
 
 
 def initialize_parameters_deep(layer_dims):
@@ -83,7 +87,7 @@ def accuracy_cal(train_pre_val, train_cor_val):
 
 
 def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
-          initial_learning_rate=0.5, minest_learning_rate=0.01):
+          initial_learning_rate=0.5, minest_learning_rate=0.0001):
     ops.reset_default_graph()
 
     m, n_x = X_train.shape
@@ -145,11 +149,11 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                 minibatch_cost += temp_cost / num_minibatches
 
             if epoch % 50 == 0:
-                print("Cost|Acc after epoch %i: %f" % (epoch, temp_cost))
+                print("Cost|Acc after epoch %i: %f" % (epoch, minibatch_cost))
                 print("wcost", wwc)
             if epoch % 100 == 0:
-                train_pre_val = predict_op.eval({X: X_train, Y: Y_train, kp: 1})
-                train_cor_val = correct_op.eval({X: X_train, Y: Y_train, kp: 1})
+                train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
+                train_cor_val = correct_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
 
                 train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
 
@@ -162,8 +166,8 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
                 print("----------------------------------------------------------")
 
-        train_pre_val = predict_op.eval({X: X_train, Y: Y_train, kp: 1})
-        train_cor_val = correct_op.eval({X: X_train, Y: Y_train, kp: 1})
+        train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
+        train_cor_val = correct_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
         train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
 
         test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
@@ -172,7 +176,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
         print("Train Accuracy:", round(train_accuracy, 2), '||', round(train_real_accuracy, 2))
         print("Test Accuracy:", round(test_accuracy, 2), '||', round(test_real_accuracy, 2))
-        print("pred_ans", test_cor_val[list(np.random.permutation(20))])
+        print("pred_ans", test_pre_val[list(np.random.permutation(20))])
         print("----------------------------------------------------------")
         test_pre_val = list(test_pre_val)
         for i in range(3):
@@ -182,21 +186,21 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
 
 if __name__ == '__main__':
-    name = 'Syh'
+    name = 'Dxq'
     if name == 'Dxq':
-        file = '../../practice_two/load_data/face_1_channel_sense.mat'
+        file = 'face_1_channel_vecoutline.mat'
     elif name == 'Syh':
         file = 'face_1_channel_sense'
     # load data
-    X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
+    X_train_org, X_test_org, Y_train_org, Y_test_org = load_data(file, test_size=0.1)
     # preprocessing
-    X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
+    X_train, X_test, Y_train, Y_test = preprocessing(X_train_org, X_test_org, Y_train_org, Y_test_org)
     data_check(Y_train)
     data_check(Y_test)
 
-    layer_dims = [X_train.shape[1], 00, Y_train.shape[1]]
+    layer_dims = [X_train.shape[1], Y_train.shape[1]]
 
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=1000,
                        initial_learning_rate=0.5)
 
-    # scio.savemat('64DNN2_parameter', parameters)
+    scio.savemat('DNNvec_outline_parameter', parameters)
