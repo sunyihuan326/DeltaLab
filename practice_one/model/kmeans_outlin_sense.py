@@ -10,21 +10,21 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow.contrib.factorization import KMeans
+import matplotlib.pyplot as plt
 import os
 import scipy.io as scio
 from sklearn.model_selection import train_test_split
 from practice_one.model.utils import *
 from imblearn.over_sampling import ADASYN, SMOTE, RandomOverSampler
-from imblearn.under_sampling import RandomUnderSampler
-from sklearn.metrics import classification_report,hamming_loss
+from imblearn.under_sampling import RandomUnderSampler, RepeatedEditedNearestNeighbours
+from sklearn.metrics import classification_report, confusion_matrix, hamming_loss, roc_curve, roc_auc_score
 
 
 def preprocessing(trX, teX, trY, teY):
-    res = RandomOverSampler(random_state=42)
     trY = np.argmax(trY, 1)
     teY = np.argmax(teY, 1)
-    trX, trY = res.fit_sample(trX, trY)
-    teX, teY = res.fit_sample(teX, teY)
+    trX, trY = SMOTE(ratio='auto', random_state=42).fit_sample(trX, trY)
+    teX, teY = SMOTE(ratio='auto', random_state=42).fit_sample(teX, teY)
 
     trY = np.eye(3)[trY]
     teY = np.eye(3)[teY]
@@ -168,7 +168,18 @@ if __name__ == '__main__':
     print(round(100 * (c / len(cluster_sense)), 2), "%")
 
     print(classification_report(y_pred=cluster_sense, y_true=Y_test0))
+
+    print(confusion_matrix(y_pred=cluster_sense, y_true=Y_test0))
     print(hamming_loss(y_pred=cluster_sense, y_true=Y_test0))
+
+    fpr, tpr, thresholds = roc_curve(y_true=Y_test0, y_score=cluster_sense, pos_label=2)
+
+    print("fpr", fpr)
+    print("tpr", tpr)
+    # roc_auc = roc_auc_score(fpr, tpr,average="macro")
+    # 画图，只需要plt.plot(fpr,tpr),变量roc_auc只是记录auc的值，通过auc()函数能计算出来
+    plt.plot(fpr, tpr, 'r')
+    plt.show()
 
     # cluster_sense = pd.DataFrame(cluster_sense)
     # cluster_sense.to_csv('cluster_outlin.csv')

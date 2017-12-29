@@ -9,25 +9,51 @@ import pandas as pd
 import tensorflow as tf
 import numpy as np
 import scipy.io as sio
+from practice_one.model.utils import *
+from sklearn.metrics import classification_report, roc_curve, confusion_matrix, accuracy_score
 
-cluster_out = pd.read_csv('cluster_outlin.csv')
-cluster_sen = pd.read_csv('cluster_sense.csv')
+absolute_error = [
+    [2, 5, 6, 7, 8],
+    [6, 7, 8],
+    [0, 3, 6, 7, 8],
+    [2, 5, 8],
+    [0, 2, 6, 8],
+    [0, 3, 6],
+    [0, 1, 2, 5, 8],
+    [0, 1, 2],
+    [0, 1, 2, 3, 6]
+]
 
-cluster_labels = []
-cluster_out = cluster_out.values
-cluster_sen = cluster_sen.values
+dnn_over_out = sio.loadmat('dnn_res_outline13_undersample.mat')
+dnn_over_sen = sio.loadmat('dnn_res_sense_undersample.mat')
 
-for i in range(cluster_out.shape[0]):
-    c = 3 * cluster_out[i][1] + cluster_sen[i][1]
-    cluster_labels.append(c)
+dnn_res_out = dnn_over_out["ztr"]
+dnn_res_sense = dnn_over_sen["ztr"]
 
-Y_data = sio.loadmat('E:/deeplearning_Data/face_1_channel_XY')
-Y_train = Y_data['Y'][1200:, :]
+X_train, X_test, Y_train, Y_test = load_data('face_1_channel_XY_Points72.mat')
+print(X_train.shape, Y_train.shape, Y_test.shape)
+Y_train = np.argmax(Y_train, 1)
+dnn_res = []
+for i in range(dnn_res_out.shape[0]):
+    c = 3 * dnn_res_out[i] + dnn_res_sense[i]
+    dnn_res.append(c)
+dnn_res = list(dnn_res[0])
+for i in range(9):
+    print(str(i) + '的比例', round(100.0 * list(dnn_res).count(i) / len(dnn_res), 2), '%')
+print("^^^^^^^^^^^^")
+# print(dnn_res)
+for i in range(9):
+    print(str(i) + '的比例', round(100.0 * list(Y_train).count(i) / len(Y_train), 2), '%')
 
-Y = tf.placeholder(tf.float32, shape=[None, 9])
-correct_prediction = tf.equal(cluster_labels, tf.cast(tf.argmax(Y, 1), tf.int32))
-accuracy_op = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+print(len(dnn_res), len(Y_train))
+k = 0.
+ka = 0.
+for i in range(len(dnn_res)):
+    if dnn_res[i] in accept_ans[Y_train[i]]:
+        k += 1. / len(dnn_res)
+    if dnn_res[i] in absolute_error[Y_train[i]]:
+        ka += 1. / len(dnn_res)
+print(k)
+print(ka)
 
-with tf.Session() as sess:
-    correct_prediction, accuracy_op = sess.run([correct_prediction, accuracy_op], feed_dict={Y: Y_train})
-    print("Test Accuracy:", accuracy_op)
+# Y_test = np.argmax(Y_test, 1)
