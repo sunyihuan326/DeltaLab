@@ -65,8 +65,8 @@ def check_load_correct():
 
 
 if __name__ == '__main__':
-    # get_point_feature()
-    check_load_correct()
+    get_point_feature()
+    # check_load_correct()
 
     # file = '1001.jpg'
     # main(file)

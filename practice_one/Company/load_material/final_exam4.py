@@ -176,12 +176,12 @@ def one_dir(dir):
     dir_path = os.listdir(face_dir)
     for file in dir_path:
         file_path = face_dir + '/{}'.format(file)
-        if file.endswith('png') and not file.endswith('-res.png'):
-            if not os.path.exists(file_path.replace('.png', '-res.png')):
+        if file.endswith('jpg') and not file.endswith('-res.png'):
+            # if not os.path.exists(file_path.replace('.png', '-res.png')):
                 print(file, 'OK')
                 image, feature_index = main(file_path)
-                image.save(file_path.replace('.png', '-res.png'))
-                with open(file_path.replace('png', 'txt'), 'a') as text_file:
+                image.save(file_path.replace('.jpg', '-res.png'))
+                with open(file_path.replace('jpg', 'txt'), 'a') as text_file:
                     text_file.writelines('---------------------------------\n')
                     for org, item in feature_index.items():
                         text_file.writelines(org + ':' + str(item) + '\n')
