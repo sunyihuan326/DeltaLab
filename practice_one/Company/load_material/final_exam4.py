@@ -188,7 +188,7 @@ def one_dir(dir):
 
 if __name__ == "__main__":
     # final_eye_try()
-    face_dir = 'C:/Users/chk01/Desktop/real_test'
+    face_dir = 'C:/Users/chk01/Desktop/final_test'
     # face_dir = '5.jpg'
     # one_file(face_dir)
     one_dir(face_dir)
