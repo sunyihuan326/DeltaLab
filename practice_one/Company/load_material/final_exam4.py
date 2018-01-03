@@ -153,7 +153,6 @@ def main(file_path):
         'glasses': glasses,
         'chin': chin_id
     }
-
     image = merge_all(width, height, org_struct, feature_index)
     return image, feature_index
 

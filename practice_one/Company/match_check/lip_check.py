@@ -25,8 +25,8 @@ def compare_feature(feature):
 def get_point_feature():
     print('开始{}导入'.format(org))
     dir_path = os.listdir(root_dir + '/src/' + org)
-    m = len(dir_path)
-    n = 16
+    m = 20
+    n = 14
     X = np.zeros([m, n, 2])
     Y = np.zeros([m, 1])
     for i, sourceDir in enumerate(dir_path):
@@ -62,8 +62,8 @@ def check_load_correct():
 
 
 if __name__ == '__main__':
-    # get_point_feature()
+    get_point_feature()
     # check_load_correct()
 
-    file = '1003.jpg'
-    main(file)
+    # file = '1003.jpg'
+    # main(file)

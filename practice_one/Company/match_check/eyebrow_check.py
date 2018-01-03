@@ -11,7 +11,6 @@ org = 'left_eyebrow'
 root_dir = 'C:/Users/chk01/Desktop/Delta/image'
 save_dir = '../load_material/feature_matrix/' + org
 
-
 matrix = 'eyebr'
 org_data = scio.loadmat('../load_material/feature_matrix/{}'.format(matrix))
 org_ob = NearestNeighbor()
@@ -28,8 +27,8 @@ def get_point_feature():
     dir_path = os.listdir(root_dir + '/src/' + org)
     m = 25
     n = 8
-    X = np.zeros([m, n, 2])
-    Y = np.zeros([m, 1])
+    X = np.zeros([m, n, 2]) + 999
+    Y = np.zeros([m, 1]) + 999
     for i, sourceDir in enumerate(dir_path):
         _id = int(sourceDir.split('.')[0]) - 1
         full_path = root_dir + '/src/' + org + '/' + sourceDir
@@ -39,8 +38,8 @@ def get_point_feature():
         X[_id] = feature
         Y[_id] = _id + 1
         # p2f(landmark72[39:47])
-        print('load--->{}---图{}'.format(org, _id))
-    scio.savemat(save_dir, {"X": X, "Y": Y})
+        print('load--->{}---图{}'.format(org, _id + 1))
+    scio.savemat(save_dir.replace(org, matrix), {"X": X, "Y": Y})
     print('完成{}导入'.format(org))
 
 
@@ -65,8 +64,8 @@ def check_load_correct():
 
 
 if __name__ == '__main__':
-    # get_point_feature()
+    get_point_feature()
     # check_load_correct()
 
-    file = '1003.jpg'
-    main(file)
+    # file = '1003.jpg'
+    # main(file)

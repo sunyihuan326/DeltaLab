@@ -30,8 +30,9 @@ class NearestNeighbor(object):
         self.trY = Y
 
     def predict(self, X):
-        distinces = np.linalg.norm(self.trX - X, axis=(1, 2))
-        min_index = np.argmin(distinces)
+        # distinces = np.linalg.norm(self.trX - X, axis=(1, 2))
+        distinces = np.sum(np.linalg.norm(self.trX - X, axis=1), axis=1)
+        min_index = np.argmin(np.squeeze(distinces))
         Ypred = np.squeeze(self.trY[min_index])
         return int(Ypred)
 
@@ -154,18 +155,20 @@ def point2feature_ebr(landmarks):
     center = (points[0] + points[4]) / 2
     feature = (points - center) / np.array([wid, hei])
     # feature = (points - center)
+    # feature = (points[:-1] - points[1:]) / np.array([wid, hei])
     return feature
 
 
 def point2feature_eye(landmarks):
-    points = landmarks[13:22]
+    points = landmarks[13:21]
     x = [p[0] for p in points]
     y = [p[1] for p in points]
     wid = max(x) - min(x)
     hei = max(y) - min(y)
-    center = points[-1]
-    feature = (points - center) / np.array([wid, hei])
-    # feature = (points - center)
+    # center = [(max(x) + min(x)) / 2, (max(y) + min(y)) / 2]
+    center = landmarks[17]
+    # feature = (points - center) / np.array([wid, hei])
+    feature = (points[:-1] - points[1:])
     return feature
 
 
@@ -182,38 +185,43 @@ def point2feature_nose(landmarks):
 
 
 def point2feature_lip(landmarks):
-    point1 = [landmarks[58], landmarks[59], landmarks[60], landmarks[61], landmarks[62],
-              landmarks[68], landmarks[67], landmarks[66]]
+    point1 = np.array([landmarks[58], landmarks[59], landmarks[60], landmarks[61], landmarks[62],
+                       landmarks[68], landmarks[67], landmarks[66]])
     x1 = [p[0] for p in point1]
     y1 = [p[1] for p in point1]
     wid1 = max(x1) - min(x1)
     hei1 = max(y1) - min(y1)
 
     center1 = landmarks[67]
-    feature1 = (point1 - center1) / np.array([wid1, hei1])
-    # feature1 = (point1 - center1)
+    # feature1 = (point1 - center1) / np.array([wid1, hei1])
+    feature1 = (point1[:-1] - point1[1:]) / np.array([wid1, hei1])
 
-    point2 = [landmarks[58], landmarks[65], landmarks[64], landmarks[63], landmarks[62],
-              landmarks[69], landmarks[70], landmarks[71]]
+    point2 = np.array([landmarks[58], landmarks[65], landmarks[64], landmarks[63], landmarks[62],
+                       landmarks[69], landmarks[70], landmarks[71]])
     x2 = [p[0] for p in point2]
     y2 = [p[1] for p in point2]
     wid2 = max(x2) - min(x2)
     hei2 = max(y2) - min(y2)
 
     center2 = landmarks[70]
-    feature2 = (point2 - center2) / np.array([wid2, hei2])
-    # feature2 = (point2 - center2)
-    feature = np.zeros([16, 2])
-    feature[:8, :] = feature1
-    feature[8:, :] = feature2
+    # feature2 = (point2 - center2) / np.array([wid2, hei2])
+    feature2 = (point2[:-1] - point2[1:]) / np.array([wid2, hei2])
+
+    feature = np.zeros([14, 2])
+    feature[:7, :] = feature1
+    feature[7:14, :] = feature2
+
+    # feature[14] = [wid1, hei1]
+    # feature[15] = [wid2, hei2]
 
     return feature
 
 
 def point2feature_chin(landmarks):
-    # points = landmarks[:13]
-    # x = [p[0] for p in points]
-    # y = [p[1] for p in points]
-    # wid = max(x) - min(x)
-    # hei = max(y) - min(y)
-    return landmarks[:13] - landmarks[6]
+    points = landmarks[:13]
+    x = [p[0] for p in points]
+    y = [p[1] for p in points]
+    wid = max(x) - min(x)
+    hei = max(y) - min(y)
+    # landmarks[:13] - landmarks[6]
+    return (points - points[6]) / np.array([wid, hei])
