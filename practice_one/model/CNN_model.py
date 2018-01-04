@@ -12,6 +12,18 @@ from tensorflow.python.framework import ops
 
 from practice_one.model.utils import *
 
+absolute_error = [
+    [2, 5, 6, 7, 8],
+    [6, 7, 8],
+    [0, 3, 6, 7, 8],
+    [2, 5, 8],
+    [0, 2, 6, 8],
+    [0, 3, 6],
+    [0, 1, 2, 5, 8],
+    [0, 1, 2],
+    [0, 1, 2, 3, 6]
+]
+
 
 def preprocessing(trX, teX, trY, teY):
     return trX / 255., teX / 255., trY, teY
@@ -145,36 +157,69 @@ def model(X_train, Y_train, X_test, Y_test, keep_prob=1.0, epochs=2000, minibatc
                 summary_write.add_summary(summary_merge, epoch)
                 print("Cost after epoch %i: %f" % (epoch, loss))
 
-            print("Step " + str(epoch) + ", Minibatch Loss= " + \
-                  "{:.4f}".format(minibatch_cost) + ", Training Accuracy= " + \
-                  "{:.3f}".format(acc))
+                print("Step " + str(epoch) + ", Minibatch Loss= " + \
+                      "{:.4f}".format(minibatch_cost) + ", Training Accuracy= " + \
+                      "{:.3f}".format(acc))
 
         print("Optimization Finished!")
 
-        train_accuracy = accuracy.eval({X: X_train.T, Y: Y_train.T, kp: 1})
-        test_accuracy = accuracy.eval({X: X_test.T, Y: Y_test.T, kp: 1})
+        train_accuracy = accuracy.eval({X: X_train, Y: Y_train, kp: 1})
+        test_accuracy = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
+        prediction = prediction.eval({X: X_test, Y: Y_test, kp: 1})
         print('train_accuracy', train_accuracy)
         print('test_accuracy', test_accuracy)
-    return par
+    return par, prediction
 
 
 if __name__ == '__main__':
-    name = 'Dxq'
+    name = 'Syh'
     if name == 'Dxq':
         file = 'F:/dataSets/FaceChannel1/face_1_channel_XY64'
     elif name == 'Syh':
-        file = 'E:/deeplearning_Data/face_1_channel_XY64'
+        file = 'face_1_channel_XY64'
 
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file)
 
     # preprocess
     X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
-    print(X_train.shape, Y_train.shape)
+
+    # test data distribution for 9 classes
+    for i in range(9):
+        print(str(i) + "比例", round(100 * list(np.argmax(Y_test, 1)).count(i) / len(list(np.argmax(Y_test, 1))), 2), "%")
 
     # check the distribution
     # data_check(Y_train)
     # data_check(Y_test)
 
-    parameters = model(X_train, Y_train, X_test, Y_test, keep_prob=1, epochs=100, initial_learning_rate=0.5)
-    scio.savemat(file + '64CNN_parameter', parameters)
+    parameters, log = model(X_train, Y_train, X_test, Y_test, keep_prob=1, epochs=200, initial_learning_rate=0.5)
+    # scio.savemat(file + '64CNN_parameter', parameters)
+    log = np.argmax(log, 1)
+
+    # predict data distribution for 9 classes
+    for i in range(9):
+        print(str(i) + "比例", round(100 * list(log).count(i) / len(list(log)), 2), "%")
+
+    # accept accuracy
+    c0 = 0.
+    c1 = 0.
+    for i in range(len(list(log))):
+        if log[i] in accept_ans[np.argmax(Y_test, 1)[i]]:
+            c0 += 1. / len(list(log))
+        if log[i] not in absolute_error[np.argmax(Y_test, 1)[i]]:
+            c1 += 1. / len(list(log))
+    print("accept_ans", c0)
+    print("absolute_error", c1)
+
+    # epoch=200
+    # 0比例 0.0 %
+    # 1比例 0.0 %
+    # 2比例 1.06 %
+    # 3比例 0.27 %
+    # 4比例 2.39 %
+    # 5比例 95.74 %
+    # 6比例 0.0 %
+    # 7比例 0.0 %
+    # 8比例 0.53 %
+    # accept: 0.7021276595744664
+    # absolute_accept: 0.877659574468081

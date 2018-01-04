@@ -1,9 +1,10 @@
-# coding:utf-8
+# coding:utf-8 
 '''
-Created on 2017/11/15.
+created on 
 
-@author: chk01
+@author:sunyihuan
 '''
+
 import tensorflow as tf
 from tensorflow.python.framework import ops
 
@@ -12,17 +13,6 @@ from imblearn.over_sampling import ADASYN, SMOTE, RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler, RepeatedEditedNearestNeighbours
 from sklearn.metrics import classification_report, roc_curve, confusion_matrix, accuracy_score
 
-accept_ans = [
-    [0, 1, 3],
-    [1, 0, 2, 4],
-    [2, 1, 5],
-    [3, 0, 4, 6],
-    [4, 1, 3, 5, 7],
-    [5, 2, 4, 8],
-    [6, 3, 7],
-    [7, 6, 4, 8],
-    [8, 7, 5],
-]
 absolute_error = [
     [2, 5, 6, 7, 8],
     [6, 7, 8],
@@ -37,12 +27,8 @@ absolute_error = [
 
 
 def preprocessing(trX, teX, trY, teY):
-    res = SMOTE(ratio="auto", random_state=42)
-    trY = np.argmax(trY, 1)
-
-    trX, trY = res.fit_sample(trX, trY)
-    # teX, teY = res.fit_sample(teX, teY)
-    # teY = np.argmax(teY, 1)
+    res = RandomOverSampler(ratio="all")
+    trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
     trY = np.eye(3)[trY]
     return trX, teX, trY, teY
 
@@ -157,11 +143,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
 
 if __name__ == '__main__':
-    name = 'Syh'
-    if name == 'Dxq':
-        file = 'F:/dataSets/MNIST/mnist_data_small.mat'
-    elif name == 'Syh':
-        file = 'face_1_channel_XY64_sense'
+    file = 'sense64x64.mat'
     # load data
     X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
 
@@ -175,7 +157,7 @@ if __name__ == '__main__':
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
 
-    parameters, z1 = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.9, epochs=400,
+    parameters, z1 = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.9, epochs=1000,
                            initial_learning_rate=0.5)
 
     # caculate accept accuracy
@@ -183,12 +165,6 @@ if __name__ == '__main__':
     for i in range(len(z1)):
         if abs(z1[i] - np.argmax(Y_test, 1)[i]) > 1:
             c += 1 / len(z1)
-    # c1 = 0.
-    # for i in range(len(z1)):
-    #     if z1[i] in accept_ans[np.argmax(Y_test, 1)[i]]:
-    #         c += 1. / len(z1)
-    #     if z1[i] not in absolute_error[np.argmax(Y_test, 1)[i]]:
-    #         c1 += 1. / len(z1)
     print("accept error", c)
 
     # roc curve
@@ -198,4 +174,4 @@ if __name__ == '__main__':
 
     # Classification index
     print(classification_report(y_pred=z1, y_true=np.argmax(Y_test, 1)))
-    # scio.savemat(file + 'DNN_parameter', parameters)
+    scio.savemat(file + 'DNN_parameter', parameters)

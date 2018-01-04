@@ -8,7 +8,7 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 
-plt.rcParams['figure.figsize'] = (5.0, 4.0) # set default size of plots
+plt.rcParams['figure.figsize'] = (5.0, 4.0)  # set default size of plots
 plt.rcParams['image.interpolation'] = 'nearest'
 plt.rcParams['image.cmap'] = 'gray'
 np.random.seed(1)
@@ -30,7 +30,7 @@ def zero_pad(X, pad):
     """
 
     ### START CODE HERE ### (≈ 1 line)
-    X_pad = np.pad(X,((0,0),(pad,pad),(pad,pad),(0,0)),'constant', constant_values = 0)
+    X_pad = np.pad(X, ((0, 0), (pad, pad), (pad, pad), (0, 0)), 'constant', constant_values=0)
     ### END CODE HERE ###
 
     return X_pad
@@ -75,6 +75,7 @@ def conv_single_step(a_slice_prev, W, b):
     ### END CODE HERE ###
 
     return Z
+
 
 # 测试conv_single_step函数
 # np.random.seed(1)
@@ -151,6 +152,7 @@ def conv_forward(A_prev, W, b, hparameters):
 
     return Z, cache
 
+
 # 测试conv_forward函数
 # np.random.seed(1)
 # A_prev = np.random.randn(10,4,4,3)
@@ -224,6 +226,7 @@ def pool_forward(A_prev, hparameters, mode="max"):
     assert (A.shape == (m, n_H, n_W, n_C))
 
     return A, cache
+
 
 # 测试pool_forward函数
 # np.random.seed(1)
@@ -313,6 +316,7 @@ def conv_backward(dZ, cache):
     assert (dA_prev.shape == (m, n_H_prev, n_W_prev, n_C_prev))
 
     return dA_prev, dW, db
+
 
 # 测试 conv_backward函数
 # np.random.seed(1)
