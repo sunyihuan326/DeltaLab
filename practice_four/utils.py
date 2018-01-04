@@ -93,7 +93,7 @@ def minibatches(X, Y, batch_size=64, shuffle=True):
 
 def accuracy_cal(res_matrix, typ):
     num = np.sum(res_matrix)
-    print(str(typ).upper())
+    print('----------------', str(typ).upper(), '------------------')
     print(0, '准确率 {}%'.format(round(100 * res_matrix[0, 0] / np.sum(res_matrix[:, 0]), 2)),
           '| 召回率 {}%'.format(round(100 * res_matrix[0, 0] / np.sum(res_matrix[0, :]), 2)),
           '| 错误率 {}%'.format(round(100 * res_matrix[0, 2] / np.sum(res_matrix[0, :]), 2)),
@@ -110,6 +110,7 @@ def accuracy_cal(res_matrix, typ):
           '| 识别为2率 {}%'.format(round(100 * res_matrix[1, 2] / np.sum(res_matrix[1, :])), 2),
           '| 出现率 {}%'.format(round(100 * np.sum(res_matrix[:, 1]) / num, 2)))
 
+    print('准确率 {}%'.format(round(100 * (res_matrix[0, 0] + res_matrix[1, 1] + res_matrix[2, 2]) / num, 2)))
     print('单维度可接受率 {}%'.format(
         round(100 - 100 * res_matrix[0, 2] / num - 100 * res_matrix[2, 0] / num, 2)))
     print('单维度最优可接受率 {}%'.format(
