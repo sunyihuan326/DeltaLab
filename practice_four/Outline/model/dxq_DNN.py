@@ -8,9 +8,12 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 from practice_four.utils import *
 from imblearn.over_sampling import RandomOverSampler, SMOTE
+from sklearn.metrics import confusion_matrix
 
 
 def preprocessing(trX, teX, trY, teY):
+    trX = trX / 255.
+    teX = teX / 255.
     # res = RandomOverSampler(ratio="all")
     # trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
     # trY = np.eye(3)[trY]
@@ -54,36 +57,6 @@ def forward_propagation(X, parameters, kp):
     A = tf.nn.dropout(A, kp)
     ZL = tf.add(tf.matmul(A, tf.transpose(parameters['W' + str(L)])), parameters['b' + str(L)])
     return ZL
-
-
-def accuracy_cal(train_pre_val, train_cor_val):
-    accept_ans = [
-        [0, 1, 3],
-        [1, 0, 2, 4],
-        [2, 1, 5],
-        [3, 0, 4, 6],
-        [4, 1, 3, 5, 7],
-        [5, 2, 4, 8],
-        [6, 3, 7],
-        [7, 6, 4, 8],
-        [8, 7, 5],
-    ]
-    error_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, len(train_cor_val), 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    correct = 0
-    real_correct = 0
-    pre_real = np.zeros([len(train_cor_val), 2])
-    for i in range(len(train_cor_val)):
-        pre_real[i, :] = [train_pre_val[i], train_cor_val[i]]
-        error_count[train_cor_val[i] + 10] += 1
-        if train_pre_val[i] in accept_ans[train_cor_val[i]]:
-            correct += 1
-        else:
-            error_count[train_cor_val[i]] += 1
-        if train_pre_val[i] == train_cor_val[i]:
-            real_correct += 1
-    scio.savemat('result/res', {'result': pre_real})
-    scio.savemat('result/error', {'result': error_count})
-    return correct / len(train_cor_val), real_correct / len(train_cor_val)
 
 
 def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
@@ -150,54 +123,35 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                 print("wcost", wwc)
             if epoch % 100 == 0:
                 train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
-                train_cor_val = correct_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
+                train_res_matrix = confusion_matrix(y_true=np.argmax(Y_train_org, 1), y_pred=train_pre_val)
+                accuracy_cal(train_res_matrix, 'train')
+                if epoch % 200 == 0:
+                    test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
+                    test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
+                    accuracy_cal(test_res_matrix, 'test')
 
-                train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
-
-                test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
-                test_cor_val = correct_op.eval({X: X_test, Y: Y_test, kp: 1})
-                test_accuracy, test_real_accuracy = accuracy_cal(test_pre_val, test_cor_val)
-
-                print("Train Accuracy:", train_accuracy, train_real_accuracy)
-                print("Test Accuracy:", test_accuracy, test_real_accuracy)
-
-                print("----------------------------------------------------------")
-                if epoch % 500 == 0:
-                    test_pre_val = list(test_pre_val)
-                    for i in range(3):
-                        print(str(i) + "比例", round(100 * test_pre_val.count(i) / len(test_pre_val), 2), "%")
-
+        print('↓↓↓↓↓↓↓↓↓↓↓--------结果------------↓↓↓↓↓↓↓↓↓↓↓↓↓↓')
         train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
-        train_cor_val = correct_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
-        train_accuracy, train_real_accuracy = accuracy_cal(train_pre_val, train_cor_val)
-
+        train_res_matrix = confusion_matrix(y_true=np.argmax(Y_train_org, 1), y_pred=train_pre_val)
+        accuracy_cal(train_res_matrix, 'train')
         test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
-        test_cor_val = correct_op.eval({X: X_test, Y: Y_test, kp: 1})
-        test_accuracy, test_real_accuracy = accuracy_cal(test_pre_val, test_cor_val)
-
-        print("Train Accuracy:", round(train_accuracy, 2), '||', round(train_real_accuracy, 2))
-        print("Test Accuracy:", round(test_accuracy, 2), '||', round(test_real_accuracy, 2))
-        print("pred_ans", test_pre_val[list(np.random.permutation(20))])
-        print("----------------------------------------------------------")
-        test_pre_val = list(test_pre_val)
-        for i in range(3):
-            print(str(i) + "比例", round(100 * test_pre_val.count(i) / len(test_pre_val), 2), "%")
-
+        test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
+        accuracy_cal(test_res_matrix, 'test')
     return par
 
 
 if __name__ == '__main__':
-    file = '../data/outline13.mat'
+    file = '../data/outline64x64.mat'
     # load data
-    X_train_org, X_test_org, Y_train_org, Y_test_org = load_data(file, test_size=0.1)
+    X_train_org, X_test_org, Y_train_org, Y_test_org = load_data(file, test_size=0.2)
     # preprocessing
     X_train, X_test, Y_train, Y_test = preprocessing(X_train_org, X_test_org, Y_train_org, Y_test_org)
     data_check(Y_train)
     data_check(Y_test)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 3500
+    epochs = 200
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=epochs,
                        initial_learning_rate=0.5)
 
-    scio.savemat('parameter/outline13_parameter-{}'.format(epochs), parameters)
+    scio.savemat('parameter/outline64x64_parameter-{}'.format(epochs), parameters)
