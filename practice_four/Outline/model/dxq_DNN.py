@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 from practice_four.utils import *
 from imblearn.over_sampling import RandomOverSampler, SMOTE
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 
 
 def preprocessing(trX, teX, trY, teY):
@@ -137,6 +137,8 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
         test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
         test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
         accuracy_cal(test_res_matrix, 'test')
+
+        print(classification_report(y_pred=test_pre_val, y_true=np.argmax(Y_test, 1)))
     return par
 
 
