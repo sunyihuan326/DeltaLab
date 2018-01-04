@@ -125,6 +125,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                 train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
                 train_res_matrix = confusion_matrix(y_true=np.argmax(Y_train_org, 1), y_pred=train_pre_val)
                 accuracy_cal(train_res_matrix, 'train')
+
                 if epoch % 200 == 0:
                     test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
                     test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
