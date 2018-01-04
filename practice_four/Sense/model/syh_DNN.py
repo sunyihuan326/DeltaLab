@@ -54,7 +54,7 @@ def forward_propagation(X, parameters, kp):
         b = parameters['b' + str(l)]
         A = tf.nn.relu(tf.add(tf.matmul(A_prev, tf.transpose(W)), b))
         A = tf.layers.batch_normalization(A, axis=-1)
-        A = tf.nn.dropout(A, kp)
+    A = tf.nn.dropout(A, kp)
     ZL = tf.add(tf.matmul(A, tf.transpose(parameters['W' + str(L)])), parameters['b' + str(L)])
     return ZL
 
@@ -80,7 +80,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
     wcost = tf.contrib.layers.l2_regularizer(.1)(parameters['W1'])
 
-    cost = cost + wcost
+    # cost = cost + wcost
     # cost = tf.reduce_mean(tf.square(ZL - Y))
     tf.summary.scalar(name='cost', tensor=cost)
 
