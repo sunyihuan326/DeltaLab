@@ -12,11 +12,13 @@ from sklearn.metrics import confusion_matrix, classification_report
 
 
 def preprocessing(trX, teX, trY, teY):
+    res = SMOTE(ratio="auto")
+    trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
+    trY = np.eye(3)[trY]
+
     trX = trX / 255.
     teX = teX / 255.
-    # res = RandomOverSampler(ratio="all")
-    # trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
-    # trY = np.eye(3)[trY]
+
     return trX, teX, trY, teY
 
 
@@ -120,6 +122,10 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
             if epoch % 50 == 0:
                 print("Cost|Acc after epoch %i: %f" % (epoch, minibatch_cost))
+                train_pre_val = accuracy.eval({X: X_train_org, Y: Y_train_org, kp: 1})
+                test_pre_val = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
+                print("Train Accuracy:", train_pre_val)
+                print("Test Accuracy:", test_pre_val)
                 # print("wcost", wwc)
             if epoch % 200 == 10:
                 test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
