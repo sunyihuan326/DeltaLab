@@ -8,29 +8,17 @@ created on
 import tensorflow as tf
 from tensorflow.python.framework import ops
 
-from practice_one.model.utils import *
+from practice_four.utils import *
 from imblearn.over_sampling import ADASYN, SMOTE, RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler, RepeatedEditedNearestNeighbours
 from sklearn.metrics import classification_report, roc_curve, confusion_matrix, accuracy_score
 
-absolute_error = [
-    [2, 5, 6, 7, 8],
-    [6, 7, 8],
-    [0, 3, 6, 7, 8],
-    [2, 5, 8],
-    [0, 2, 6, 8],
-    [0, 3, 6],
-    [0, 1, 2, 5, 8],
-    [0, 1, 2],
-    [0, 1, 2, 3, 6]
-]
-
 
 def preprocessing(trX, teX, trY, teY):
-    res = RandomOverSampler(ratio="all")
+    res = SMOTE(ratio="auto")
     trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
     trY = np.eye(3)[trY]
-    return trX, teX, trY, teY
+    return trX / 255., teX / 255., trY, teY
 
 
 def initialize_parameters_deep(layer_dims):
@@ -72,7 +60,7 @@ def forward_propagation(X, parameters, kp):
 
 
 def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
-          initial_learning_rate=0.5, minest_learning_rate=0.001):
+          initial_learning_rate=0.5, minest_learning_rate=0.0001):
     ops.reset_default_graph()
 
     m, n_x = X_train.shape
@@ -84,94 +72,90 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     X, Y = create_placeholders(n_x, n_y)
     parameters = initialize_parameters_deep(layer_dims)
 
-    ZL = forward_propagation(X, parameters, kp)
-    # ss = tf.where(tf.greater(abs(Y - ZL), 1), abs(Y - ZL) * 10, abs(Y - ZL) * 1)
-    # cost = tf.reduce_sum(ss)
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
-    tf.summary.scalar('cost', cost)
-    # cost = compute_cost(Z1, Y) + tf.contrib.layers.l1_regularizer(.2)(parameters['W1'])
-    # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
+    ZL = forward_propagation(X, parameters, keep_prob)
 
+    predict_op = tf.argmax(ZL, 1)
+    correct_op = tf.argmax(Y, 1)
+
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
+    wcost = tf.contrib.layers.l2_regularizer(.1)(parameters['W1'])
+
+    cost = cost + wcost
+    # cost = tf.reduce_mean(tf.square(ZL - Y))
+    tf.summary.scalar(name='cost', tensor=cost)
+
+    correct_pred = tf.equal(predict_op, correct_op)
+    accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+
+    tf.summary.scalar(name='accuracy', tensor=accuracy)
+    tf.summary.histogram(name='predict_op', values=predict_op)
+    tf.summary.histogram(name='correct_op', values=correct_op)
+
+    # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
-                                               decay_steps=1000, decay_rate=0.95)
+                                               decay_steps=10, decay_rate=0.9)
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
-    tf.summary.scalar('learning_rate', learning_rate)
-
-    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
-
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+    # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
     add_global = global_step.assign_add(1)
-    merge_op = tf.summary.merge_all()
-
-    correct_pred = tf.equal(tf.argmax(ZL, 1), tf.argmax(Y, 1))
-    accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
-    tf.summary.scalar('accuracy', accuracy)
-
     init = tf.global_variables_initializer()
+
+    merged_summary_op = tf.summary.merge_all()
 
     with tf.Session() as sess:
         sess.run(init)
-        writer = tf.summary.FileWriter(logdir='logdir/MNIST/DNN')
+
+        summary = tf.summary.FileWriter(logdir='logdir', graph=sess.graph)
         for epoch in range(epochs):
+
             minibatch_cost = 0.
             num_minibatches = int(m / minibatch_size)
-            minibatches = random_mini_batches(X_train, Y_train, minibatch_size)
 
-            for minibatch in minibatches:
-                (minibatch_X, minibatch_Y) = minibatch
-                summary, zl, par, _, temp_cost, _, acc = sess.run(
-                    [merge_op, ZL, parameters, optimizer, cost, add_global, accuracy],
+            for minibatch_X, minibatch_Y in minibatches(X_train, Y_train, minibatch_size, shuffle=True):
+                wwc, acc, summary_op, zl, par, _, temp_cost, _ = sess.run(
+                    [wcost, accuracy, merged_summary_op, ZL, parameters, optimizer, cost, add_global],
                     feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
+                summary.add_summary(summary_op, epoch)
                 minibatch_cost += temp_cost / num_minibatches
-                writer.add_summary(summary)
-            if epoch % 200 == 0:
-                print("Cost|Acc after epoch %i: %f | %f" % (epoch, temp_cost, acc))
 
-        train_accuracy = accuracy.eval({X: X_train, Y: Y_train, kp: 1})
-        test_accuracy = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
-        ZL = ZL.eval({X: X_test, Y: Y_test, kp: 1})
-        ZY = list(np.argmax(ZL, 1))
+            if epoch % 100 == 0:
+                print("Cost|Acc after epoch %i: %f" % (epoch, minibatch_cost))
+                print("wcost", wwc)
 
-        # predict data distribution for 3 classes
+                train_pre_val = accuracy.eval({X: X_train_org, Y: Y_train_org, kp: 1})
+                test_pre_val = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
+                print("Train Accuracy:", train_pre_val)
+                print("Test Accuracy:", test_pre_val)
+
+        print('↓↓↓↓↓↓↓↓↓↓↓--------结果------------↓↓↓↓↓↓↓↓↓↓↓↓↓↓')
+        train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
+        train_res_matrix = confusion_matrix(y_true=np.argmax(Y_train_org, 1), y_pred=train_pre_val)
+        accuracy_cal(train_res_matrix, 'train')
+        test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
+        test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
+        accuracy_cal(test_res_matrix, 'test')
+
         for i in range(3):
-            print(str(i) + "比例", round(100 * ZY.count(i) / len(ZY), 2), "%")
+            print(str(i) + "比例", round(100 * list(test_pre_val).count(i) / len(list(test_pre_val)), 2), "%")
 
-        print("Train Accuracy:", train_accuracy)
-        print("Test Accuracy:", test_accuracy)
-
-    return par, ZY
+    return par
 
 
 if __name__ == '__main__':
-    file = 'sense64x64.mat'
+    file = '/Users/sunyihuan/PycharmProjects/DeltaLab/practice_four/Sense/data/sense64x64.mat'
     # load data
-    X_train, X_test, Y_train, Y_test = load_data(file, test_size=0.2)
-
+    X_train_org, X_test_org, Y_train_org, Y_test_org = load_data(file, test_size=0.2)
     # preprocessing
-    X_train, X_test, Y_train, Y_test = preprocessing(X_train, X_test, Y_train, Y_test)
+    X_train, X_test, Y_train, Y_test = preprocessing(X_train_org, X_test_org, Y_train_org, Y_test_org)
 
-    # data distribution
-    print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
+    layer_dims = [X_train.shape[1], Y_train.shape[1]]
+    epochs = 4000
+
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.9, epochs=epochs,
+                       initial_learning_rate=0.5)
+
     data_check(Y_train)
     data_check(Y_test)
 
-    layer_dims = [X_train.shape[1], Y_train.shape[1]]
-
-    parameters, z1 = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.9, epochs=1000,
-                           initial_learning_rate=0.5)
-
-    # caculate accept accuracy
-    c = 0.
-    for i in range(len(z1)):
-        if abs(z1[i] - np.argmax(Y_test, 1)[i]) > 1:
-            c += 1 / len(z1)
-    print("accept error", c)
-
-    # roc curve
-    fpr, tpr, thresholds = roc_curve(y_true=np.argmax(Y_test, 1), y_score=z1, pos_label=2)
-    # confusion matrix
-    print(confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=z1))
-
-    # Classification index
-    print(classification_report(y_pred=z1, y_true=np.argmax(Y_test, 1)))
-    scio.savemat(file + 'DNN_parameter', parameters)
+    scio.savemat('parameters/sense64_parameter-{}'.format(epochs), parameters)
