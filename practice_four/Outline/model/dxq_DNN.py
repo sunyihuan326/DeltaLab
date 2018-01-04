@@ -120,16 +120,17 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
             if epoch % 50 == 0:
                 print("Cost|Acc after epoch %i: %f" % (epoch, minibatch_cost))
-                print("wcost", wwc)
-            if epoch % 100 == 0:
+                # print("wcost", wwc)
+            if epoch % 200 == 10:
+                test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
+                test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
+                accuracy_cal(test_res_matrix, 'test')
+            if epoch % 500 == 10:
                 train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
                 train_res_matrix = confusion_matrix(y_true=np.argmax(Y_train_org, 1), y_pred=train_pre_val)
                 accuracy_cal(train_res_matrix, 'train')
 
-                if epoch % 200 == 0:
-                    test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
-                    test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
-                    accuracy_cal(test_res_matrix, 'test')
+
 
         print('↓↓↓↓↓↓↓↓↓↓↓--------结果------------↓↓↓↓↓↓↓↓↓↓↓↓↓↓')
         train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
@@ -139,7 +140,8 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
         test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
         accuracy_cal(test_res_matrix, 'test')
 
-        print(classification_report(y_pred=test_pre_val, y_true=np.argmax(Y_test, 1)))
+        print('--------------Test-----------\n', classification_report(y_pred=test_pre_val, y_true=np.argmax(Y_test, 1)))
+        print('--------------Train-----------\n', classification_report(y_pred=train_pre_val, y_true=np.argmax(Y_train_org, 1)))
     return par
 
 
@@ -153,8 +155,8 @@ if __name__ == '__main__':
     data_check(Y_test)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 200
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=epochs,
+    epochs = 2500
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.99, epochs=epochs,
                        initial_learning_rate=0.5)
 
     scio.savemat('parameter/outline64x64_parameter-{}'.format(epochs), parameters)
