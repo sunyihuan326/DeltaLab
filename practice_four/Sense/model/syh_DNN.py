@@ -78,7 +78,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     correct_op = tf.argmax(Y, 1)
 
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
-    wcost = tf.contrib.layers.l2_regularizer(.1)(parameters['W1'])
+    wcost = tf.contrib.layers.l2_regularizer(.001)(parameters['W1'])
 
     # cost = cost + wcost
     # cost = tf.reduce_mean(tf.square(ZL - Y))
@@ -106,7 +106,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     with tf.Session() as sess:
         sess.run(init)
 
-        summary = tf.summary.FileWriter(logdir='logdir', graph=sess.graph)
+        #summary = tf.summary.FileWriter(logdir='logdir', graph=sess.graph)
         for epoch in range(epochs):
 
             minibatch_cost = 0.
@@ -116,7 +116,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                 wwc, acc, summary_op, zl, par, _, temp_cost, _ = sess.run(
                     [wcost, accuracy, merged_summary_op, ZL, parameters, optimizer, cost, add_global],
                     feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
-                summary.add_summary(summary_op, epoch)
+                #summary.add_summary(summary_op, epoch)
                 minibatch_cost += temp_cost / num_minibatches
 
             if epoch % 100 == 0:
@@ -150,12 +150,12 @@ if __name__ == '__main__':
     X_train, X_test, Y_train, Y_test = preprocessing(X_train_org, X_test_org, Y_train_org, Y_test_org)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 4000
+    epochs = 3500
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.9, epochs=epochs,
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.95, epochs=epochs,
                        initial_learning_rate=0.5)
 
     data_check(Y_train)
     data_check(Y_test)
 
-    scio.savemat('parameters/sense64_parameter-{}'.format(epochs), parameters)
+    scio.savemat('parameter/sense64_parameter-{}'.format(epochs), parameters)
