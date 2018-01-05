@@ -150,7 +150,7 @@ if __name__ == '__main__':
     X_train, X_test, Y_train, Y_test = preprocessing(X_train_org, X_test_org, Y_train_org, Y_test_org)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 3500
+    epochs = 2000
 
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.95, epochs=epochs,
                        initial_learning_rate=0.5)
