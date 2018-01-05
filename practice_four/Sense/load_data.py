@@ -176,18 +176,18 @@ def main():
     files = os.listdir(logdir)
     num = len(files)
     print('total num ------>', num)
-    data_X = np.zeros((num, 26))
+    data_X = np.zeros((num, 64*64))
     data_Y = np.zeros((num, 3))
     for i, file in enumerate(files):
         print('read_{}_data------->loading----->start'.format(file))
         points = scio.loadmat(logdir + '/' + file)['Points']
-        data_X[i, :] = get_senseNorm26(points)
+        data_X[i, :] = np.array(get_face_box(points)).reshape(1, -1)
         label = np.argmax(scio.loadmat(label_dir + '/' + file.replace('Point', 'Label'))['Label'])
         data_Y[i, :] = convert_to_one_hot(LabelToSense[label], 3)
 
         print('read_{}_data------->loading----->end'.format(file))
 
-    scio.savemat('data/senseNorm26', {"X": data_X, "Y": data_Y})
+    scio.savemat('data/sense64x64', {"X": data_X, "Y": data_Y})
 
 
 if __name__ == '__main__':

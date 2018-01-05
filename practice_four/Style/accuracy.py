@@ -8,8 +8,10 @@ from sklearn.metrics import confusion_matrix, classification_report
 from practice_four.utils import *
 from collections import Counter
 
-outline_parameters = scio.loadmat('parameter/outline64x64_parameter-2500.mat')
-sense_parameters = scio.loadmat('parameter/sense64_parameter-3500.mat')
+outline_parameters = scio.loadmat('parameter/outline64x64_parameter-255.mat')
+sense_parameters = scio.loadmat('parameter/sense64x64_parameter-100.mat')
+LabelToOutline = [0, 0, 0, 1, 1, 1, 2, 2, 2]
+LabelToSense = [0, 1, 2, 0, 1, 2, 0, 1, 2]
 
 
 def get_outline64(trX):
@@ -20,19 +22,27 @@ def get_outline64(trX):
 
 
 def get_sense64(trX):
-    W = sense_parameters['W1']
-    b = sense_parameters['b1']
-    Z = np.add(np.matmul(trX, W.T), b)
-    return np.squeeze(np.argmax(Z, 1))
+    W1 = sense_parameters['W1']
+    b1 = sense_parameters['b1']
+    Z1 = np.add(np.matmul(trX, W1.T), b1)
+    return np.squeeze(np.argmax(Z1, 1))
 
 
 def main():
     data = scio.loadmat('data/style64x64.mat')
     trX = data['X']
     trY = np.argmax(data['Y'], 1)
+    cor_outline = [LabelToOutline[l] for l in trY]
+    cor_sense = [LabelToSense[ll] for ll in trY]
+
     m, _ = trX.shape
-    outline = get_outline64(trX)
-    sense = get_sense64(trX)
+    sense = get_sense64(trX/255.)
+    outline = get_outline64(trX/255.)
+    print(sense)
+    outline_res_matrix = classification_report(y_true=cor_outline, y_pred=outline)
+    sense_res_matrix = classification_report(y_true=cor_sense, y_pred=sense)
+    print(sense_res_matrix)
+
     style = 3 * outline + sense
 
     train_res_matrix = confusion_matrix(y_true=trY, y_pred=style)

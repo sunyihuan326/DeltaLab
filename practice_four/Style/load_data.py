@@ -6,7 +6,7 @@ Created on 2018/1/5.
 '''
 import os
 from PIL import Image, ImageDraw, ImageEnhance
-from practice_four.utils import *
+from practice_two.load_data.utils import *
 
 
 def get_face_box(points):
@@ -56,7 +56,8 @@ def main():
         print('read_{}_data------->loading----->start'.format(file))
         points = scio.loadmat(logdir + '/' + file)['Points']
         data_X[i, :] = np.array(get_face_box(points)).reshape(1, -1)
-        data_Y[i, :] = scio.loadmat(label_dir + '/' + file.replace('Point', 'Label'))['Label']
+        label = np.argmax(scio.loadmat(label_dir + '/' + file.replace('Point', 'Label'))['Label'])
+        data_Y[i, :] = convert_to_one_hot(label, 9)
 
         print('read_{}_data------->loading----->end'.format(file))
 
