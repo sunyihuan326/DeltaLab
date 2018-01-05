@@ -4,7 +4,7 @@ Created on 2018/1/4.
 
 @author: chk01
 '''
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 from practice_four.utils import *
 from collections import Counter
 
@@ -64,6 +64,7 @@ def main():
     # c = Counter(style)
     # c.most_common()
     # print(c)
+    print(train_res_matrix)
 
     return True
 
