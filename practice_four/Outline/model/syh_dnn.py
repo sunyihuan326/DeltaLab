@@ -15,9 +15,9 @@ from sklearn.metrics import classification_report, roc_curve, confusion_matrix, 
 
 
 def preprocessing(trX, teX, trY, teY):
-    res = SMOTE(ratio="auto")
-    trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
-    trY = np.eye(3)[trY]
+    # res = SMOTE(ratio="auto")
+    # trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
+    # trY = np.eye(3)[trY]
     return trX / 255., teX / 255., trY, teY
 
 
@@ -78,7 +78,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     correct_op = tf.argmax(Y, 1)
 
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
-    wcost = tf.contrib.layers.l2_regularizer(.0001)(parameters['W1'])
+    wcost = tf.contrib.layers.l2_regularizer(.001)(parameters['W1'])
 
     # cost = cost + wcost
     # cost = tf.reduce_mean(tf.square(ZL - Y))
@@ -96,8 +96,8 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                                                global_step=global_step,
                                                decay_steps=10, decay_rate=0.9)
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
-    # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate).minimize(cost)
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+    # optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(cost)
     add_global = global_step.assign_add(1)
     init = tf.global_variables_initializer()
 
@@ -106,7 +106,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     with tf.Session() as sess:
         sess.run(init)
 
-        # summary = tf.summary.FileWriter(logdir='logdir', graph=sess.graph)
+        #summary = tf.summary.FileWriter(logdir='logdir', graph=sess.graph)
         for epoch in range(epochs):
 
             minibatch_cost = 0.
@@ -116,7 +116,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
                 wwc, acc, summary_op, zl, par, _, temp_cost, _ = sess.run(
                     [wcost, accuracy, merged_summary_op, ZL, parameters, optimizer, cost, add_global],
                     feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
-                # summary.add_summary(summary_op, epoch)
+                #summary.add_summary(summary_op, epoch)
                 minibatch_cost += temp_cost / num_minibatches
 
             if epoch % 100 == 0:
@@ -131,11 +131,10 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
         print('↓↓↓↓↓↓↓↓↓↓↓--------结果------------↓↓↓↓↓↓↓↓↓↓↓↓↓↓')
         train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
         train_res_matrix = confusion_matrix(y_true=np.argmax(Y_train_org, 1), y_pred=train_pre_val)
-        # accuracy_cal(train_res_matrix, 'train')
-        print(train_res_matrix)
+        accuracy_cal(train_res_matrix, 'train')
         test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
         test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
-        # accuracy_cal(test_res_matrix, 'test')
+        accuracy_cal(test_res_matrix, 'test')
         print(test_res_matrix)
 
         for i in range(3):
@@ -143,21 +142,21 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
     return par
 
+
 if __name__ == '__main__':
-    file = '/Users/sunyihuan/PycharmProjects/DeltaLab/practice_four/Sense/data/sense64x64.mat'
+    file = '/Users/sunyihuan/PycharmProjects/DeltaLab/practice_four/Outline/data/outline64x64.mat'
     # load data
     X_train_org, X_test_org, Y_train_org, Y_test_org = load_data(file, test_size=0.2)
     # preprocessing
     X_train, X_test, Y_train, Y_test = preprocessing(X_train_org, X_test_org, Y_train_org, Y_test_org)
 
-    print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
-
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
     epochs = 2000
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.91, epochs=epochs,
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.95, epochs=epochs,
                        initial_learning_rate=0.5)
 
+    data_check(Y_train)
     data_check(Y_test)
 
-    scio.savemat('parameter/sense64_parameter-{}'.format(epochs), parameters)
+    scio.savemat('outline64_parameter_syh-{}'.format(epochs), parameters)

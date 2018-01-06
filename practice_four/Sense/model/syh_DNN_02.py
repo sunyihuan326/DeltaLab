@@ -15,9 +15,9 @@ from sklearn.metrics import classification_report, roc_curve, confusion_matrix, 
 
 
 def preprocessing(trX, teX, trY, teY):
-    res = SMOTE(ratio="auto")
-    trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
-    trY = np.eye(3)[trY]
+    # res = SMOTE(ratio="auto")
+    # trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
+    # trY = np.eye(2)[trY]
     return trX / 255., teX / 255., trY, teY
 
 
@@ -138,13 +138,14 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
         # accuracy_cal(test_res_matrix, 'test')
         print(test_res_matrix)
 
-        for i in range(3):
+        for i in range(2):
             print(str(i) + "比例", round(100 * list(test_pre_val).count(i) / len(list(test_pre_val)), 2), "%")
 
     return par
 
+
 if __name__ == '__main__':
-    file = '/Users/sunyihuan/PycharmProjects/DeltaLab/practice_four/Sense/data/sense64x64.mat'
+    file = '/Users/sunyihuan/PycharmProjects/DeltaLab/practice_four/Sense/data/sense64x64_02.mat'
     # load data
     X_train_org, X_test_org, Y_train_org, Y_test_org = load_data(file, test_size=0.2)
     # preprocessing
@@ -153,11 +154,13 @@ if __name__ == '__main__':
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 2000
+    epochs = 3000
 
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.91, epochs=epochs,
                        initial_learning_rate=0.5)
 
     data_check(Y_test)
 
-    scio.savemat('parameter/sense64_parameter-{}'.format(epochs), parameters)
+    data_check(Y_train)
+
+    scio.savemat('parameter/sense64_02_parameter-{}'.format(epochs), parameters)
