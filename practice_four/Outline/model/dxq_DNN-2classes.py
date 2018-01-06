@@ -163,7 +163,7 @@ if __name__ == '__main__':
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
     epochs = 1000
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.99, epochs=epochs,
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.90, epochs=epochs,
                        initial_learning_rate=0.5)
 
     scio.savemat('parameter/outline64x64-2classes_parameter-{}'.format(epochs), parameters)
