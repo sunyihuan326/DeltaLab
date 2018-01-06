@@ -7,8 +7,8 @@ Created on 2018/1/4.
 from sklearn.metrics import confusion_matrix, classification_report
 from practice_four.utils import *
 from collections import Counter
-
-outline_parameters = scio.loadmat('parameter/outline64x64_parameter-255.mat')
+import numpy
+outline_parameters = scio.loadmat('parameter/outline64x64_parameter-2500.mat')
 sense_parameters = scio.loadmat('parameter/sense64x64_parameter-100.mat')
 LabelToOutline = [0, 0, 0, 1, 1, 1, 2, 2, 2]
 LabelToSense = [0, 1, 2, 0, 1, 2, 0, 1, 2]
@@ -29,19 +29,21 @@ def get_sense64(trX):
 
 
 def main():
-    data = scio.loadmat('data/style64x64.mat')
-    trX = data['X']
-    trY = np.argmax(data['Y'], 1)
+    file = 'data/style64x64.mat'
+    X_train_org, X_test_org, Y_train_org, Y_test_org = load_data(file, test_size=0.2)
+    trX = X_test_org
+    trY = np.argmax(Y_test_org, 1)
     cor_outline = [LabelToOutline[l] for l in trY]
     cor_sense = [LabelToSense[ll] for ll in trY]
 
     m, _ = trX.shape
-    sense = get_sense64(trX/255.)
-    outline = get_outline64(trX/255.)
-    print(sense)
+    sense = get_sense64(trX / 255.)
+    outline = get_outline64(trX / 255.)
+
     outline_res_matrix = classification_report(y_true=cor_outline, y_pred=outline)
     sense_res_matrix = classification_report(y_true=cor_sense, y_pred=sense)
     print(sense_res_matrix)
+    print(outline_res_matrix)
 
     style = 3 * outline + sense
 

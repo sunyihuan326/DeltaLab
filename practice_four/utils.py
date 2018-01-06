@@ -46,7 +46,7 @@ def load_data(file, test_size=0.25):
     data_train = scio.loadmat(file)
 
     X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=test_size,
-                                                        shuffle=True)
+                                                        shuffle=True, random_state=16)
 
     return X_train, X_test, Y_train, Y_test
 
