@@ -10,6 +10,7 @@ from io import BytesIO
 import requests
 import scipy.io as scio
 import matplotlib.pyplot as plt
+import os
 
 _resList = requests.get('http://xiaomei.meiyezhushou.com/api/m/sample/brow/list/all').json()['brow_list']
 m = len(_resList)
@@ -17,7 +18,9 @@ m = len(_resList)
 trX = np.zeros([m, 64 * 64 * 3])
 trY = np.zeros([m, 18])
 for i, res in enumerate(_resList):
-    print('----load----start---', i)
+    # if not os.path.exists('data_crash/{}.jpg'.format(res['_id'])):
+    # plt.figure(i + 1)
+    # print('----load----start---', res['_id'])
     img = Image.open(BytesIO(requests.get(res['img']).content))
     X = np.array(img).reshape(1, -1)
     p1 = [res['ll_x'], res['ll_y']]
@@ -31,7 +34,9 @@ for i, res in enumerate(_resList):
     p9 = [res['rlu_x'], res['rlu_y']]
     pp = np.array([p1, p2, p3, p4, p5, p6, p7, p8, p9])
     plt.scatter(pp[:, 0], -pp[:, 1])
-    plt.show()
+    if i % 20 == 0:
+        plt.show()
+    # plt.savefig('data_crash/{}.jpg'.format(res['_id']))
 # Y = np.array([p1, p2, p3, p4, p5, p6, p7, p8, p9]).reshape(1, -1)
 #     trX[i, :] = X
 #     trY[i, :] = Y
