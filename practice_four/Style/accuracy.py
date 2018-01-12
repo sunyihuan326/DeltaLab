@@ -9,10 +9,10 @@ from practice_four.utils import *
 from collections import Counter
 import numpy
 
-outline_parameters = scio.loadmat('parameter/outline64x64_parameter-1500.mat')
-outline_2classes_parameters = scio.loadmat('parameter/outline64x64-2classes_parameter-10.mat')
-sense_parameters = scio.loadmat('parameter/sense64x64_parameter-100.mat')
-sense_2classes_parameters = scio.loadmat('parameter/sense64_02_parameter-3000.mat')
+outline_parameters = scio.loadmat('parameter/outline64x64_parameter-2500.mat')
+outline_2classes_parameters = scio.loadmat('parameter/outline64x64-2classes_parameter-4000.mat')
+sense_parameters = scio.loadmat('parameter/sense64_parameter-6600.mat')
+sense_2classes_parameters = scio.loadmat('parameter/sense64_02_parameter-2000.mat')
 
 LabelToOutline = [0, 0, 0, 1, 1, 1, 2, 2, 2]
 LabelToSense = [0, 1, 2, 0, 1, 2, 0, 1, 2]

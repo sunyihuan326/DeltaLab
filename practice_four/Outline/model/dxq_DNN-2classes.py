@@ -162,7 +162,7 @@ if __name__ == '__main__':
     data_check(Y_test)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 1000
+    epochs = 4000
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.90, epochs=epochs,
                        initial_learning_rate=0.5)
 

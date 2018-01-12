@@ -15,9 +15,9 @@ from sklearn.metrics import classification_report, roc_curve, confusion_matrix, 
 
 
 def preprocessing(trX, teX, trY, teY):
-    # res = SMOTE(ratio="auto")
-    # trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
-    # trY = np.eye(2)[trY]
+    res = SMOTE(ratio="auto")
+    trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
+    trY = np.eye(2)[trY]
     return trX / 255., teX / 255., trY, teY
 
 
@@ -94,7 +94,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
-                                               decay_steps=10, decay_rate=0.9)
+                                               decay_steps=100, decay_rate=0.9)
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
     # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate).minimize(cost)
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
@@ -154,13 +154,13 @@ if __name__ == '__main__':
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 3000
+    epochs = 3100
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.91, epochs=epochs,
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.9, epochs=epochs,
                        initial_learning_rate=0.5)
 
     data_check(Y_test)
 
     data_check(Y_train)
 
-    scio.savemat('parameter/sense64_02_parameter-{}'.format(epochs), parameters)
+    scio.savemat('parameter/sense64_02smote_parameter-{}'.format(epochs), parameters)

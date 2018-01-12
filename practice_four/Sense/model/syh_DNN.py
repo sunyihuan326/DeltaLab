@@ -15,9 +15,9 @@ from sklearn.metrics import classification_report, roc_curve, confusion_matrix, 
 
 
 def preprocessing(trX, teX, trY, teY):
-    res = SMOTE(ratio="auto")
-    trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
-    trY = np.eye(3)[trY]
+    # res = SMOTE(ratio="auto")
+    # trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
+    # trY = np.eye(3)[trY]
     return trX / 255., teX / 255., trY, teY
 
 
@@ -131,11 +131,11 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
         print('↓↓↓↓↓↓↓↓↓↓↓--------结果------------↓↓↓↓↓↓↓↓↓↓↓↓↓↓')
         train_pre_val = predict_op.eval({X: X_train_org, Y: Y_train_org, kp: 1})
         train_res_matrix = confusion_matrix(y_true=np.argmax(Y_train_org, 1), y_pred=train_pre_val)
-        # accuracy_cal(train_res_matrix, 'train')
+        accuracy_cal(train_res_matrix, 'train')
         print(train_res_matrix)
         test_pre_val = predict_op.eval({X: X_test, Y: Y_test, kp: 1})
         test_res_matrix = confusion_matrix(y_true=np.argmax(Y_test, 1), y_pred=test_pre_val)
-        # accuracy_cal(test_res_matrix, 'test')
+        accuracy_cal(test_res_matrix, 'test')
         print(test_res_matrix)
 
         for i in range(3):
@@ -153,9 +153,9 @@ if __name__ == '__main__':
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 2000
+    epochs = 4000
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.91, epochs=epochs,
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.9, epochs=epochs,
                        initial_learning_rate=0.5)
 
     data_check(Y_test)
