@@ -15,7 +15,7 @@ from sklearn.metrics import classification_report, roc_curve, confusion_matrix, 
 
 
 def preprocessing(trX, teX, trY, teY):
-    res = SMOTE(ratio="auto")
+    res = ADASYN(ratio="auto")
     trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
     trY = np.eye(2)[trY]
     return trX / 255., teX / 255., trY, teY
@@ -154,9 +154,9 @@ if __name__ == '__main__':
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 3100
+    epochs = 2000
 
-    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.9, epochs=epochs,
+    parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.8, epochs=epochs,
                        initial_learning_rate=0.5)
 
     data_check(Y_test)

@@ -15,9 +15,9 @@ from sklearn.metrics import classification_report, roc_curve, confusion_matrix, 
 
 
 def preprocessing(trX, teX, trY, teY):
-    # res = SMOTE(ratio="auto")
-    # trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
-    # trY = np.eye(3)[trY]
+    res = SMOTE(ratio="auto")
+    trX, trY = res.fit_sample(trX, np.argmax(trY, 1))
+    trY = np.eye(3)[trY]
     return trX / 255., teX / 255., trY, teY
 
 
@@ -113,7 +113,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
             num_minibatches = int(m / minibatch_size)
 
             for minibatch_X, minibatch_Y in minibatches(X_train, Y_train, minibatch_size, shuffle=True):
-                wwc, acc, summary_op, zl, par, _, temp_cost, _ = sess.run(
+                wwc, acc, summffary_op, zl, par, _, temp_cost, _ = sess.run(
                     [wcost, accuracy, merged_summary_op, ZL, parameters, optimizer, cost, add_global],
                     feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
                 # summary.add_summary(summary_op, epoch)
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
-    epochs = 4000
+    epochs = 5200
 
     parameters = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=.9, epochs=epochs,
                        initial_learning_rate=0.5)

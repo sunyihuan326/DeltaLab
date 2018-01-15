@@ -9,10 +9,10 @@ from practice_four.utils import *
 from collections import Counter
 import numpy
 
-outline_parameters = scio.loadmat('parameter/outline64x64_parameter-2500.mat')
-outline_2classes_parameters = scio.loadmat('parameter/outline64x64-2classes_parameter-4000.mat')
-sense_parameters = scio.loadmat('parameter/sense64_parameter-6600.mat')
-sense_2classes_parameters = scio.loadmat('parameter/sense64_02_parameter-2000.mat')
+outline_parameters = scio.loadmat('parameter/outline64x64_parameter-200.mat')
+outline_2classes_parameters = scio.loadmat('parameter/outline64x64-2classes_parameter-10.mat')
+sense_parameters = scio.loadmat('parameter/sense64_parameter-5000.mat')
+sense_2classes_parameters = scio.loadmat('parameter/sense64_02_parameter-3200.mat')
 
 LabelToOutline = [0, 0, 0, 1, 1, 1, 2, 2, 2]
 LabelToSense = [0, 1, 2, 0, 1, 2, 0, 1, 2]
@@ -85,6 +85,12 @@ def analysis(trY, style):
         # c = Counter(style)
         # c.most_common()
         # print(c)
+    for i in range(9):
+        print(str(i) + "比例", round(100 * list(style).count(i) / len(list(style)), 2), "%")
+
+    for i in range(9):
+        print(str(i) + "比例", round(100 * list(trY).count(i) / len(list(trY)), 2), "%")
+
 
 
 def main():
