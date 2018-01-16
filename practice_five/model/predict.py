@@ -6,6 +6,7 @@ Created on 2018/1/6.
 '''
 import tensorflow as tf
 import scipy.io as scio
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -25,8 +26,11 @@ def main():
         X = graph.get_tensor_by_name("Placeholder:0")
         # dp = graph.get_tensor_by_name("Placeholder_2:0")
 
-        resY = predict_op.eval({X: data['X']/255.})
-        print(resY[0])
+        resY = predict_op.eval({X: data['X'][:50].reshape(-1, 64, 64, 3) / 255.})
+        for i in range(10):
+            plt.figure(i + 1)
+            plt.scatter(resY[i].reshape(-1, 2)[:, 0], -resY[i].reshape(-1, 2)[:, 1])
+            plt.savefig(str(i) + '.png')
 
 
 if __name__ == '__main__':

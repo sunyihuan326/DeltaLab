@@ -27,8 +27,8 @@ def get_point_feature():
     dir_path = os.listdir(root_dir + '/src/' + org)
     m = 20
     n = 14
-    X = np.zeros([m, n, 2])
-    Y = np.zeros([m, 1])
+    X = np.zeros([m, n, 2]) + 999
+    Y = np.zeros([m, 1]) + 999
     for i, sourceDir in enumerate(dir_path):
         _id = int(sourceDir.split('.')[0]) - 1
         full_path = root_dir + '/src/' + org + '/' + sourceDir
@@ -38,7 +38,7 @@ def get_point_feature():
         X[_id] = feature
         Y[_id] = _id + 1
         # p2f(landmark72[39:47])
-        print('load--->{}---图{}'.format(org, _id))
+        print('load--->{}---图{}'.format(org, _id + 1))
     scio.savemat(save_dir, {"X": X, "Y": Y})
     print('完成{}导入'.format(org))
 

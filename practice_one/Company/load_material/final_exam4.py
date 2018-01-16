@@ -93,6 +93,7 @@ def get_carton_points(feature_index):
 
 def merge_all(real_width, real_height, real_points, feature_index):
     face_id = feature_index['chin']
+    # face_id='B-1'
     cartoon_points = get_carton_points(feature_index)
     image = Image.open(root_dir + '/cartoon/face/{}.png'.format(face_id)).convert('RGBA')
 
@@ -110,7 +111,11 @@ def merge_all(real_width, real_height, real_points, feature_index):
     norm_real_points = (np.array(real_points) - real_chin_point) * [ratio_x, ratio_y]
 
     boxes = norm_real_points - cartoon_points + chin_point
-
+    # reb,reye,nose,lip,chin,leb,leye
+    # boxes[0] += [-20, 35]
+    # boxes[5] += [20, 35]
+    # boxes[3] += [10, -15]
+    # boxes[-1] += [10, 35]
     # 调整位置和耳朵平齐
     # eye_height = boxes[1][1]
     # cartoon_eye = cartoon_points[1][1] + eye_height
@@ -159,6 +164,7 @@ def main(file_path):
 
 def one_file(file):
     image, feature_index = main(file)
+    image.save('res.png')
     image.show()
     print('---------------------------')
     print('-----eyebrow-----:', feature_index['left_eyebrow'], '号素材')
@@ -175,20 +181,23 @@ def one_dir(dir):
     dir_path = os.listdir(face_dir)
     for file in dir_path:
         file_path = face_dir + '/{}'.format(file)
-        if file.endswith('jpg') and not file.endswith('-res.png'):
-            # if not os.path.exists(file_path.replace('.png', '-res.png')):
-                print(file, 'OK')
+        if file.endswith('png') and not file.endswith('-res.png'):
+            if not os.path.exists(file_path.replace('.png', '-res.png')):
+                # print(file, 'OK')
                 image, feature_index = main(file_path)
-                image.save(file_path.replace('.jpg', '-res.png'))
-                with open(file_path.replace('jpg', 'txt'), 'a') as text_file:
-                    text_file.writelines('---------------------------------\n')
-                    for org, item in feature_index.items():
-                        text_file.writelines(org + ':' + str(item) + '\n')
+                print('nose', feature_index['nose'])
+                print('lip', feature_index['lip'])
+                image.save(file_path.replace('.png', '-res.png'))
+                # with open(file_path.replace('png', 'txt'), 'a') as text_file:
+                #     text_file.writelines('---------------------------------\n')
+                #     for org, item in feature_index.items():
+                #         text_file.writelines(org + ':' + str(item) + '\n')
 
 
 if __name__ == "__main__":
+    file = 'check/33.jpg'
     # final_eye_try()
-    face_dir = 'C:/Users/chk01/Desktop/final_test'
-    # face_dir = '5.jpg'
-    # one_file(face_dir)
-    one_dir(face_dir)
+    # face_dir = 'bad/img/8'
+    # face_dir = 'bad/img/0/5.png'
+    one_file(file)
+    # one_dir(face_dir)

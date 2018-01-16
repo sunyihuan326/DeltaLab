@@ -27,8 +27,8 @@ def get_point_feature():
     dir_path = os.listdir(root_dir + '/src/' + org)
     m = len(dir_path)
     n = 6
-    X = np.zeros([m, n, 2])
-    Y = np.zeros([m, 1])
+    X = np.zeros([m, n, 2]) + 999
+    Y = np.zeros([m, 1]) + 999
     for i, sourceDir in enumerate(dir_path):
         _id = int(sourceDir.split('.')[0]) - 1
         full_path = root_dir + '/src/' + org + '/' + sourceDir
@@ -63,8 +63,8 @@ def check_load_correct():
 
 
 if __name__ == '__main__':
-    # get_point_feature()
+    get_point_feature()
     # check_load_correct()
 
-    file = '1003.jpg'
-    main(file)
+    # file = '1003.jpg'
+    # main(file)

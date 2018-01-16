@@ -24,7 +24,7 @@ def get_face_box(points):
     new_x = min_x - (wid - (max_x - min_x)) // 2
     new_y = min_y - (wid - (max_y - min_y)) // 2
 
-    pil_image = Image.new("RGB", (2000, 2000), color=255)
+    pil_image = Image.new("RGB", (2000, 2000), color=(255, 255, 255))
     d = ImageDraw.Draw(pil_image)
 
     d.line([tuple(p) for p in points[:13]], width=10, fill=0)
@@ -43,7 +43,8 @@ def get_face_box(points):
     region = pil_image.crop([new_x, new_y, new_x + wid, new_y + wid])
     region = region.resize((64, 64), Image.ANTIALIAS)
     region = ImageEnhance.Contrast(region).enhance(999)
-
+    region.show()
+    assert 1 == 0
     return region
 
 
