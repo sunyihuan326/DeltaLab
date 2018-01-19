@@ -1,8 +1,10 @@
-import scipy.io
 import scipy.misc
+import scipy.io as scio
 
-import numpy as np
 import tensorflow as tf
+import numpy as np
+
+from sklearn.model_selection import train_test_split
 
 _FLOATX = 'float64'
 
@@ -68,7 +70,7 @@ def load_vgg_model(path):
         42 is softmax
     """
 
-    vgg = scipy.io.loadmat(path)
+    vgg = scio.loadmat(path)
 
     vgg_layers = vgg['layers']
 
@@ -192,3 +194,20 @@ def minibatches(X, Y, batch_size=64, shuffle=True):
         else:
             excerpt = slice(start_idx, start_idx + batch_size)
         yield X[excerpt], Y[excerpt]
+
+
+def load_data(file, test_size=0.25):
+    '''
+    :param file:the name of dataset
+    :param test_size:float, int, None, optional
+                If float, should be between 0.0 and 1.0 and represent the proportion
+                of the dataset to include in the test split. If int, represents the
+                absolute number of test samples.
+    :return: X_train, X_test, Y_train, Y_test shape:[m,features]--[m,classes]
+    '''
+    data_train = scio.loadmat(file)
+
+    X_train, X_test, Y_train, Y_test = train_test_split(data_train['X'], data_train['Y'], test_size=test_size,
+                                                        shuffle=True, random_state=16)
+
+    return X_train, X_test, Y_train, Y_test

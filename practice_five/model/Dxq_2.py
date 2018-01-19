@@ -8,17 +8,23 @@ from practice_five.model.nst_utils import *
 import tensorflow as tf
 import scipy
 
+import numpy as np
 
-
+a = np.array([[1, 2, 3, 2], [1, 2, 3, 2]]).reshape(2, -1)
+b = np.array([[1, 2, 3, 2], [2, 2, 2, 2]]).reshape(2, -1)
+print((a - b).shape)
+print(a - b)
+c = [2, 1]
+d = ((a - b) * (c * 2))
+print(d)
+assert 1 == 0
 
 tf.reset_default_graph()
 
 # Start interactive session
 sess = tf.InteractiveSession()
 
-
 model = load_vgg_model("F:/AImodel/imagenet-vgg-verydeep-19.mat")
-
 
 out = model['conv4_2']
 a_C = sess.run(out)

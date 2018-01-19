@@ -28,7 +28,7 @@ def get_face_box(points):
 
 
 def main():
-    img_path = '7.jpg'
+    img_path = '666.jpg'
     image = Image.open(img_path).convert("RGB")
 
     points = get_landmark72(img_path)
@@ -36,11 +36,8 @@ def main():
 
     new_x = region[0]
     new_y = region[1]
-
     res = np.array(image.crop(region).resize([64, 64]))
     tt = np.squeeze(predict(res)).reshape(-1, 2) * width / 64 + [new_x, new_y]
-    print(points)
-    print(tt)
     plt.scatter(points[:, 0], -points[:, 1])
     plt.scatter(tt[:, 0], -tt[:, 1])
     plt.axis('equal')
@@ -50,8 +47,9 @@ def main():
     landmark72 = tuple(tuple(t) for t in tt)
     rr = tuple(tuple(t) for t in points)
     drawSurface.line(rr[:13], fill=255, width=5)
-    drawSurface.polygon([landmark72[2:5],landmark72[-3]], fill=255)
-    drawSurface.line(landmark72[5:], fill=255, width=5)
+    # drawSurface.polygon([landmark72[2:5],landmark72[-3]], fill=255)
+    drawSurface.point(landmark72, fill=255)
+    image.save(img_path.replace('.jpg', 'res.png'))
     image.show()
 
 
@@ -60,12 +58,12 @@ def predict(trX):
     # data = scio.loadmat(file)
     tf.reset_default_graph()
     # graph
-    saver = tf.train.import_meta_graph("save/model.ckpt.meta")
+    saver = tf.train.import_meta_graph("save/model-fc-200-12.ckpt.meta")
     # value
     # a = tf.train.NewCheckpointReader('save/model.ckpt.index')
     # saver = tf.train.Saver()
     with tf.Session() as sess:
-        saver.restore(sess, "save/model.ckpt")
+        saver.restore(sess, "save/model-fc-200-12.ckpt")
         graph = tf.get_default_graph()
 
         predict_op = graph.get_tensor_by_name("output/BiasAdd:0")
@@ -73,6 +71,12 @@ def predict(trX):
         # dp = graph.get_tensor_by_name("Placeholder_2:0")
 
         resY = predict_op.eval({X: trX.reshape(-1, 64, 64, 3) / 255.})
+        # resY=[[31,10]]
+    print(resY)
+    # resY = [[14.34780979, 32.37727928, 17.39715767, 22.06736565, 23.70981216,
+    #          17.21895123, 29.31753731, 16.67663288, 31.93413925, 14.36086273,
+    #          48.92932129, 29.01085472, 45.96300888, 21.74747467, 42.84361649,
+    #          17.86888313, 34.78334045, 14.6940918]]
     return resY
 
 
