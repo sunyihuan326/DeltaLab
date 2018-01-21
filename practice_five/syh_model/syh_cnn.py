@@ -38,7 +38,9 @@ def preprocessing(trX, teX, trY, teY):
 
 def model(trX, trY, lr=.2, epoches=200, minibatch_size=64):
     m, features = trY.shape
-    X = tf.placeholder(tf.float32, shape=[None, 64 * 64 * 3])
+    X = tf.placeholder(tf.float32, shape=[None, 64 * 64 * 3], name="input")
+
+    print(X)
     XX = tf.reshape(X, shape=[-1, 64, 64, 3])
     inputs = XX
     Y = tf.placeholder(tf.float32, shape=[None, features])
@@ -96,7 +98,7 @@ def model(trX, trY, lr=.2, epoches=200, minibatch_size=64):
         strides=(1, 1),
         padding='same',
         activation=tf.nn.relu)
-    flatten = tf.layers.flatten(inputs=conv5)
+    flatten = tf.layers.flatten(inputs=conv4)
 
     fc1 = tf.layers.dense(flatten, 256, activation=tf.nn.relu, kernel_regularizer=reg1)
     # fc1 = tf.layers.batch_normalization(fc1)
@@ -105,12 +107,12 @@ def model(trX, trY, lr=.2, epoches=200, minibatch_size=64):
     # fc2 = tf.layers.dense(fc1, 128, activation=tf.nn.relu, kernel_regularizer=reg1)
     # fc2 = tf.layers.batch_normalization(fc2)
     # fc2 = tf.layers.dropout(fc2, rate=dp, training=True)
-    #
+
     # fc3 = tf.layers.dense(fc2, 64, activation=tf.nn.relu, name='fc3')
-    #
     # fc3 = tf.layers.batch_normalization(fc3)
     # fc3 = tf.layers.dropout(fc3, rate=dp, training=True)
     ZL = tf.layers.dense(fc1, 18, activation=None, name='output')
+    print(ZL)
 
     learning_rate = tf.train.exponential_decay(lr,
                                                global_step=global_step,
@@ -139,8 +141,11 @@ def model(trX, trY, lr=.2, epoches=200, minibatch_size=64):
             print('epoch', epoch, 'loss', minibatch_cost)
             print(llr)
 
-        saver.save(sess, "save/model.ckpt")
+        # saver.save(sess, "save/model4-300.ckpt")
         # saver.restore(sess, "save/model.ckpt")
+
+        zl = ZL.eval(feed_dict={X: trX, Y: trY})
+    return zl
 
 
 if __name__ == '__main__':
@@ -148,4 +153,7 @@ if __name__ == '__main__':
     data = scio.loadmat(file)
     trX = data['X'] / 255.
     trY = data['Y']
-    model(trX, trY, epoches=200)
+    zl = model(trX, trY, epoches=50)
+    print(zl[0])
+    print(zl[1])
+    print(zl[100])

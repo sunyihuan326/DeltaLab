@@ -85,9 +85,10 @@ def analysis(trY, style):
         # c = Counter(style)
         # c.most_common()
         # print(c)
+    print("predict result:")
     for i in range(9):
         print(str(i) + "比例", round(100 * list(style).count(i) / len(list(style)), 2), "%")
-
+    print("true result:")
     for i in range(9):
         print(str(i) + "比例", round(100 * list(trY).count(i) / len(list(trY)), 2), "%")
 
