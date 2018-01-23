@@ -166,8 +166,8 @@ def merge_all(real_width, real_height, real_points, feature_index):
     # leb,leye,nose,lip,chin,reb,reye
     last_position = norm_real_points + chin_point
     last_position = eye_dis_check(last_position, face_data[0])
-    # last_position = nose_dis_check(last_position)
-    # last_position = lip_dis_check(last_position)
+    last_position = nose_dis_check(last_position)
+    last_position = lip_dis_check(last_position)
     # boxes = norm_real_points - cartoon_points + chin_point
     boxes = last_position - cartoon_points
 
