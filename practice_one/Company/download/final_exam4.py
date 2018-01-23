@@ -90,6 +90,61 @@ def get_carton_points(feature_index):
     return cartoon_points
 
 
+def eye_dis_check(position, fw):
+    out_position = position
+    eye_dis_in = position[-1][0] - position[1][0]
+    eye_ratio_in = eye_dis_in / fw
+    eye_ratio_min = 0.380
+    eye_ratio_max = 0.485
+    if eye_ratio_in < eye_ratio_min:
+        print('eye_check_min')
+        eye_ratio = eye_ratio_min
+    elif eye_ratio_in > eye_ratio_max:
+        print('eye_check_max')
+        eye_ratio = eye_ratio_max
+    else:
+        eye_ratio = eye_ratio_in
+
+    eye_dis_out = eye_ratio * fw
+    eye_diff = eye_dis_out - eye_dis_in
+    out_position[-1][0] += eye_diff / 2
+    out_position[1][0] -= eye_diff / 2
+
+    out_position[-2][0] += eye_diff / 2
+    out_position[0][0] -= eye_diff / 2
+
+    return out_position
+
+
+def nose_dis_check(position):
+    out_position = position
+    brow_hei = out_position[1][1] - out_position[4][1]
+    nose_hei = out_position[2][1] - out_position[4][1]
+    nose_ratio_in = nose_hei / brow_hei
+    nose_ratio_min = 0.47
+    nose_ratio_max = 0.63
+    if nose_ratio_in < nose_ratio_min:
+        print('nose_check_min')
+        nose_ratio = nose_ratio_min
+    elif nose_ratio_in > nose_ratio_max:
+        print('nose_check_max')
+        nose_ratio = nose_ratio_max
+    else:
+        nose_ratio = nose_ratio_in
+
+    nose_hei_out = nose_ratio * brow_hei
+    out_position[2][1] = nose_hei_out + out_position[4][1]
+    return out_position
+
+
+def lip_dis_check(position):
+    out_position = position
+    nose_hei = out_position[2][1] - out_position[4][1]
+    lip_hei = nose_hei / 2 - 28
+    out_position[3][1] = lip_hei + out_position[4][1]
+    return out_position
+
+
 def merge_all(real_width, real_height, real_points, feature_index):
     skin_color = 7
     face_id = feature_index['chin']
@@ -108,9 +163,15 @@ def merge_all(real_width, real_height, real_points, feature_index):
     ratio_y = (ear_height - chin_point[1]) / (np.array(real_points) - real_chin_point)[1][1]
     # ratio_y = 250/real_height
     norm_real_points = (np.array(real_points) - real_chin_point) * [ratio_x, ratio_y]
+    # leb,leye,nose,lip,chin,reb,reye
+    last_position = norm_real_points + chin_point
+    last_position = eye_dis_check(last_position, face_data[0])
+    # last_position = nose_dis_check(last_position)
+    # last_position = lip_dis_check(last_position)
+    # boxes = norm_real_points - cartoon_points + chin_point
+    boxes = last_position - cartoon_points
 
-    boxes = norm_real_points - cartoon_points + chin_point
-    # reb,reye,nose,lip,chin,leb,leye
+    # leb,leye,nose,lip,chin,reb,reye
     # boxes[0] += [0, 6]
     # boxes[1] += [-3, 0]
     # boxes[-1] += [3, 0]
@@ -136,6 +197,7 @@ def merge_all(real_width, real_height, real_points, feature_index):
                 file_path = file_path2
             organ = Image.open(file_path)
             image.paste(organ, list(boxes[i].astype(np.int)), mask=organ)
+
     if feature_index['glasses'] == 1:
         organ = Image.open("material/cartoon/glasses/glasses_1.png")
         image.paste(organ, list(glasses_box.astype(np.int)), mask=organ)
@@ -215,5 +277,5 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    file = 'check/2.jpg'
+    file = 'check/5.jpg'
     one_file(file)
