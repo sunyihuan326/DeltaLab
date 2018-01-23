@@ -29,16 +29,16 @@ def main():
         typ = res['type']
         _id = res['title']
         if typ == 'lianxing':
-            [typ, wid, hei, chin_x, chin_y, _id] = str(_id).split('-')
+            [typ2, wid, hei, chin_x, chin_y, _id] = str(_id).split('-')
             # chin[int(_id) - 1] = [x, y]
             chin_data = [int(wid), int(hei), int(chin_x), int(chin_y), int(x), int(y)]
-            if typ == 'A':
+            if typ2 == 'A':
                 A_shape[int(_id) - 1] = chin_data
-            elif typ == 'B':
+            elif typ2 == 'B':
                 B_shape[int(_id) - 1] = chin_data
-            elif typ == 'C':
+            elif typ2 == 'C':
                 C_shape[int(_id) - 1] = chin_data
-            elif typ == 'D':
+            elif typ2 == 'D':
                 D_shape[int(_id) - 1] = chin_data
             else:
                 E_shape[int(_id) - 1] = chin_data

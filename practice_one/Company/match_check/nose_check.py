@@ -25,7 +25,7 @@ def compare_feature(feature):
 def get_point_feature():
     print('开始{}导入'.format(org))
     dir_path = os.listdir(root_dir + '/src/' + org)
-    m = len(dir_path)
+    m = 12
     n = 6
     X = np.zeros([m, n, 2]) + 999
     Y = np.zeros([m, 1]) + 999
@@ -37,7 +37,7 @@ def get_point_feature():
         feature = point2feature_nose(landmark72)
         X[_id] = feature
         Y[_id] = _id + 1
-        print('load--->{}---图{}'.format(org, _id))
+        print('load--->{}---图{}'.format(org, _id + 1))
     scio.savemat(save_dir, {"X": X, "Y": Y})
     print('完成{}导入'.format(org))
 
