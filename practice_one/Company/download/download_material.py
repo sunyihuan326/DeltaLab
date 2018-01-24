@@ -39,17 +39,18 @@ def update_one_face_material(face_obj, img_domain):
     title = face_obj['title']
     typ, wid, hei, _id = title.split('-')
 
-    model_img = img_domain + face_obj['face_img']
-    download_url_img(model_img, 'material/cartoon/face/{}/model/{}-{}.jpg'.format(typ, typ, _id), mode='RGB')
-
-    for i in range(3):
-        # 冷中暖
-        for j in range(3):
-            # 浅中深
-            file_name = str(3 * j + i + 1)
-            key = '_{}_{}'.format(i, j)
-            img = img_domain + face_obj[key]
-            download_url_img(img, 'material/cartoon/face/{}/{}/{}-{}.png'.format(typ, file_name, typ, _id))
+    # model_img = img_domain + face_obj['face_img']
+    # download_url_img(model_img, 'material/cartoon/face/{}/model/{}-{}.jpg'.format(typ, typ, _id), mode='RGB')
+    if typ in ['A', "C"]:
+        if int(_id) in [2, 3, 7]:
+            for i in range(3):
+                # 冷中暖
+                for j in range(3):
+                    # 浅中深
+                    file_name = str(3 * j + i + 1)
+                    key = '_{}_{}'.format(i, j)
+                    img = img_domain + face_obj[key]
+                    download_url_img(img, 'material/cartoon/face/{}/{}/{}-{}.png'.format(typ, file_name, typ, _id))
     return True
 
 
@@ -238,4 +239,4 @@ def update_one_lip_material(lip_obj, img_domain):
 
 
 if __name__ == '__main__':
-    update_position()
+    download_face_material()

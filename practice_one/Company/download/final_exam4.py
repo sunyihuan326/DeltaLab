@@ -247,7 +247,7 @@ def main(file_path):
 def one_file(file):
     image, feature_index = main(file)
     image.save('res.png')
-    image.show()
+    # image.show()
     print('---------------------------')
     print('-----eyebrow-----:', feature_index['left_eyebrow'], '号素材')
     print('-------eye-------:', feature_index['left_eye'], '号素材')
@@ -277,5 +277,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    file = 'check/10.jpg'
+    i = 10
+    file = 'check/{}.jpg'.format(i)
     one_file(file)
