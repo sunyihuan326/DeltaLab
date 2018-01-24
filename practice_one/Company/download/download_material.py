@@ -11,8 +11,6 @@ from PIL import Image
 from io import BytesIO
 import os
 
-url = ''
-
 
 def download_url_img(url, fpath, mode='RGBA'):
     fdir = fpath[:fpath.rfind('/')]
@@ -237,6 +235,7 @@ def update_one_lip_material(lip_obj, img_domain):
     if lip_obj['img']:
         img = img_domain + lip_obj['img']
         download_url_img(img, 'material/cartoon/lip/{}.png'.format(_id))
+
 
 if __name__ == '__main__':
     update_position()

@@ -146,7 +146,7 @@ def lip_dis_check(position):
 
 
 def merge_all(real_width, real_height, real_points, feature_index):
-    skin_color = 7
+    skin_color = 1
     face_id = feature_index['chin']
     typ, fid = face_id.split('-')
 
@@ -277,5 +277,5 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    file = 'check/5.jpg'
+    file = 'check/10.jpg'
     one_file(file)

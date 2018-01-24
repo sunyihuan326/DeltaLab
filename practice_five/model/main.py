@@ -28,7 +28,7 @@ def get_face_box(points):
 
 
 def main():
-    img_path = '44.jpg'
+    img_path = '7.jpg'
     image = Image.open(img_path).convert("L")
 
     points = get_landmark72(img_path)
@@ -58,12 +58,12 @@ def predict(trX):
     # data = scio.loadmat(file)
     tf.reset_default_graph()
     # graph
-    saver = tf.train.import_meta_graph("save/model-1000-2.ckpt.meta")
+    saver = tf.train.import_meta_graph("save/model-2000-2.ckpt.meta")
     # value
     # a = tf.train.NewCheckpointReader('save/model.ckpt.index')
     # saver = tf.train.Saver()
     with tf.Session() as sess:
-        saver.restore(sess, "save/model-1000-2.ckpt")
+        saver.restore(sess, "save/model-2000-2.ckpt")
         graph = tf.get_default_graph()
 
         predict_op = graph.get_tensor_by_name("output/BiasAdd:0")

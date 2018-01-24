@@ -433,7 +433,7 @@ def chin_check():
 
 if __name__ == '__main__':
     # chin_check()
-    file = 'check/3.jpg'
+    file = 'check/8.png'
     # org = 'lip'
     # for i in range(20):
     #     # file = 'C:/Users/chk01/Desktop/Delta/image/check/src/{}/{}.jpg'.format(org, i + 1)
@@ -485,3 +485,4 @@ if __name__ == '__main__':
     #     # drawSurface.point(landmark72, fill=0)
     #     # im.save(file.replace('src', 'cartoon'))
     im.show()
+    im.save('res.png')
