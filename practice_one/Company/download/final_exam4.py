@@ -85,7 +85,7 @@ def get_carton_points(feature_index):
             typ, _id = feature_index[org].split('-')
             data = CartoonPoint[typ + '_shape'][int(_id) - 1][2:4]
         else:
-            data = CartoonPoint[org][feature_index[org] - 1]
+            data = CartoonPoint[org][feature_index[org] - 1][:2]
         cartoon_points.append(data)
     return cartoon_points
 
@@ -137,10 +137,11 @@ def nose_dis_check(position):
     return out_position
 
 
-def lip_dis_check(position):
+def lip_dis_check(position, hou):
+    print(hou)
     out_position = position
     nose_hei = out_position[2][1] - out_position[4][1]
-    lip_hei = nose_hei / 2 - 28
+    lip_hei = nose_hei / 2 - hou
     out_position[3][1] = lip_hei + out_position[4][1]
     return out_position
 
@@ -167,7 +168,8 @@ def merge_all(real_width, real_height, real_points, feature_index):
     last_position = norm_real_points + chin_point
     last_position = eye_dis_check(last_position, face_data[0])
     last_position = nose_dis_check(last_position)
-    last_position = lip_dis_check(last_position)
+    hou = CartoonPoint['lip'][feature_index['lip'] - 1][2]
+    last_position = lip_dis_check(last_position, hou)
     # boxes = norm_real_points - cartoon_points + chin_point
     boxes = last_position - cartoon_points
 

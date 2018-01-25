@@ -67,7 +67,7 @@ def update_position():
     D_shape = np.zeros([32, 6]) + 999
     E_shape = np.zeros([32, 6]) + 999
     nose = np.zeros([32, 2]) + 999
-    lip = np.zeros([32, 2]) + 999
+    lip = np.zeros([32, 3]) + 999
 
     for res in resList['face_list']:
         x = res['pos_x']
@@ -92,7 +92,8 @@ def update_position():
             else:
                 E_shape[int(_id) - 1] = chin_data
         elif typ == 'mouth':
-            lip[int(_id) - 1] = [x, y]
+            [hou, _id] = str(_id).split('-')
+            lip[int(_id) - 1] = [x, y, hou]
         elif typ == 'eye':
             [tt, _id] = str(_id).split('-')
             if tt == 'l':
@@ -239,4 +240,4 @@ def update_one_lip_material(lip_obj, img_domain):
 
 
 if __name__ == '__main__':
-    download_face_material()
+    update_position()
