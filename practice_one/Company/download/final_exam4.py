@@ -122,7 +122,7 @@ def nose_dis_check(position):
     nose_hei = out_position[2][1] - out_position[4][1]
     nose_ratio_in = nose_hei / brow_hei
     nose_ratio_min = 0.47
-    nose_ratio_max = 0.63
+    nose_ratio_max = 0.615
     if nose_ratio_in < nose_ratio_min:
         print('nose_check_min')
         nose_ratio = nose_ratio_min
@@ -138,11 +138,27 @@ def nose_dis_check(position):
 
 
 def lip_dis_check(position, hou):
-    print(hou)
+    # print(hou)
+    # leb,leye,nose,lip,chin,reb,reye
     out_position = position
-    nose_hei = out_position[2][1] - out_position[4][1]
-    lip_hei = nose_hei / 2 - hou
-    out_position[3][1] = lip_hei + out_position[4][1]
+    nose2lip = out_position[3][1] - out_position[2][1]
+    # lip2chin = out_position[4][1] - hou - out_position[3][1]
+    nose_hei = out_position[4][1] - out_position[2][1]
+    lip_ratio_in = nose2lip / nose_hei
+    lip_ratio_min = 0.23
+    lip_ratio_max = 0.28
+    print(lip_ratio_in)
+    if lip_ratio_in < lip_ratio_min:
+        print('lip_check_min')
+        lip_ratio = lip_ratio_min
+    elif lip_ratio_in > lip_ratio_max:
+        print('lip_check_max')
+        lip_ratio = lip_ratio_max
+    else:
+        lip_ratio = lip_ratio_in
+    print(lip_ratio)
+    out_position[3][1] = out_position[2][1] + lip_ratio * nose_hei
+
     return out_position
 
 
@@ -279,6 +295,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 10
+    i = 9
     file = 'check/{}.jpg'.format(i)
     one_file(file)
