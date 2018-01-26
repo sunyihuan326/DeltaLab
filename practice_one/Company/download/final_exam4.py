@@ -297,6 +297,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 37
+    i = 39
     file = 'check/{}.jpg'.format(i)
     one_file(file)

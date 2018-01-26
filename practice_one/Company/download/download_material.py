@@ -240,4 +240,4 @@ def update_one_lip_material(lip_obj, img_domain):
 
 
 if __name__ == '__main__':
-    download_face_material()
+    update_position()
