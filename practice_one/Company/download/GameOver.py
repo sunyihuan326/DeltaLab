@@ -178,7 +178,7 @@ class Face(object):
         im.save('report.jpg')
         cartoon = self.get_cartoon_face()
         cartoon.save("cartoon.png")
-        sheet.insert_image('N2', 'cartoon.png')
+        sheet.insert_image('N2', 'cartoon.png',options={"x_scale": 1.0, "y_scale": 1.0})
         scale = 500.0 / self.width
         sheet.insert_image('A2', 'report.jpg', options={"x_scale": scale, "y_scale": scale})
         feature = self.feature
