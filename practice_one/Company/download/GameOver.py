@@ -65,9 +65,9 @@ class Face(object):
             DOMAIN + '/cartoon/merge?landmark72={}&&glasses={}&&faceshape={}&&skin_color={}'.format(self.landmark72,
                                                                                                     self.glasses,
                                                                                                     self.baidu_faceshape,
-                                                                                                    1),
-            cert=False).json()
-
+                                                                                                    1), cert=False)
+        print(res)
+        res = res.json()
         imgdata = base64.b64decode(str(res['cartoon_face'])[2:-1])
         img = Image.open(BytesIO(imgdata))
         self.feature = res['feature_index']
@@ -178,7 +178,7 @@ class Face(object):
         im.save('report.jpg')
         cartoon = self.get_cartoon_face()
         cartoon.save("cartoon.png")
-        sheet.insert_image('N2', 'cartoon.png',options={"x_scale": 1.0, "y_scale": 1.0})
+        sheet.insert_image('N2', 'cartoon.png', options={"x_scale": 1.0, "y_scale": 1.0})
         scale = 500.0 / self.width
         sheet.insert_image('A2', 'report.jpg', options={"x_scale": scale, "y_scale": scale})
         feature = self.feature
@@ -401,7 +401,7 @@ class Face(object):
 
 
 ts = time.time()
-face = Face('check/1.jpg', stature=0, sense=0, age=35)
+face = Face('check/37.jpg', stature=0, sense=0, age=35)
 face.report()
 print(time.time() - ts)
 # im = face.get_cartoon_face()

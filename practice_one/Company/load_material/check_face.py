@@ -433,7 +433,7 @@ def chin_check():
 
 if __name__ == '__main__':
     # chin_check()
-    file = 'check/8.png'
+    file = 'check/eye13.jpg'
     # org = 'lip'
     # for i in range(20):
     #     # file = 'C:/Users/chk01/Desktop/Delta/image/check/src/{}/{}.jpg'.format(org, i + 1)
@@ -460,7 +460,7 @@ if __name__ == '__main__':
     landmark72 = tuple(tuple(t) for t in landmark72)
     drawSurface.line(landmark72[:13], fill=255, width=1)
     # drawSurface.line(landmark72, fill=255, width=3)
-    # drawSurface.line(landmark72[13:21], fill=255, width=3)
+    drawSurface.line(landmark72[13:21], fill=255, width=3)
     drawSurface.line([landmark72[13], landmark72[20]], fill=255, width=3)
     #     # drawSurface.line(landmark72[14], fill=100, width=10)
     #     # drawSurface.line(landmark72[30:39], fill=255, width=10)

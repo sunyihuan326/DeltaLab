@@ -96,6 +96,7 @@ def eye_dis_check(position, fw):
     eye_ratio_in = eye_dis_in / fw
     eye_ratio_min = 0.380
     eye_ratio_max = 0.485
+    print(eye_ratio_in)
     if eye_ratio_in < eye_ratio_min:
         print('eye_check_min')
         eye_ratio = eye_ratio_min
@@ -296,6 +297,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 1
+    i = 37
     file = 'check/{}.jpg'.format(i)
     one_file(file)
