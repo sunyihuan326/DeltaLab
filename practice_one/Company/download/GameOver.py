@@ -401,7 +401,7 @@ class Face(object):
 
 
 ts = time.time()
-face = Face('check/38.jpg', stature=0, sense=0, age=35)
+face = Face('check/36.jpg', stature=0, sense=0, age=35)
 face.report()
 print(time.time() - ts)
 # im = face.get_cartoon_face()
