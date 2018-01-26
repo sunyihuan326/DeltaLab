@@ -123,6 +123,7 @@ def nose_dis_check(position):
     nose_ratio_in = nose_hei / brow_hei
     nose_ratio_min = 0.47
     nose_ratio_max = 0.615
+    print(nose_ratio_in)
     if nose_ratio_in < nose_ratio_min:
         print('nose_check_min')
         nose_ratio = nose_ratio_min
@@ -295,6 +296,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 9
+    i = 22
     file = 'check/{}.jpg'.format(i)
     one_file(file)
