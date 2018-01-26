@@ -146,7 +146,7 @@ def lip_dis_check(position, hou):
     # lip2chin = out_position[4][1] - hou - out_position[3][1]
     nose_hei = out_position[4][1] - out_position[2][1]
     lip_ratio_in = nose2lip / nose_hei
-    lip_ratio_min = 0.23
+    lip_ratio_min = 0.25
     lip_ratio_max = 0.28
     print(lip_ratio_in)
     if lip_ratio_in < lip_ratio_min:
@@ -296,6 +296,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 22
+    i =10
     file = 'check/{}.jpg'.format(i)
     one_file(file)
