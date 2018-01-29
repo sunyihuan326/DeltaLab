@@ -57,7 +57,7 @@ class Face(object):
         trX = np.array(image.crop(region).resize([64, 64]))
         top = np.squeeze(self.predict_op.eval({self.trX: trX.reshape(1, -1) / 255.})).reshape(-1, 2) * wid / 64 + \
               [new_x, new_y]
-        self.top = [int(top[1][0]), int(top[1][1])]
+        self.top = [int(round(top[1][0])), int(round(top[1][1]))]
         return top
 
     def get_cartoon_face(self):
@@ -401,12 +401,6 @@ class Face(object):
 
 
 ts = time.time()
-face = Face('check/43.jpg', stature=0, sense=0, age=35)
+face = Face('check/51.jpg', stature=0, sense=0, age=35)
 face.report()
 print(time.time() - ts)
-# im = face.get_cartoon_face()
-# im.show()
-# im = face.baidu_check()
-# im2 = face.get_organ_struct()
-# im2.save('1.jpg')
-# im2.show()

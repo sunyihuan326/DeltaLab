@@ -48,7 +48,7 @@ def read_feature(file_path):
     # step1 Api 获取脸型，五官点阵，是否有眼镜，脸型，性别
     landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
     # # 图片矫正待优化
-    if -10 < angle < 10:
+    if -1 < angle < 1:
         pass
     else:
         # import math
@@ -297,6 +297,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 41
+    i = 47
     file = 'check/{}.jpg'.format(i)
     one_file(file)
