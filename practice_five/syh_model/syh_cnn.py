@@ -36,11 +36,10 @@ def preprocessing(trX, teX, trY, teY):
     return trX, teX, trY, teY
 
 
-def model(trX, trY, lr=.2, epoches=200, minibatch_size=64):
+def model(trX, trY, teX, teY, lr=.2, epoches=200, minibatch_size=64):
     m, features = trY.shape
     X = tf.placeholder(tf.float32, shape=[None, 64 * 64 * 3], name="input")
 
-    print(X)
     XX = tf.reshape(X, shape=[-1, 64, 64, 3])
     inputs = XX
     Y = tf.placeholder(tf.float32, shape=[None, features])
@@ -49,7 +48,7 @@ def model(trX, trY, lr=.2, epoches=200, minibatch_size=64):
     # dp = tf.placeholder(tf.float32)
     global_step = tf.Variable(0, trainable=False)
 
-    reg1 = tf.contrib.layers.l2_regularizer(scale=0.1)
+    # reg1 = tf.contrib.layers.l2_regularizer(scale=0.01)
     conv1 = tf.layers.conv2d(
         inputs=inputs,
         filters=32,
@@ -83,36 +82,35 @@ def model(trX, trY, lr=.2, epoches=200, minibatch_size=64):
         pool_size=[2, 2],
         strides=(2, 2),
         padding='valid')
-    conv4 = tf.layers.conv2d(
-        inputs=pool2,
-        filters=64,
-        kernel_size=[3, 3],
-        strides=(1, 1),
-        padding='same',
-        activation=tf.nn.relu)
+    # conv4 = tf.layers.conv2d(
+    #     inputs=pool2,
+    #     filters=64,
+    #     kernel_size=[3, 3],
+    #     strides=(1, 1),
+    #     padding='same',
+    #     activation=tf.nn.relu)
+    #
+    # conv5 = tf.layers.conv2d(
+    #     inputs=conv4,
+    #     filters=128,
+    #     kernel_size=[3, 3],
+    #     strides=(1, 1),
+    #     padding='same',
+    #     activation=tf.nn.relu)
+    flatten = tf.layers.flatten(inputs=conv3)
 
-    conv5 = tf.layers.conv2d(
-        inputs=conv4,
-        filters=128,
-        kernel_size=[3, 3],
-        strides=(1, 1),
-        padding='same',
-        activation=tf.nn.relu)
-    flatten = tf.layers.flatten(inputs=conv4)
-
-    fc1 = tf.layers.dense(flatten, 256, activation=tf.nn.relu, kernel_regularizer=reg1)
+    fc1 = tf.layers.dense(flatten, 16, activation=tf.nn.relu)
     # fc1 = tf.layers.batch_normalization(fc1)
     # fc1 = tf.layers.dropout(fc1, rate=dp, training=True)
 
-    # fc2 = tf.layers.dense(fc1, 128, activation=tf.nn.relu, kernel_regularizer=reg1)
+    # fc2 = tf.layers.dense(fc1, 64, activation=tf.nn.relu)
     # fc2 = tf.layers.batch_normalization(fc2)
     # fc2 = tf.layers.dropout(fc2, rate=dp, training=True)
 
-    # fc3 = tf.layers.dense(fc2, 64, activation=tf.nn.relu, name='fc3')
+    # fc3 = tf.layers.dense(fc2, 4, activation=tf.nn.relu, name='fc3')
     # fc3 = tf.layers.batch_normalization(fc3)
     # fc3 = tf.layers.dropout(fc3, rate=dp, training=True)
-    ZL = tf.layers.dense(fc1, 18, activation=None, name='output')
-    print(ZL)
+    ZL = tf.layers.dense(fc1, features, activation=None, name='output')
 
     learning_rate = tf.train.exponential_decay(lr,
                                                global_step=global_step,
@@ -131,29 +129,30 @@ def model(trX, trY, lr=.2, epoches=200, minibatch_size=64):
     with tf.Session() as sess:
         sess.run(init)
         for epoch in range(epoches):
-            minibatch_cost = 0.
             num_minibatches = int(m / minibatch_size)
             for minibatch_X, minibatch_Y in minibatches(trX, trY, minibatch_size, shuffle=True):
                 __, _loss, _, res, llr = sess.run([add_global, loss, train_op, ZL, learning_rate],
                                                   feed_dict={X: minibatch_X, Y: minibatch_Y})
-                minibatch_cost += _loss / num_minibatches
-
-            print('epoch', epoch, 'loss', minibatch_cost)
+            print('epoch', epoch, 'loss', _loss)
             print(llr)
 
-        # saver.save(sess, "save/model4-300.ckpt")
-        # saver.restore(sess, "save/model.ckpt")
+        zl = ZL.eval(feed_dict={X: teX})
+        loss = loss.eval(feed_dict={X: teX, Y: teY})
 
-        zl = ZL.eval(feed_dict={X: trX, Y: trY})
+        saver.save(sess, "save/model_conv3—3point-{}-{}.ckpt".format(epoches, int(loss)))
+        # saver.restore(sess, "save/model.ckpt")
+        print(loss)
     return zl
 
 
 if __name__ == '__main__':
     file = '/Users/sunyihuan/Desktop/Data/face_top_9.mat'
-    data = scio.loadmat(file)
-    trX = data['X'] / 255.
-    trY = data['Y']
-    zl = model(trX, trY, epoches=50)
+    X_train, X_test, Y_train, Y_test = load_data(file)
+    Y_train = Y_train[:, 6:12]
+    Y_test = Y_test[:, 6:12]
+    #
+    zl = model(X_train, Y_train, X_test, Y_test, epoches=50)
     print(zl[0])
     print(zl[1])
     print(zl[100])
+

@@ -93,7 +93,6 @@ def analysis(trY, style):
         print(str(i) + "比例", round(100 * list(trY).count(i) / len(list(trY)), 2), "%")
 
 
-
 def main():
     file = 'data/style64x64.mat'
     X_train_org, X_test_org, Y_train_org, Y_test_org = load_data(file, test_size=0.2)
