@@ -28,8 +28,8 @@ def get_face_box(points):
 
 
 def main():
-    img_path = '666.jpg'
-    image = Image.open(img_path).convert("RGB")
+    img_path = '7.jpg'
+    image = Image.open(img_path).convert("L")
 
     points = get_landmark72(img_path)
     region, width = get_face_box(points)
@@ -48,7 +48,7 @@ def main():
     rr = tuple(tuple(t) for t in points)
     drawSurface.line(rr[:13], fill=255, width=5)
     # drawSurface.polygon([landmark72[2:5],landmark72[-3]], fill=255)
-    drawSurface.point(landmark72, fill=255)
+    drawSurface.line(landmark72, fill=255,width=5)
     image.save(img_path.replace('.jpg', 'res.png'))
     image.show()
 
@@ -58,19 +58,19 @@ def predict(trX):
     # data = scio.loadmat(file)
     tf.reset_default_graph()
     # graph
-    saver = tf.train.import_meta_graph("save/model-fc-200-12.ckpt.meta")
+    saver = tf.train.import_meta_graph("save/model-2000-2.ckpt.meta")
     # value
     # a = tf.train.NewCheckpointReader('save/model.ckpt.index')
     # saver = tf.train.Saver()
     with tf.Session() as sess:
-        saver.restore(sess, "save/model-fc-200-12.ckpt")
+        saver.restore(sess, "save/model-2000-2.ckpt")
         graph = tf.get_default_graph()
 
         predict_op = graph.get_tensor_by_name("output/BiasAdd:0")
         X = graph.get_tensor_by_name("Placeholder:0")
         # dp = graph.get_tensor_by_name("Placeholder_2:0")
 
-        resY = predict_op.eval({X: trX.reshape(-1, 64, 64, 3) / 255.})
+        resY = predict_op.eval({X: trX.reshape(1, -1) / 255.})
         # resY=[[31,10]]
     print(resY)
     # resY = [[14.34780979, 32.37727928, 17.39715767, 22.06736565, 23.70981216,

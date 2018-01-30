@@ -47,7 +47,7 @@ def org_alignment(org_struct):
 def read_feature(file_path):
     # step1 Api 获取脸型，五官点阵，是否有眼镜，脸型，性别
     landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
-
+    print(landmark72)
     # # 图片矫正待优化
     if -10 < angle < 10:
         pass
@@ -112,9 +112,12 @@ def merge_all(real_width, real_height, real_points, feature_index):
 
     boxes = norm_real_points - cartoon_points + chin_point
     # reb,reye,nose,lip,chin,leb,leye
-    # boxes[0] += [-20, 35]
-    # boxes[5] += [20, 35]
-    # boxes[3] += [10, -15]
+    # boxes[0] += [0, 6]
+    # boxes[1] += [-3, 0]
+    # boxes[-1] += [3, 0]
+    # boxes[0] += [10, 0]
+    # boxes[-2] += [0, 6]
+    # boxes[3] += [0, 6]
     # boxes[-1] += [10, 35]
     # 调整位置和耳朵平齐
     # eye_height = boxes[1][1]
@@ -145,9 +148,13 @@ def main(file_path):
     eye_id = eye.predict(_eye)
     lip_id = lip.predict(_lip)
     nose_id = nose.predict(_nose)
+    # eye_id = 22
+    # nose_id = 12
+    # lip_id=2
+    # eyebr_id=1
 
     chin_id = faceshape + '-' + str(ChinData[faceshape].predict(_chin))
-
+    # chin_id = 'A-7'
     feature_index = {
         'left_eye': eye_id,
         'right_eye': eye_id,
@@ -158,8 +165,15 @@ def main(file_path):
         'glasses': glasses,
         'chin': chin_id
     }
+    print(feature_index)
     image = merge_all(width, height, org_struct, feature_index)
-    return image, feature_index
+
+    # step4 去污（可优化）
+    # back = Image.open('A-77.png').convert('RGBA')
+    back = Image.open(root_dir + '/cartoon/face/{}.png'.format(chin_id)).convert('RGBA')
+    back.alpha_composite(image)
+
+    return back, feature_index
 
 
 def one_file(file):
@@ -195,7 +209,7 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    file = 'check/33.jpg'
+    file = 'check/5.jpg'
     # final_eye_try()
     # face_dir = 'bad/img/8'
     # face_dir = 'bad/img/0/5.png'

@@ -10,16 +10,16 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    file = '../data/face_top_9.mat'
+    file = '../data/face_top_9_L.mat'
     data = scio.loadmat(file)
     tf.reset_default_graph()
     # graph
-    saver = tf.train.import_meta_graph("save/model-fc-250-10.ckpt.meta")
+    saver = tf.train.import_meta_graph("save/model-1000-2.ckpt.meta")
     # value
     # a = tf.train.NewCheckpointReader('save/model.ckpt.index')
     # saver = tf.train.Saver()
     with tf.Session() as sess:
-        saver.restore(sess, "save/model-fc-250-10.ckpt")
+        saver.restore(sess, "save/model-1000-2.ckpt")
         graph = tf.get_default_graph()
 
         predict_op = graph.get_tensor_by_name("output/BiasAdd:0")
@@ -33,9 +33,10 @@ def main():
         # print(w.eval())
         # print(ww.eval())
         # print(b.eval())
-        resY = predict_op.eval({X: data['X'][:50].reshape(-1, 64, 64, 3) / 255.})
+        resY = predict_op.eval({X: data['X'][:50] / 255.})
         for i in range(10):
             plt.figure(i + 1)
+            print(resY[i])
             plt.scatter(resY[i].reshape(-1, 2)[:, 0], -resY[i].reshape(-1, 2)[:, 1])
             plt.scatter(data['Y'][i].reshape(-1, 2)[:, 0], -data['Y'][i].reshape(-1, 2)[:, 1])
             plt.savefig('test/' + str(i) + '.png')

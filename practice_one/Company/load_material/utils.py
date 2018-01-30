@@ -50,15 +50,15 @@ def get_url_img(filePath):
 
 
 def load_feature_matrix():
-    eyebr_data = scio.loadmat('feature_matrix/eyebr')
-    eye_data = scio.loadmat('feature_matrix/eye')
-    nose_data = scio.loadmat('feature_matrix/nose')
-    lip_data = scio.loadmat('feature_matrix/lip')
-    chin_data_A = scio.loadmat('feature_matrix/chin_A')
-    chin_data_B = scio.loadmat('feature_matrix/chin_B')
-    chin_data_C = scio.loadmat('feature_matrix/chin_C')
-    chin_data_D = scio.loadmat('feature_matrix/chin_D')
-    chin_data_E = scio.loadmat('feature_matrix/chin_E')
+    eyebr_data = scio.loadmat('material/feature_matrix/eyebr')
+    eye_data = scio.loadmat('material/feature_matrix/eye')
+    nose_data = scio.loadmat('material/feature_matrix/nose')
+    lip_data = scio.loadmat('material/feature_matrix/lip')
+    chin_data_A = scio.loadmat('material/feature_matrix/chin_A')
+    chin_data_B = scio.loadmat('material/feature_matrix/chin_B')
+    chin_data_C = scio.loadmat('material/feature_matrix/chin_C')
+    chin_data_D = scio.loadmat('material/feature_matrix/chin_D')
+    chin_data_E = scio.loadmat('material/feature_matrix/chin_E')
 
     eyebr = NearestNeighbor()
     eye = NearestNeighbor()
@@ -85,7 +85,7 @@ def load_feature_matrix():
 
 
 def load_cartoon_center():
-    return scio.loadmat("feature_matrix/CartoonPoint")
+    return scio.loadmat("material/feature_matrix/CartoonPoint")
 
 
 def landmark72_trans(points):

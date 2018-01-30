@@ -13,8 +13,8 @@ def get_face_feature():
         dir_path = os.listdir(root_dir + '/src/face_' + typ)
         m = len(dir_path)
         n = 13
-        X = np.zeros([m, n, 2])
-        Y = np.zeros([m, 1])
+        X = np.zeros([m, n, 2]) + 999
+        Y = np.zeros([m, 1]) + 999
         for i, sourceDir in enumerate(dir_path):
             _id = int(sourceDir.split('.')[0].replace(typ, '')) - 1
 
@@ -25,7 +25,7 @@ def get_face_feature():
             _data = point2feature_chin(landmark72)
             X[_id] = _data
             Y[_id] = _id + 1
-            print('load--->{}---图{}'.format(typ, _id))
+            print('load--->{}---图{}'.format(typ, _id + 1))
         scio.savemat('../load_material/feature_matrix/chin_' + typ, {"X": X, "Y": Y})
         print('完成{}导入'.format(typ))
 

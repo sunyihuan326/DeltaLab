@@ -43,7 +43,7 @@ def model(X_train, X_test, Y_train, Y_test, epochs=300, minibatch_size=64,
                                                global_step=global_step,
                                                decay_steps=100, decay_rate=0.9)
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
-    loss = tf.reduce_mean(tf.square((Y - ZL) * [1, 1.25]))
+    loss = tf.reduce_mean(tf.square((Y - ZL)))
 
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
     # train_op = tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(loss)
@@ -69,7 +69,7 @@ def model(X_train, X_test, Y_train, Y_test, epochs=300, minibatch_size=64,
                 print(llr)
                 print(test_loss)
 
-        saver.save(sess, "save/model-fc-{}-{}.ckpt".format(epochs, int(test_loss)))
+        saver.save(sess, "save/model-fc3-{}-{}.ckpt".format(epochs, int(test_loss)))
     return True
 
 
@@ -81,4 +81,4 @@ if __name__ == '__main__':
     X_train_org, X_test_org, Y_train_org, Y_test_org = load_data(file, test_size=0.2)
     # preprocessing
     X_train, X_test, Y_train, Y_test = preprocessing(X_train_org, X_test_org, Y_train_org, Y_test_org)
-    model(X_train, X_test, Y_train[:, 8:10], Y_test[:, 8:10], epochs=250)
+    model(X_train, X_test, Y_train[:, 6:12], Y_test[:, 6:12], epochs=500)
