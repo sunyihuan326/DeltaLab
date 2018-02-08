@@ -52,7 +52,7 @@ def read_feature(file_path):
         pass
     else:
         # import math
-        print(angle)
+        print('angle', angle)
         # angle = -angle / 180 * math.pi
         Image.open(file_path).rotate(angle, expand=1).save(file_path)
         landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
@@ -96,7 +96,7 @@ def eye_dis_check(position, fw):
     eye_ratio_in = eye_dis_in / fw
     eye_ratio_min = 0.380
     eye_ratio_max = 0.485
-    print(eye_ratio_in)
+    print('eye_ratio_in', eye_ratio_in)
     if eye_ratio_in < eye_ratio_min:
         print('eye_check_min')
         eye_ratio = eye_ratio_min
@@ -124,7 +124,7 @@ def nose_dis_check(position):
     nose_ratio_in = nose_hei / brow_hei
     nose_ratio_min = 0.47
     nose_ratio_max = 0.615
-    print(nose_ratio_in)
+    print('nose_ratio_in', nose_ratio_in)
     if nose_ratio_in < nose_ratio_min:
         print('nose_check_min')
         nose_ratio = nose_ratio_min
@@ -134,6 +134,7 @@ def nose_dis_check(position):
     else:
         nose_ratio = nose_ratio_in
 
+    nose_ratio = 0.565
     nose_hei_out = nose_ratio * brow_hei
     out_position[2][1] = nose_hei_out + out_position[4][1]
     return out_position
@@ -147,9 +148,9 @@ def lip_dis_check(position, hou):
     # lip2chin = out_position[4][1] - hou - out_position[3][1]
     nose_hei = out_position[4][1] - out_position[2][1]
     lip_ratio_in = nose2lip / nose_hei
-    lip_ratio_min = 0.25
-    lip_ratio_max = 0.28
-    print(lip_ratio_in)
+    lip_ratio_min = 0.26
+    lip_ratio_max = 0.27
+    print('lip_ratio_in', lip_ratio_in)
     if lip_ratio_in < lip_ratio_min:
         print('lip_check_min')
         lip_ratio = lip_ratio_min
@@ -158,7 +159,7 @@ def lip_dis_check(position, hou):
         lip_ratio = lip_ratio_max
     else:
         lip_ratio = lip_ratio_in
-    print(lip_ratio)
+
     out_position[3][1] = out_position[2][1] + lip_ratio * nose_hei
 
     return out_position
@@ -238,12 +239,13 @@ def main(file_path):
     lip_id = lip.predict(_lip)
     nose_id = nose.predict(_nose)
     # eye_id = 22
-    # nose_id = 12
-    # lip_id=2
+    # nose_id = 11
+    # lip_id = 2
     # eyebr_id=1
 
     chin_id = faceshape + '-' + str(ChinData[faceshape].predict(_chin))
-    # chin_id = 'A-7'
+    # chin_id = 'B-6'
+    # chin_id = 'A-9'
     feature_index = {
         'left_eye': eye_id,
         'right_eye': eye_id,
@@ -297,6 +299,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 64
+    i = 2
     file = 'check/{}.jpg'.format(i)
     one_file(file)

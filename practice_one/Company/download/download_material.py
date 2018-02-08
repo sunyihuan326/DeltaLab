@@ -42,16 +42,16 @@ def update_one_face_material(face_obj, img_domain):
     # model_img = img_domain + face_obj['face_img']
     # download_url_img(model_img, 'material/cartoon/face/{}/model/{}-{}.jpg'.format(typ, typ, _id), mode='RGB')
     mark = typ + '-' + _id
-    # if mark in ['A-7', 'B-10']:
-    for i in range(3):
-        # 冷中暖
-        for j in range(3):
-            # 浅中深
-            file_name = str(3 * j + i + 1)
-            key = '_{}_{}'.format(i, j)
-            img = img_domain + face_obj[key]
-            download_url_img(img, 'material/cartoon/face/{}/{}/{}-{}.png'.format(typ, file_name, typ, _id))
-        return True
+    if mark in ['E-3', 'A-7', 'B-10']:
+        for i in range(3):
+            # 冷中暖
+            for j in range(3):
+                # 浅中深
+                file_name = str(3 * j + i + 1)
+                key = '_{}_{}'.format(i, j)
+                img = img_domain + face_obj[key]
+                download_url_img(img, 'material/cartoon/face/{}/{}/{}-{}.png'.format(typ, file_name, typ, _id))
+    return True
 
 
 def update_position():
@@ -229,7 +229,7 @@ def download_lip_material():
 
 
 def update_one_lip_material(lip_obj, img_domain):
-    _id = lip_obj['title']
+    _id = lip_obj['title'].split('-')[1]
 
     model_img = img_domain + lip_obj['face_img']
     download_url_img(model_img, 'material/cartoon/lip/model/{}.jpg'.format(_id), mode='RGB')

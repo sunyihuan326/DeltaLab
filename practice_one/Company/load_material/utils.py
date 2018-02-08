@@ -105,7 +105,7 @@ def get_baseInfo(full_path):
     res = client.detect(get_file_content(full_path), options=options)
     assert res['result_num'] == 1
     result = res['result'][0]
-    assert result['face_probability'] > 0.8
+    # assert result['face_probability'] > 0.8
 
     isPerson = result['qualities']['type']['human']
     isCartoon = result['qualities']['type']['cartoon']
