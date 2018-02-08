@@ -165,6 +165,29 @@ def lip_dis_check(position, hou):
     return out_position
 
 
+def eyebrow_hei_check(position, hei):
+    out_position = position
+    ratio_in = (out_position[1][1] - out_position[0][1]) / hei
+    ratio_max = 0.20
+    ratio_min = 0.17
+    ratio_out = min(max(ratio_in, ratio_min), ratio_max)
+
+    dis_in = ratio_out * hei
+    dis_min = 45
+    dis_max = 48
+    dis_out = min(max(dis_in, dis_min), dis_max)
+    print(dis_out)
+    print(ratio_out)
+    out_position[0][1] = out_position[1][1] - dis_out
+    out_position[-2][1] = out_position[1][1] - dis_out
+    # 0.2286 ok
+    # 0.14 close
+    # 0.25 far
+    # 0.239 far
+    print('----222----', (out_position[1] - out_position[0])[1])
+    return out_position
+
+
 def merge_all(real_width, real_height, real_points, feature_index):
     skin_color = 1
     face_id = feature_index['chin']
@@ -186,6 +209,9 @@ def merge_all(real_width, real_height, real_points, feature_index):
     # leb,leye,nose,lip,chin,reb,reye
     last_position = norm_real_points + chin_point
     last_position = eye_dis_check(last_position, face_data[0])
+
+    last_position = eyebrow_hei_check(last_position, ear_height)
+
     last_position = nose_dis_check(last_position)
     hou = CartoonPoint['lip'][feature_index['lip'] - 1][2]
     last_position = lip_dis_check(last_position, hou)
@@ -299,6 +325,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 2
+    i = 7
     file = 'check/{}.jpg'.format(i)
     one_file(file)
