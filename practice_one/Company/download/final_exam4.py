@@ -94,19 +94,18 @@ def eye_dis_check(position, fw):
     out_position = position
     eye_dis_in = position[-1][0] - position[1][0]
     eye_ratio_in = eye_dis_in / fw
-    eye_ratio_min = 0.380
-    eye_ratio_max = 0.485
-    print('eye_ratio_in', eye_ratio_in)
-    if eye_ratio_in < eye_ratio_min:
-        print('eye_check_min')
-        eye_ratio = eye_ratio_min
-    elif eye_ratio_in > eye_ratio_max:
-        print('eye_check_max')
-        eye_ratio = eye_ratio_max
-    else:
-        eye_ratio = eye_ratio_in
+    eye_ratio_min = 0.43
+    # eye_ratio_max = 0.485
+    eye_ratio_max = 0.45
+    eye_ratio = min(max(eye_ratio_in, eye_ratio_min), eye_ratio_max)
 
-    eye_dis_out = eye_ratio * fw
+    eye_dis_min = 127
+    eye_dis_max = 130
+    eye_dis_out_1 = eye_ratio * fw
+    eye_dis_out = min(max(eye_dis_out_1, eye_dis_min), eye_dis_max)
+    # 126.42
+    print('eye_dis_out', eye_dis_out)
+
     eye_diff = eye_dis_out - eye_dis_in
     out_position[-1][0] += eye_diff / 2
     out_position[1][0] -= eye_diff / 2
@@ -264,13 +263,13 @@ def main(file_path):
     eye_id = eye.predict(_eye)
     lip_id = lip.predict(_lip)
     nose_id = nose.predict(_nose)
-    # eye_id = 22
+    eye_id = 16
     # nose_id = 11
-    # lip_id = 2
+    # lip_id = 11
     # eyebr_id=1
 
     chin_id = faceshape + '-' + str(ChinData[faceshape].predict(_chin))
-    # chin_id = 'B-6'
+    chin_id = 'E-1'
     # chin_id = 'A-9'
     feature_index = {
         'left_eye': eye_id,
