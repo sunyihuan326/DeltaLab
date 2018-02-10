@@ -402,6 +402,6 @@ class Face(object):
 
 
 ts = time.time()
-face = Face('check/7.jpg', stature=1, sense=2, age=35)
+face = Face('check/13.jpg', stature=1, sense=2, age=35)
 face.report()
 print(time.time() - ts)
