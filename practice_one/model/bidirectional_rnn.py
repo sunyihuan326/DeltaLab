@@ -8,12 +8,6 @@ import math
 from practice_one.model.utils import *
 import scipy.io as scio
 
-'''
-To classify images using a bidirectional recurrent neural network, we consider
-every image row as a sequence of pixels. Because MNIST image shape is 28*28px,
-we will then handle 28 sequences of 28 steps for every sample.
-'''
-
 
 # Network Parameters
 
