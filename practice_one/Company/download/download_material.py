@@ -54,6 +54,7 @@ def update_one_face_material(face_obj, img_domain):
     return True
 
 
+
 def update_position():
     resList = requests.get('http://devxm.meiyezhushou.com/api/m/sample/face/list').json()
 
