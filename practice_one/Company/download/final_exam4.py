@@ -263,13 +263,13 @@ def main(file_path):
     eye_id = eye.predict(_eye)
     lip_id = lip.predict(_lip)
     nose_id = nose.predict(_nose)
-    eye_id = 5
+    # eye_id = 5
     # nose_id = 11
     # lip_id = 11
     # eyebr_id=1
 
     chin_id = faceshape + '-' + str(ChinData[faceshape].predict(_chin))
-    chin_id = 'E-1'
+    # chin_id = 'B-8'
     # chin_id = 'A-9'
     feature_index = {
         'left_eye': eye_id,
@@ -324,6 +324,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 10
+    i = 12
     file = 'check/{}.jpg'.format(i)
     one_file(file)
