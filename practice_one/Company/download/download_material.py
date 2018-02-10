@@ -39,10 +39,10 @@ def update_one_face_material(face_obj, img_domain):
     title = face_obj['title']
     typ, wid, hei, _id = title.split('-')
 
-    # model_img = img_domain + face_obj['face_img']
-    # download_url_img(model_img, 'material/cartoon/face/{}/model/{}-{}.jpg'.format(typ, typ, _id), mode='RGB')
+    model_img = img_domain + face_obj['face_img']
+    download_url_img(model_img, 'material/cartoon/face/{}/model/{}-{}.jpg'.format(typ, typ, _id), mode='RGB')
     mark = typ + '-' + _id
-    if mark in ['E-3', 'A-7', 'B-10']:
+    if mark in ['E-99']:
         for i in range(3):
             # 冷中暖
             for j in range(3):
@@ -240,4 +240,7 @@ def update_one_lip_material(lip_obj, img_domain):
 
 
 if __name__ == '__main__':
+    # download_face_material()
+    # download_lip_material()
+    # download_nose_material()
     update_position()
