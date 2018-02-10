@@ -8,7 +8,7 @@ from practice_one.Company.load_material.utils import *
 
 
 def get_face_feature():
-    for typ in ['A', 'B', 'C', 'D', 'E']:
+    for typ in ['A','B']:
         print('开始{}型导入'.format(typ))
         dir_path = os.listdir('material/cartoon/face/{}/model'.format(typ))
         m = 25

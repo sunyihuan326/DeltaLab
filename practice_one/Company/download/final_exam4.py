@@ -52,7 +52,7 @@ def read_feature(file_path):
         pass
     else:
         # import math
-        print(angle)
+        print('angle', angle)
         # angle = -angle / 180 * math.pi
         Image.open(file_path).rotate(angle, expand=1).save(file_path)
         landmark72, angle, gender, glasses, faceshape = get_baseInfo(file_path)
@@ -94,19 +94,18 @@ def eye_dis_check(position, fw):
     out_position = position
     eye_dis_in = position[-1][0] - position[1][0]
     eye_ratio_in = eye_dis_in / fw
-    eye_ratio_min = 0.380
-    eye_ratio_max = 0.485
-    print(eye_ratio_in)
-    if eye_ratio_in < eye_ratio_min:
-        print('eye_check_min')
-        eye_ratio = eye_ratio_min
-    elif eye_ratio_in > eye_ratio_max:
-        print('eye_check_max')
-        eye_ratio = eye_ratio_max
-    else:
-        eye_ratio = eye_ratio_in
+    eye_ratio_min = 0.43
+    # eye_ratio_max = 0.485
+    eye_ratio_max = 0.45
+    eye_ratio = min(max(eye_ratio_in, eye_ratio_min), eye_ratio_max)
 
-    eye_dis_out = eye_ratio * fw
+    eye_dis_min = 127
+    eye_dis_max = 130
+    eye_dis_out_1 = eye_ratio * fw
+    eye_dis_out = min(max(eye_dis_out_1, eye_dis_min), eye_dis_max)
+    # 126.42
+    print('eye_dis_out', eye_dis_out)
+
     eye_diff = eye_dis_out - eye_dis_in
     out_position[-1][0] += eye_diff / 2
     out_position[1][0] -= eye_diff / 2
@@ -124,7 +123,7 @@ def nose_dis_check(position):
     nose_ratio_in = nose_hei / brow_hei
     nose_ratio_min = 0.47
     nose_ratio_max = 0.615
-    print(nose_ratio_in)
+    print('nose_ratio_in', nose_ratio_in)
     if nose_ratio_in < nose_ratio_min:
         print('nose_check_min')
         nose_ratio = nose_ratio_min
@@ -134,6 +133,7 @@ def nose_dis_check(position):
     else:
         nose_ratio = nose_ratio_in
 
+    nose_ratio = 0.565
     nose_hei_out = nose_ratio * brow_hei
     out_position[2][1] = nose_hei_out + out_position[4][1]
     return out_position
@@ -147,9 +147,9 @@ def lip_dis_check(position, hou):
     # lip2chin = out_position[4][1] - hou - out_position[3][1]
     nose_hei = out_position[4][1] - out_position[2][1]
     lip_ratio_in = nose2lip / nose_hei
-    lip_ratio_min = 0.25
-    lip_ratio_max = 0.28
-    print(lip_ratio_in)
+    lip_ratio_min = 0.26
+    lip_ratio_max = 0.27
+    print('lip_ratio_in', lip_ratio_in)
     if lip_ratio_in < lip_ratio_min:
         print('lip_check_min')
         lip_ratio = lip_ratio_min
@@ -158,9 +158,32 @@ def lip_dis_check(position, hou):
         lip_ratio = lip_ratio_max
     else:
         lip_ratio = lip_ratio_in
-    print(lip_ratio)
+
     out_position[3][1] = out_position[2][1] + lip_ratio * nose_hei
 
+    return out_position
+
+
+def eyebrow_hei_check(position, hei):
+    out_position = position
+    ratio_in = (out_position[1][1] - out_position[0][1]) / hei
+    ratio_max = 0.20
+    ratio_min = 0.17
+    ratio_out = min(max(ratio_in, ratio_min), ratio_max)
+
+    dis_in = ratio_out * hei
+    dis_min = 45
+    dis_max = 48
+    dis_out = min(max(dis_in, dis_min), dis_max)
+    print(dis_out)
+    print(ratio_out)
+    out_position[0][1] = out_position[1][1] - dis_out
+    out_position[-2][1] = out_position[1][1] - dis_out
+    # 0.2286 ok
+    # 0.14 close
+    # 0.25 far
+    # 0.239 far
+    print('----222----', (out_position[1] - out_position[0])[1])
     return out_position
 
 
@@ -185,6 +208,9 @@ def merge_all(real_width, real_height, real_points, feature_index):
     # leb,leye,nose,lip,chin,reb,reye
     last_position = norm_real_points + chin_point
     last_position = eye_dis_check(last_position, face_data[0])
+
+    last_position = eyebrow_hei_check(last_position, ear_height)
+
     last_position = nose_dis_check(last_position)
     hou = CartoonPoint['lip'][feature_index['lip'] - 1][2]
     last_position = lip_dis_check(last_position, hou)
@@ -237,13 +263,14 @@ def main(file_path):
     eye_id = eye.predict(_eye)
     lip_id = lip.predict(_lip)
     nose_id = nose.predict(_nose)
-    # eye_id = 22
-    # nose_id = 12
-    # lip_id=2
+    # eye_id = 5
+    # nose_id = 11
+    # lip_id = 11
     # eyebr_id=1
 
     chin_id = faceshape + '-' + str(ChinData[faceshape].predict(_chin))
-    # chin_id = 'A-7'
+    # chin_id = 'B-8'
+    # chin_id = 'A-9'
     feature_index = {
         'left_eye': eye_id,
         'right_eye': eye_id,
@@ -297,6 +324,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 64
+    i = 12
     file = 'check/{}.jpg'.format(i)
     one_file(file)
