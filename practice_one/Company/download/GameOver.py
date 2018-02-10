@@ -22,7 +22,7 @@ SHAPE_TRANS = {'oval': "A", 'heart': "B", 'square': "C", 'triangle': "D", 'round
 SHAPE_NAME = {"A": "鹅蛋脸", "B": "心型脸", "C": "方脸", "D": "三角脸", "E": "圆脸"}
 SHAPE_NUM = {"A": 3, "B": 1, "C": 4, "D": 2, "E": 0}
 STYLE_TRANS = ['甜美可爱', '自然优雅', '浪漫迷人', '魅力时尚', '高雅柔美', '华丽高雅', '清纯简洁', '知性沉着', '现代摩登']
-DOMAIN = 'https://devai.meiyezhushou.com'
+DOMAIN = 'http://xmai.meiyezhushou.com'
 COURT = ['上庭过长', '上庭过短', '正常']
 
 
@@ -401,6 +401,6 @@ class Face(object):
 
 
 ts = time.time()
-face = Face('check/12.jpg', stature=1, sense=2, age=35)
+face = Face('check/10.jpg', stature=1, sense=2, age=35)
 face.report()
 print(time.time() - ts)

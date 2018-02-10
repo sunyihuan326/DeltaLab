@@ -263,7 +263,7 @@ def main(file_path):
     eye_id = eye.predict(_eye)
     lip_id = lip.predict(_lip)
     nose_id = nose.predict(_nose)
-    eye_id = 16
+    # eye_id = 16
     # nose_id = 11
     # lip_id = 11
     # eyebr_id=1
@@ -324,6 +324,6 @@ def one_dir(dir):
 
 
 if __name__ == "__main__":
-    i = 7
+    i = 10
     file = 'check/{}.jpg'.format(i)
     one_file(file)
