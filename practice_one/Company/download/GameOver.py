@@ -401,6 +401,7 @@ class Face(object):
         self.trX = graph.get_tensor_by_name("Placeholder:0")
 
 
+
 ts = time.time()
 face = Face('check/13.jpg', stature=1, sense=2, age=35)
 face.report()
