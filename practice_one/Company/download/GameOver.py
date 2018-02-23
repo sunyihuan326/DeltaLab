@@ -391,6 +391,7 @@ class Face(object):
         self.sense_2classes_parameters = scio.loadmat('material/style/sense2.mat')
         self.expert_exp = scio.loadmat('material/style/style_expert_exp-2.mat')['data']
 
+
     def __load_top_model(self):
         tf.reset_default_graph()
         saver = tf.train.import_meta_graph("material/face/model.ckpt.meta")
