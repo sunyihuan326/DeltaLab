@@ -5,7 +5,6 @@ Created on 2018/1/12.
 @author: chk01
 '''
 
-
 def get_face_box(points):
     X = points[:, 0]
     Y = points[:, 1]
