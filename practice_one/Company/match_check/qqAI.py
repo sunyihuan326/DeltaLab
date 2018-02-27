@@ -180,7 +180,7 @@ def ExecTecentAPI(*arg, **kwds):
 
 
 if __name__ == "__main__":
-    file = '1002.jpg'
+    file = '3.jpg'
     rest = ExecTecentAPI(Apiname='face_dect', image=file)
     landmark72 = rest['data']['face_list'][0]['face_shape']
     for key in ['face_profile', '', '', '', '', '', '', '', '', '', '']:

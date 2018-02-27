@@ -266,8 +266,8 @@ def main(file_path):
     # eye_id = 5
     # nose_id = 11
     # lip_id = 11
-    # eyebr_id=1
-
+    eyebr_id=1
+    #1,7
     chin_id = faceshape + '-' + str(ChinData[faceshape].predict(_chin))
     # chin_id = 'B-8'
     # chin_id = 'A-9'
