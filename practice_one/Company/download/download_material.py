@@ -195,9 +195,9 @@ def download_eye_material():
 def update_one_brow_material(brow_obj, img_domain):
     title = brow_obj['title']
     tt, _id = str(title).split('-')
-    if tt == 'l':
-        model_img = img_domain + brow_obj['face_img']
-        download_url_img(model_img, 'material/cartoon/left_eyebrow/model/{}.jpg'.format(_id), mode='RGB')
+    # if tt == 'l':
+    #     model_img = img_domain + brow_obj['face_img']
+    #     download_url_img(model_img, 'material/cartoon/left_eyebrow/model/{}.jpg'.format(_id), mode='RGB')
 
     if brow_obj['img']:
         img = img_domain + brow_obj['img']
@@ -241,7 +241,8 @@ def update_one_lip_material(lip_obj, img_domain):
 
 
 if __name__ == '__main__':
-    download_face_material()
+    # download_face_material()
     # download_lip_material()
     # download_nose_material()
-    # update_position()
+    # download_brow_material()
+    update_position()
