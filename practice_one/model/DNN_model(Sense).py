@@ -37,13 +37,13 @@ absolute_error = [
 
 
 def preprocessing(trX, teX, trY, teY):
-    res = SMOTE(ratio="auto", random_state=42)
-    trY = np.argmax(trY, 1)
-
-    trX, trY = res.fit_sample(trX, trY)
-    # teX, teY = res.fit_sample(teX, teY)
-    # teY = np.argmax(teY, 1)
-    trY = np.eye(3)[trY]
+    # res = SMOTE(ratio="auto", random_state=42)
+    # trY = np.argmax(trY, 1)
+    # #
+    # trX, trY = res.fit_sample(trX, trY)
+    # # # teX, teY = res.fit_sample(teX, teY)
+    # # # teY = np.argmax(teY, 1)
+    # trY = np.eye(3)[trY]
     return trX, teX, trY, teY
 
 
@@ -86,7 +86,7 @@ def forward_propagation(X, parameters, kp):
 
 
 def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=2000, minibatch_size=64,
-          initial_learning_rate=0.5, minest_learning_rate=0.001):
+          initial_learning_rate=0.5, minest_learning_rate=0.02):
     ops.reset_default_graph()
 
     m, n_x = X_train.shape
@@ -98,34 +98,38 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
     X, Y = create_placeholders(n_x, n_y)
     parameters = initialize_parameters_deep(layer_dims)
 
+    # XX = tf.layers.batch_normalization(X)
+    # print(XX)
     ZL = forward_propagation(X, parameters, kp)
-    # ss = tf.where(tf.greater(abs(Y - ZL), 1), abs(Y - ZL) * 10, abs(Y - ZL) * 1)
-    # cost = tf.reduce_sum(ss)
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
-    tf.summary.scalar('cost', cost)
-    # cost = compute_cost(Z1, Y) + tf.contrib.layers.l1_regularizer(.2)(parameters['W1'])
-    # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
 
+    # ss = tf.where(tf.greater(abs(Y - ZL), 1), abs(Y - ZL) * 5, abs(Y - ZL) * 1)
+    # cost = tf.reduce_mean(ss)
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
+    l2 = tf.contrib.layers.l2_regularizer(0.51)(parameters["W1"])
+    cost = cost + 0.01 * l2
+    tf.summary.scalar('cost', cost)
+    # optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum=0.99).minimize(cost)
+    #
     learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                                global_step=global_step,
-                                               decay_steps=1000, decay_rate=0.95)
+                                               decay_steps=100, decay_rate=0.96)
     learning_rate = tf.maximum(learning_rate, minest_learning_rate)
     tf.summary.scalar('learning_rate', learning_rate)
 
-    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
+    optimizer = tf.train.AdadeltaOptimizer(learning_rate).minimize(cost)
 
     add_global = global_step.assign_add(1)
-    merge_op = tf.summary.merge_all()
 
     correct_pred = tf.equal(tf.argmax(ZL, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
     tf.summary.scalar('accuracy', accuracy)
 
     init = tf.global_variables_initializer()
+    merge_op = tf.summary.merge_all()
 
     with tf.Session() as sess:
         sess.run(init)
-        writer = tf.summary.FileWriter(logdir='logdir/MNIST/DNN')
+        writer = tf.summary.FileWriter(logdir='logdir/Sense_DNN')
         for epoch in range(epochs):
             minibatch_cost = 0.
             num_minibatches = int(m / minibatch_size)
@@ -133,25 +137,29 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1.0, epochs=20
 
             for minibatch in minibatches:
                 (minibatch_X, minibatch_Y) = minibatch
-                summary, zl, par, _, temp_cost, _, acc = sess.run(
-                    [merge_op, ZL, parameters, optimizer, cost, add_global, accuracy],
+                summary, zl, par, _, temp_cost, _, acc, l_2, p, learn = sess.run(
+                    [merge_op, ZL, parameters, optimizer, cost, add_global, accuracy, l2, parameters, learning_rate],
                     feed_dict={X: minibatch_X, Y: minibatch_Y, kp: keep_prob})
                 minibatch_cost += temp_cost / num_minibatches
-                writer.add_summary(summary)
-            if epoch % 200 == 0:
-                print("Cost|Acc after epoch %i: %f | %f" % (epoch, temp_cost, acc))
-
-        train_accuracy = accuracy.eval({X: X_train, Y: Y_train, kp: 1})
-        test_accuracy = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
+                writer.add_summary(summary, epoch)
+            if epoch % 20 == 0:
+                test_accuracy = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
+                print("Cost|Acc after epoch %i: %f ， %f|%f" % (epoch, temp_cost, acc, test_accuracy))
+                print("learning rate:", learn)
+                print("l2:", l_2)
+                # print("W1:", p["W1"])
+        #
+        # train_accuracy = accuracy.eval({X: X_train, Y: Y_train, kp: 1})
+        # test_accuracy = accuracy.eval({X: X_test, Y: Y_test, kp: 1})
         ZL = ZL.eval({X: X_test, Y: Y_test, kp: 1})
         ZY = list(np.argmax(ZL, 1))
 
         # predict data distribution for 3 classes
         for i in range(3):
             print(str(i) + "比例", round(100 * ZY.count(i) / len(ZY), 2), "%")
-
-        print("Train Accuracy:", train_accuracy)
-        print("Test Accuracy:", test_accuracy)
+        #
+        # print("Train Accuracy:", train_accuracy)
+        # print("Test Accuracy:", test_accuracy)
 
     return par, ZY
 
@@ -174,8 +182,9 @@ if __name__ == '__main__':
     data_check(Y_test)
 
     layer_dims = [X_train.shape[1], Y_train.shape[1]]
+    print("layers_dims", layer_dims)
 
-    parameters, z1 = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=0.9, epochs=400,
+    parameters, z1 = model(X_train, Y_train, X_test, Y_test, layer_dims, keep_prob=1, epochs=4000,
                            initial_learning_rate=0.5)
 
     # caculate accept accuracy
@@ -183,12 +192,6 @@ if __name__ == '__main__':
     for i in range(len(z1)):
         if abs(z1[i] - np.argmax(Y_test, 1)[i]) > 1:
             c += 1 / len(z1)
-    # c1 = 0.
-    # for i in range(len(z1)):
-    #     if z1[i] in accept_ans[np.argmax(Y_test, 1)[i]]:
-    #         c += 1. / len(z1)
-    #     if z1[i] not in absolute_error[np.argmax(Y_test, 1)[i]]:
-    #         c1 += 1. / len(z1)
     print("accept error", c)
 
     # roc curve
@@ -198,4 +201,4 @@ if __name__ == '__main__':
 
     # Classification index
     print(classification_report(y_pred=z1, y_true=np.argmax(Y_test, 1)))
-    # scio.savemat(file + 'DNN_parameter', parameters)
+    scio.savemat(file + 'DNN_parameter', parameters)
