@@ -270,7 +270,7 @@ def main(file_path):
     #1,7
     chin_id = faceshape + '-' + str(ChinData[faceshape].predict(_chin))
     # chin_id = 'B-8'
-    # chin_id = 'A-9'
+    chin_id = 'E-7'
     feature_index = {
         'left_eye': eye_id,
         'right_eye': eye_id,

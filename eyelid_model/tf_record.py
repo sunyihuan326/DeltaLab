@@ -34,15 +34,15 @@ class Data2TFrecord(object):
                     self.labels.append(folder)
 
     def save(self, save_path):
-        to_gray = False
+        to_gray = True
         rotate = False
         brightness = False
-        contrast = True
+        contrast = False
         size = 64
-        epoches = 2
+        epoches = 1
 
         number_image = len(self.images_path)
-        file_queue = tf.train.string_input_producer(self.images_path, shuffle=False)
+        file_queue = tf.train.string_input_producer(self.images_path, shuffle=False,num_epochs=1)
         image_reader = tf.WholeFileReader()
         key, image = image_reader.read(file_queue)
         self.image = tf.image.decode_jpeg(image)
@@ -67,7 +67,7 @@ class Data2TFrecord(object):
             self.image = tf.image.random_contrast(self.image, lower=20, upper=99)
         # crop_to_bounding_box 暂时用dropout代替
 
-        self.image = tf.cast(tf.squeeze(self.image), tf.float32) / 255
+        self.image = tf.cast(tf.squeeze(self.image), tf.float32) / 255.0
 
         with tf.Session() as sess:
             label_dict = dict(zip(self.classes, range(len(self.classes))))
@@ -107,9 +107,7 @@ class Data2TFrecord(object):
 def read(path):
     batch_size = 64
     image_size = 64
-    print(2)
-    filename_queue = tf.train.string_input_producer([path], shuffle=True)
-    print(3)
+    filename_queue = tf.train.string_input_producer([path], shuffle=False)
     reader = tf.TFRecordReader()
     _, serialized_example = reader.read(filename_queue)
     img_features = tf.parse_single_example(
@@ -120,17 +118,17 @@ def read(path):
         })
     image = tf.decode_raw(img_features['image_raw'], tf.float32)
     # image = tf.cast(image, tf.float32)
-    min_after_dequeue = batch_size * 3
-    image = tf.reshape(image, [image_size, image_size,3])
+    min_after_dequeue = 1000
+    image = tf.reshape(image, [image_size, image_size, 1])
     # image = tf.cast(image, tf.float32)
     label = tf.cast(img_features['label'], tf.int32)
     capacity = min_after_dequeue + 3 * batch_size
     print(4)
-    image_batch, label_batch = tf.train.shuffle_batch([image, label],
+    image_batch, label_batch = tf.train.batch([image, label],
                                                       batch_size=batch_size,
                                                       num_threads=1,
                                                       capacity=capacity,
-                                                      min_after_dequeue=min_after_dequeue)
+                                                      )
     print(5)
     return image_batch, label_batch
 
@@ -141,12 +139,12 @@ def read(path):
 # 队列中允许的数据最大量capacity>=min_after_dequeue+num_threads*batch_size。
 # F:/dataSets/CASIA/HWDB1/train/train
 
-tt = Data2TFrecord('C:/Users/chk01/Desktop/eyelid/train')
-tt.save('train.tfrecords')
-# assert 1 == 0
+tt = Data2TFrecord('C:/Users/chk01/Desktop/eyelid/fix1/train')
+tt.save('model/data/train1.tfrecords')
+assert 1 == 0
 # C:/Users/chk01/Desktop/eyelid/data/
-image_batch_j, label_batch_j = read('train.tfrecords')
-print(6)
+image_batch_j, label_batch_j = read('model/data/valid1.tfrecords')
+# print(6)
 with tf.Session() as sess:
     init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
     sess.run(init_op)
@@ -154,17 +152,18 @@ with tf.Session() as sess:
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
     try:
-        for j in range(1):
+        for j in range(10):
             image_batch_now, label_batch_now = sess.run([image_batch_j, label_batch_j])
             for i in range(len(image_batch_now)):
                 if i == 0:
                     plt.figure()
                     plt.axis('equal')
-                    plt.imshow(image_batch_now[i],cmap='brg')
+                    plt.imshow(image_batch_now[i].reshape(64, 64), cmap='gray')
                     plt.title(label_batch_now[i])
                     plt.show()
     except tf.errors.OutOfRangeError:
         print("Done reading!")
+        coord.request_stop()
     finally:
         coord.request_stop()
-    coord.join(threads)
+        coord.join(threads)
