@@ -10,9 +10,9 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
-from eyelid_model.model.config import cfg
-from eyelid_model.model.utils import load_data, get_batch_data
-from eyelid_model.model.Net import DxqNet
+from NetTest.config import cfg
+from NetTest.utils import get_batch_data
+from NetTest.Net import DxqNet
 
 
 def save_to():
@@ -36,20 +36,20 @@ def save_to():
         fd_loss.write('step,loss\n')
         fd_val_acc = open(val_acc, 'w')
         fd_val_acc.write('step,val_acc\n')
-        return (fd_train_acc, fd_loss, fd_val_acc)
+        return fd_train_acc, fd_loss, fd_val_acc
     else:
         test_acc = cfg.results + '/test_acc.csv'
         if os.path.exists(test_acc):
             os.remove(test_acc)
         fd_test_acc = open(test_acc, 'w')
         fd_test_acc.write('test_acc\n')
-        return (fd_test_acc)
+        return fd_test_acc
 
 
 def train(model, supervisor):
     fd_train_acc, fd_loss, fd_val_acc = save_to()
-    num_tr_batch = 2850 // cfg.batch_size
-    num_val_batch = 150 // cfg.batch_size
+    num_tr_batch = 55000 // cfg.batch_size
+    num_val_batch = 5000 // cfg.batch_size
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -78,8 +78,8 @@ def train(model, supervisor):
 
                 if cfg.val_sum_freq != 0 and (global_step % cfg.val_sum_freq == 0):
                     val_acc = 0
+                    valX, vallabels = sess.run([model.valX, model.vallabels])
                     for i in range(num_val_batch):
-                        valX, vallabels = sess.run([model.valX, model.vallabels])
                         acc = sess.run(model.accuracy, {model.X: valX, model.labels: vallabels})
                         val_acc += acc
                     val_acc = val_acc / num_val_batch
@@ -97,11 +97,11 @@ def train(model, supervisor):
 
 
 def evaluation():
-    num_te_batch = 3 * 150 // cfg.batch_size
+    num_te_batch = 5000 // cfg.batch_size
     fd_test_acc = save_to()
     with tf.Session() as sess:
-        saver = tf.train.import_meta_graph(cfg.logdir + '/model_epoch_0099_step_2200.meta')
-        saver.restore(sess, cfg.logdir + '/model_epoch_0099_step_2200')
+        saver = tf.train.import_meta_graph(cfg.logdir + '/model_epoch_0099_step_4400.meta')
+        saver.restore(sess, cfg.logdir + '/model_epoch_0099_step_4400')
         graph = tf.get_default_graph()
 
         teX, teY = get_batch_data(cfg.dataset, cfg.batch_size, cfg.num_threads, train_mode='test', graph=sess.graph)
@@ -112,30 +112,23 @@ def evaluation():
         test_acc = 0
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord, sess=sess, start=True)
-        try:
-            for i in tqdm(range(num_te_batch), ncols=70, leave=False, unit='b'):
-                # print(tf.train.latest_checkpoint('./'))
-                X = graph.get_tensor_by_name('shuffle_batch:0')
-                out = graph.get_tensor_by_name('FC/out/BiasAdd:0')
-                labels = graph.get_tensor_by_name('shuffle_batch:1')
-                accuracy = graph.get_tensor_by_name('acc:0')
-                tteX, tteY = sess.run([teX, teY])
-                acc, _out = sess.run([accuracy, out], {X: tteX, labels: tteY})
-                print('tex', tteY)
-                print('pre', np.argmax(_out, axis=1))
-                print(acc)
-                test_acc += acc
 
-        except tf.errors.OutOfRangeError:
-            print('tf.errors.OutOfRangeError')
-            coord.request_stop()
-        finally:
-            test_acc = test_acc / num_te_batch
-            fd_test_acc.write(str(test_acc))
-            fd_test_acc.close()
-            print('Test accuracy has been saved to ' + cfg.results + '/test_acc.csv')
-            coord.request_stop()
-            coord.join(threads)
+        for i in tqdm(range(num_te_batch), ncols=70, leave=False, unit='b'):
+            # print(tf.train.latest_checkpoint('./'))
+            X = graph.get_tensor_by_name('shuffle_batch:0')
+            labels = graph.get_tensor_by_name('shuffle_batch:1')
+            accuracy = graph.get_tensor_by_name('acc:0')
+            tteX, tteY = sess.run([teX, teY])
+            acc = sess.run(accuracy, {X: tteX, labels: tteY})
+            test_acc += acc
+
+        test_acc = test_acc / num_te_batch
+        fd_test_acc.write(str(test_acc))
+        fd_test_acc.close()
+        print('Test accuracy has been saved to ' + cfg.results + '/test_acc.csv')
+
+        coord.request_stop()
+        coord.join(threads)
 
 
 def main(_):

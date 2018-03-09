@@ -11,9 +11,9 @@ from tqdm import tqdm
 
 # from skimage import feature
 
-TYPE = 'single'
-FILE_DIR = 'C:/Users/chk01/Desktop/eyelid/' + TYPE
-SAVE_DIR = 'C:/Users/chk01/Desktop/eyelid/new/' + TYPE
+TYPE = 'double'
+FILE_DIR = 'C:/Users/chk01/Desktop/eyelid/test/' + TYPE
+SAVE_DIR = 'C:/Users/chk01/Desktop/eyelid/test/new/' + TYPE
 SAMPLE_SIZE = 64
 
 
@@ -87,7 +87,6 @@ def one_file(file_dir, file_name):
 def one_dir(file_dir):
     file_list = os.listdir(file_dir)
     print(len(file_list))
-    assert 1==0
     for file_name in tqdm(file_list, ncols=70, leave=False, unit='b'):
         one_file(file_dir, file_name)
 

@@ -14,3 +14,5 @@ sessions/*
 node_modules/*
 
 publisher.log
+eyelid_model/model2/best/*
+eyelid_model/model2/data/*

@@ -5,7 +5,7 @@ created on 2018/2/24
 @author:Dxq
 '''
 import tensorflow as tf
-from eyelid_model.model.config import cfg
+from NetTest.config import cfg
 
 
 def load_data(dataset='eyelid', train_mode='train'):
@@ -35,15 +35,12 @@ def load_data(dataset='eyelid', train_mode='train'):
     # image = tf.decode_raw(features['image_raw'], tf.uint8)
 
     label = tf.cast(features['label'], tf.int64)
-    image_dim = 64
-    image = tf.decode_raw(features['image_raw'], tf.float32)
+    image_dim = 28
+    image = tf.decode_raw(features['image_raw'], tf.uint8)
     image = tf.cast(image, tf.float32) * (1. / 255)
 
     image = tf.reshape(image, [image_dim, image_dim, 1])
     image.set_shape([image_dim, image_dim, 1])
-
-    # Convert from [0, 255] -> [-0.5, 0.5] floats.
-    # image = tf.cast(image, tf.float32) * (1. / 255)
 
     return image, label
 
