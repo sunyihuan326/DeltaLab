@@ -1,9 +1,10 @@
-# coding:utf-8
+# coding:utf-8 
 '''
-Created on 2017/12/19
+created on 2018/3/9
 
-@author: sunyihuan
+@author:sunyihuan
 '''
+
 import math
 import pandas as pd
 import numpy as np
@@ -89,116 +90,62 @@ def get_center_loss(features, labels, alpha, num_classes):
     return loss, centers_update_op
 
 
-def model(trX, trY, teX, teY, lr=0.1, epoches=200, minibatch_size=64, drop_prob=.3):
+def model(trX, trY, teX, teY, lr=0.5, minibatch_size=64, epoches=200, drop_prob=0.21):
     graph = tf.Graph()
     with graph.as_default():
-        X = tf.placeholder(tf.float32, shape=[None, 64, 64, 3])
-        # XX = tf.reshape(X, shape=[-1, 64, 64, 3])
-        Y = tf.placeholder(tf.int32, shape=[None, 1])
-        YY = tf.reshape(tf.one_hot(Y, 2, on_value=1, off_value=None, axis=1), [-1, 2])
-
+        X = tf.placeholder(tf.float32, shape=[None, 64, 64, 1])
+        Y = tf.placeholder(tf.int32, shape=[None, 3])
         dp = tf.placeholder(tf.float32)
         global_step = tf.Variable(0, trainable=False)
 
-        reg1 = tf.contrib.layers.l2_regularizer(scale=0.5)
+        reg1 = tf.contrib.layers.l2_regularizer(scale=0.4)
+
         conv1 = tf.layers.conv2d(X, 32, 5, padding='same', kernel_regularizer=reg1)
         conv1 = tf.layers.max_pooling2d(conv1, 2, 2, padding='same')
-        conv1 = tf.layers.batch_normalization(conv1)
-
-        # reg2 = tf.contrib.layers.l2_regularizer(scale=0.2)
-        conv2 = tf.layers.conv2d(conv1, 64, 3, padding='valid', kernel_regularizer=reg1)
-        conv2 = tf.layers.max_pooling2d(conv2, 2, 2, padding='same')
-
-        # reg3 = tf.contrib.layers.l2_regularizer(scale=0.05)
-        # conv3 = tf.layers.conv2d(conv2, 128, 3, padding='same', kernel_regularizer=reg3)
-        # conv3 = tf.layers.max_pooling2d(conv3, 2, 2, padding='same')
-
-        # convZ = tf.layers.flatten(pool3)
-        convZ = tf.contrib.layers.flatten(conv2)
-
-        # fc1 = tf.layers.dense(convZ, 256, activation=tf.nn.relu)
-        # fc2 = tf.layers.dense(fc1, 128, activation=tf.nn.relu)
-        # fc3 = tf.layers.dense(fc2, 64, activation=tf.nn.relu)
-        # fc4 = tf.layers.dense(fc3, 32, activation=tf.nn.relu)
-        # fc1 = tf.layers.batch_normalization(fc1)
-        # fc1 = tf.layers.dropout(fc1, rate=dp, training=True)
+        # conv1 = tf.layers.batch_normalization(conv1)
         #
-        fc2 = tf.layers.dense(convZ, 2)
-        # 最好的是2
-        fc2 = tf.layers.batch_normalization(fc2)
+        # conv2 = tf.layers.conv2d(conv1, 64, 3, padding='valid', kernel_regularizer=reg1)
+        # conv2 = tf.layers.max_pooling2d(conv2, 2, 2, padding='same')
+        convZ = tf.contrib.layers.flatten(conv1)
+
+        fc2 = tf.layers.dense(convZ, 9)
+        # fc2 = tf.layers.batch_normalization(fc2)
         fc2 = tf.layers.dropout(fc2, rate=dp, training=True)
 
-        # fc5 = tf.layers.dense(convZ, 16, activation=None, name='fc3')
-
-        # fc3_out = tf.nn.relu(fc5)
-        # fc3 = tf.layers.batch_normalization(fc3)
-        # fc3 = tf.layers.dropout(fc3, rate=dp, training=True)
-        ZL = tf.layers.dense(fc2, 2, activation=None)
-
-        # loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
+        ZL = tf.layers.dense(fc2, 3, activation=None)
 
         learning_rate = tf.train.exponential_decay(lr,
                                                    global_step=global_step,
-                                                   decay_steps=100, decay_rate=0.95)
-        learning_rate = tf.maximum(learning_rate, .01)
-
-        # with tf.variable_scope('loss_scope'):
-        #     centerloss, centers_update_op = get_center_loss(fc2, Y, 0.5, 2)
-        # self.loss = tf.losses.softmax_cross_entropy(onehot_labels=util.makeonehot(self.y, self.CLASSNUM), logits=self.score)
-        # lambda则0.1-0.0001之间不等
-        # print('YY', YY)
-        # print('ZL', ZL)
-        loss = tf.losses.sparse_softmax_cross_entropy(labels=Y, logits=ZL)
-        with tf.control_dependencies([]):  # centers_update_op
+                                                   decay_steps=100, decay_rate=0.92)
+        learning_rate = tf.maximum(learning_rate, .001)
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
+        with tf.control_dependencies([]):
             train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss, global_step=global_step)
 
-        #     train_op = tf.train.AdamOptimizer(learning_rate, 0.9).minimize(loss)
-        # train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
-        # loss = tf.losses.sparse_softmax_cross_entropy(labels=Y, logits=ZL)
-        # train_op = tf.train.AdamOptimizer(learning_rate, 0.9).minimize(loss, global_step=global_step)
-
         predict_op = tf.argmax(ZL, 1)
-        print('predict_op', predict_op)
-        correct_prediction = tf.equal(predict_op, tf.argmax(YY, 1))
+        correct_prediction = tf.equal(predict_op, tf.argmax(Y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-        print('accuracy', accuracy)
-        # add_global = global_step.assign_add(1)
-        # init = tf.global_variables_initializer()
         sv = tf.train.Supervisor(graph=graph, logdir=logdir, save_model_secs=0)
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        with sv.managed_session(config=config) as sess:
+        with sv.managed_session() as sess:
             # sess.run(init)
             for epoch in range(epoches):
                 for minibatch_X, minibatch_Y in minibatches(trX, trY, minibatch_size, shuffle=True):
                     _lr, _loss, _ = sess.run([learning_rate, loss, train_op],
                                              feed_dict={X: minibatch_X, Y: minibatch_Y, dp: drop_prob})
                 if epoch % 5 == 0:
-                    # train_accuracy = accuracy.eval({X: trX[:2000], Y: trY[:2000], dp: 0.0})
-                    # test_accuracy = accuracy.eval({X: teX[:2000], Y: teY[:2000], dp: 0.0})
                     train_accuracy = sess.run(accuracy, feed_dict={X: trX[:2000], Y: trY[:2000], dp: 0.0})
                     test_accuracy = sess.run(accuracy, feed_dict={X: teX[:2000], Y: teY[:2000], dp: 0.0})
                     print('lr===', _lr)
                     print(
                         "Cost after epoch %i: %f tr-acc: %f te-acc: %f" % (epoch, _loss, train_accuracy, test_accuracy))
-                    # print("X", trX[2:5])
-                    # print("conv1", sess.run(conv1, feed_dict={X: trX[2:5], Y: trY[2:5], dp: 0.0}))
-                    # print("convZ", sess.run(convZ, feed_dict={X: trX[2:5], Y: trY[2:5], dp: 0.0}))
-                    # print("fc2", sess.run(fc2, feed_dict={X: trX[2:5], Y: trY[2:5], dp: 0.0}))
-                    # print("predict_op", predict_op.eval({X: trX[2:10]}))
-                    # print(np.squeeze(trY[2:10]))
+
                 if (epoch + 1) % 20 == 0:
                     sv.saver.save(sess, logdir + "/model-{}-{}".format(epoch + 1, round(test_accuracy * 100, 2)))
 
-            # 修改网络倒数层为2，然后输出特征
-            # _fc3 = fc3.eval({X: teX[:2000], Y: teY[:2000], dp: 0.0})
-            # plt.scatter(_fc3[:, 0], _fc3[:, 1], c=teY[:2000])
-            # plt.show()
-            train_accuracy = sess.run(accuracy, feed_dict={X: trX[:2000], Y: trY[:2000], dp: 0.0})
-            test_accuracy = sess.run(accuracy, feed_dict={X: teX[:2000], Y: teY[:2000], dp: 0.0})
+            train_accuracy = sess.run(accuracy, feed_dict={X: trX[:400], Y: trY[:400], dp: 0.0})
+            test_accuracy = sess.run(accuracy, feed_dict={X: teX[:400], Y: teY[:400], dp: 0.0})
             print("Train Accuracy:", train_accuracy)
             print("Test Accuracy:", test_accuracy)
-            # saver.save(sess, "save/model-{}-{}".format(epoches, round(test_accuracy, 2)))
 
 
 def predict():
@@ -233,13 +180,16 @@ def predict():
 
 # predict()
 # assert 1 == 0
-trd = scio.loadmat('/Users/sunyihuan/Desktop/Data/eyelid/eyelid_64x64x3_train1796.mat')
-trX = trd['X']
-trLabel = trd['label']
+trd = scio.loadmat('/Users/sunyihuan/PycharmProjects/DeltaLab/Sense_model/data/face_1_channel_XY64_sense.mat')
+trX = trd['X'][:1200]
+trLabel = trd['Y'][:1200]
+trX = trX.reshape(-1, 64, 64, 1)
 
-ted = scio.loadmat('/Users/sunyihuan/Desktop/Data/eyelid/eyelid_64x64x3_test119.mat')
-teX = ted['X']
-teLabel = ted['label']
+
+ted = scio.loadmat('/Users/sunyihuan/PycharmProjects/DeltaLab/Sense_model/data/face_1_channel_XY64_sense.mat')
+teX = ted['X'][1200:]
+teLabel = ted['Y'][1200:]
+teX = teX.reshape(-1, 64, 64, 1)
 
 # trX, teX, trY, teY = train_test_split(trX / 255., trLabel, test_size=.2, shuffle=True)
 model(trX / 255., trLabel, teX / 255., teLabel, epoches=1000)
