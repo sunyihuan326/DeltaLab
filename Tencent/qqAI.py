@@ -100,6 +100,7 @@ class MsgTencent(object):
         if not isinstance(req_dict, dict): return None
         if not isinstance(app_key, str) or not app_key: return None
         try:
+            print(req_dict['image'])
             # 方法，先对字典排序，排序之后，写app_key，再urlencode
             sort_dict = sorted(req_dict.items(), key=lambda item: item[0], reverse=False)
             # sort_dict=[sort_dict[0],sort_dict[2],sort_dict[3]]
@@ -133,7 +134,7 @@ class MsgTencent(object):
             req_dict['nonce_str'] = nonce_str
         # app_key 取系统参数。
         if not app_key: app_key = self.app_key
-
+        print('222',req_dict.keys(),'222')
         md5key = self.gen_dict_md5(req_dict, app_key)
         return md5key
 
@@ -175,6 +176,7 @@ def ExecTecentAPI(*arg, **kwds):
     # 生成请求包
     Req_Dict['mode'] = 1
     sign = tx.gen_req_dict(req_dict=Req_Dict)
+    print(Req_Dict)
     resp = requests.post(url, data=Req_Dict)
     return resp.text
 
@@ -182,6 +184,7 @@ def ExecTecentAPI(*arg, **kwds):
 if __name__ == "__main__":
     file = '3.jpg'
     rest = ExecTecentAPI(Apiname='face_dect', image=file)
+    print(rest)
     landmark72 = rest['data']['face_list'][0]['face_shape']
     for key in ['face_profile', '', '', '', '', '', '', '', '', '', '']:
         pass
