@@ -89,7 +89,7 @@ def get_center_loss(features, labels, alpha, num_classes):
     return loss, centers_update_op
 
 
-def model(trX, trY, teX, teY, lr=0.1, epoches=200, minibatch_size=64, drop_prob=.3):
+def model(trX, trY, teX, teY, lr=0.1, epoches=200, minibatch_size=64, drop_prob=.5):
     graph = tf.Graph()
     with graph.as_default():
         X = tf.placeholder(tf.float32, shape=[None, 64, 64, 3])
@@ -103,9 +103,9 @@ def model(trX, trY, teX, teY, lr=0.1, epoches=200, minibatch_size=64, drop_prob=
         reg1 = tf.contrib.layers.l2_regularizer(scale=0.5)
         conv1 = tf.layers.conv2d(X, 32, 5, padding='same', kernel_regularizer=reg1)
         conv1 = tf.layers.max_pooling2d(conv1, 2, 2, padding='same')
-        conv1 = tf.layers.batch_normalization(conv1)
+        # conv1 = tf.layers.batch_normalization(conv1)
 
-        # reg2 = tf.contrib.layers.l2_regularizer(scale=0.2)
+        reg2 = tf.contrib.layers.l2_regularizer(scale=0.2)
         conv2 = tf.layers.conv2d(conv1, 64, 3, padding='valid', kernel_regularizer=reg1)
         conv2 = tf.layers.max_pooling2d(conv2, 2, 2, padding='same')
 
@@ -123,9 +123,9 @@ def model(trX, trY, teX, teY, lr=0.1, epoches=200, minibatch_size=64, drop_prob=
         # fc1 = tf.layers.batch_normalization(fc1)
         # fc1 = tf.layers.dropout(fc1, rate=dp, training=True)
         #
-        fc2 = tf.layers.dense(convZ, 2)
+        fc2 = tf.layers.dense(convZ, 6)
         # 最好的是2
-        fc2 = tf.layers.batch_normalization(fc2)
+        # fc2 = tf.layers.batch_normalization(fc2)
         fc2 = tf.layers.dropout(fc2, rate=dp, training=True)
 
         # fc5 = tf.layers.dense(convZ, 16, activation=None, name='fc3')
@@ -158,15 +158,15 @@ def model(trX, trY, teX, teY, lr=0.1, epoches=200, minibatch_size=64, drop_prob=
         # train_op = tf.train.AdamOptimizer(learning_rate, 0.9).minimize(loss, global_step=global_step)
 
         predict_op = tf.argmax(ZL, 1)
-        print('predict_op', predict_op)
+        # print('predict_op', predict_op)
         correct_prediction = tf.equal(predict_op, tf.argmax(YY, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-        print('accuracy', accuracy)
+        # print('accuracy', accuracy)
         # add_global = global_step.assign_add(1)
         # init = tf.global_variables_initializer()
         sv = tf.train.Supervisor(graph=graph, logdir=logdir, save_model_secs=0)
         config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
+        config.gpu_options.allow_growth = False
         with sv.managed_session(config=config) as sess:
             # sess.run(init)
             for epoch in range(epoches):
@@ -198,6 +198,7 @@ def model(trX, trY, teX, teY, lr=0.1, epoches=200, minibatch_size=64, drop_prob=
             test_accuracy = sess.run(accuracy, feed_dict={X: teX[:2000], Y: teY[:2000], dp: 0.0})
             print("Train Accuracy:", train_accuracy)
             print("Test Accuracy:", test_accuracy)
+
             # saver.save(sess, "save/model-{}-{}".format(epoches, round(test_accuracy, 2)))
 
 
@@ -205,21 +206,22 @@ def predict():
     from PIL import Image
     tf.reset_default_graph()
     # graph
-    saver = tf.train.import_meta_graph("best/model-640-91.18.meta")
+    saver = tf.train.import_meta_graph(
+        "/Users/sunyihuan/PycharmProjects/DeltaLab/eyelid_model/model2/save/model-200-80.67.meta")
     # value
     # a = tf.train.NewCheckpointReader('save/model.ckpt.index')
     # saver = tf.train.Saver()
-    vad = scio.loadmat('data/test.mat')
+    vad = scio.loadmat('/Users/sunyihuan/Desktop/Data/eyelid/eyelid_64x64x3_valid102.mat')
     vaX = vad['X']
     vaLabel = vad['label']
     with tf.Session() as sess:
-        saver.restore(sess, "best/model-640-91.18")
+        saver.restore(sess, "/Users/sunyihuan/PycharmProjects/DeltaLab/eyelid_model/model2/save/model-200-80.67")
         graph = tf.get_default_graph()
 
         predict_op = graph.get_tensor_by_name("ArgMax:0")
         X = graph.get_tensor_by_name("Placeholder:0")
-        # dp = graph.get_tensor_by_name("Placeholder_2:0")
-        prediction = predict_op.eval({X: vaX / 255.})
+        dp = graph.get_tensor_by_name("Placeholder_2:0")
+        prediction = predict_op.eval({X: vaX / 255., dp: 0.0})
         print('valid_accuracy==', sum(prediction == np.squeeze(vaLabel)) / len(vaX))
 
         for i in range(len(vaX)):
@@ -232,6 +234,8 @@ def predict():
 
 
 # predict()
+
+# print("-------------++++++++++++++*****************+++++=================-----------")
 # assert 1 == 0
 trd = scio.loadmat('/Users/sunyihuan/Desktop/Data/eyelid/eyelid_64x64x3_train1796.mat')
 trX = trd['X']

@@ -90,25 +90,30 @@ def get_center_loss(features, labels, alpha, num_classes):
     return loss, centers_update_op
 
 
-def model(trX, trY, teX, teY, lr=0.5, minibatch_size=64, epoches=200, drop_prob=0.21):
+def model(trX, trY, vaX, vaY, lr=0.5, minibatch_size=64, epoches=200, drop_prob=0.4):
     graph = tf.Graph()
     with graph.as_default():
-        X = tf.placeholder(tf.float32, shape=[None, 64, 64, 1])
-        Y = tf.placeholder(tf.int32, shape=[None, 3])
+        X = tf.placeholder(tf.float32, shape=[None, 64, 64, 3])
+        Y = tf.placeholder(tf.int32, shape=[None, 1])
+        YY = tf.reshape(tf.one_hot(Y, 3, on_value=1, off_value=None, axis=1), [-1, 3])
         dp = tf.placeholder(tf.float32)
         global_step = tf.Variable(0, trainable=False)
 
-        reg1 = tf.contrib.layers.l2_regularizer(scale=0.4)
+        # reg1 = tf.contrib.layers.l2_regularizer(scale=0.5)
 
-        conv1 = tf.layers.conv2d(X, 32, 5, padding='same', kernel_regularizer=reg1)
+        conv1 = tf.layers.conv2d(X, 32, 5, padding='same', kernel_regularizer=0)
         conv1 = tf.layers.max_pooling2d(conv1, 2, 2, padding='same')
-        # conv1 = tf.layers.batch_normalization(conv1)
-        #
-        # conv2 = tf.layers.conv2d(conv1, 64, 3, padding='valid', kernel_regularizer=reg1)
-        # conv2 = tf.layers.max_pooling2d(conv2, 2, 2, padding='same')
-        convZ = tf.contrib.layers.flatten(conv1)
+        conv1 = tf.layers.batch_normalization(conv1)
 
-        fc2 = tf.layers.dense(convZ, 9)
+        conv2 = tf.layers.conv2d(conv1, 64, 3, padding='valid', kernel_regularizer=0)
+        conv2 = tf.layers.max_pooling2d(conv2, 2, 2, padding='same')
+
+        conv3 = tf.layers.conv2d(conv1, 128, 3, padding='valid', kernel_regularizer=0)
+        conv3 = tf.layers.max_pooling2d(conv3, 2, 2, padding='same')
+
+        convZ = tf.contrib.layers.flatten(conv3)
+
+        fc2 = tf.layers.dense(convZ, 6)
         # fc2 = tf.layers.batch_normalization(fc2)
         fc2 = tf.layers.dropout(fc2, rate=dp, training=True)
 
@@ -116,14 +121,14 @@ def model(trX, trY, teX, teY, lr=0.5, minibatch_size=64, epoches=200, drop_prob=
 
         learning_rate = tf.train.exponential_decay(lr,
                                                    global_step=global_step,
-                                                   decay_steps=100, decay_rate=0.92)
+                                                   decay_steps=100, decay_rate=0.9)
         learning_rate = tf.maximum(learning_rate, .001)
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=ZL, labels=Y))
+        loss = tf.losses.sparse_softmax_cross_entropy(labels=Y, logits=ZL)
         with tf.control_dependencies([]):
-            train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss, global_step=global_step)
+            train_op = tf.train.AdadeltaOptimizer(learning_rate).minimize(loss, global_step=global_step)
 
         predict_op = tf.argmax(ZL, 1)
-        correct_prediction = tf.equal(predict_op, tf.argmax(Y, 1))
+        correct_prediction = tf.equal(predict_op, tf.argmax(YY, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         sv = tf.train.Supervisor(graph=graph, logdir=logdir, save_model_secs=0)
         with sv.managed_session() as sess:
@@ -134,7 +139,7 @@ def model(trX, trY, teX, teY, lr=0.5, minibatch_size=64, epoches=200, drop_prob=
                                              feed_dict={X: minibatch_X, Y: minibatch_Y, dp: drop_prob})
                 if epoch % 5 == 0:
                     train_accuracy = sess.run(accuracy, feed_dict={X: trX[:2000], Y: trY[:2000], dp: 0.0})
-                    test_accuracy = sess.run(accuracy, feed_dict={X: teX[:2000], Y: teY[:2000], dp: 0.0})
+                    test_accuracy = sess.run(accuracy, feed_dict={X: vaX[:2000], Y: vaY[:2000], dp: 0.0})
                     print('lr===', _lr)
                     print(
                         "Cost after epoch %i: %f tr-acc: %f te-acc: %f" % (epoch, _loss, train_accuracy, test_accuracy))
@@ -142,31 +147,29 @@ def model(trX, trY, teX, teY, lr=0.5, minibatch_size=64, epoches=200, drop_prob=
                 if (epoch + 1) % 20 == 0:
                     sv.saver.save(sess, logdir + "/model-{}-{}".format(epoch + 1, round(test_accuracy * 100, 2)))
 
-            train_accuracy = sess.run(accuracy, feed_dict={X: trX[:400], Y: trY[:400], dp: 0.0})
-            test_accuracy = sess.run(accuracy, feed_dict={X: teX[:400], Y: teY[:400], dp: 0.0})
+            train_accuracy = sess.run(accuracy, feed_dict={X: trX, Y: trY, dp: 0.0})
+            test_accuracy = sess.run(accuracy, feed_dict={X: vaX, Y: vaY, dp: 0.0})
             print("Train Accuracy:", train_accuracy)
             print("Test Accuracy:", test_accuracy)
 
 
-def predict():
+def predict(vaX, vaLabel):
     from PIL import Image
     tf.reset_default_graph()
     # graph
-    saver = tf.train.import_meta_graph("best/model-640-91.18.meta")
+    saver = tf.train.import_meta_graph(
+        "/Users/sunyihuan/PycharmProjects/DeltaLab/Sense_model/save/model-120-54.97.meta")
     # value
     # a = tf.train.NewCheckpointReader('save/model.ckpt.index')
     # saver = tf.train.Saver()
-    vad = scio.loadmat('data/test.mat')
-    vaX = vad['X']
-    vaLabel = vad['label']
     with tf.Session() as sess:
-        saver.restore(sess, "best/model-640-91.18")
+        saver.restore(sess, "/Users/sunyihuan/PycharmProjects/DeltaLab/Sense_model/save/model-120-54.97")
         graph = tf.get_default_graph()
 
         predict_op = graph.get_tensor_by_name("ArgMax:0")
         X = graph.get_tensor_by_name("Placeholder:0")
-        # dp = graph.get_tensor_by_name("Placeholder_2:0")
-        prediction = predict_op.eval({X: vaX / 255.})
+        dp = graph.get_tensor_by_name("Placeholder_2:0")
+        prediction = predict_op.eval({X: vaX / 255., dp: 0.0})
         print('valid_accuracy==', sum(prediction == np.squeeze(vaLabel)) / len(vaX))
 
         for i in range(len(vaX)):
@@ -178,20 +181,27 @@ def predict():
                                                                                                 i))
 
 
-# predict()
-# assert 1 == 0
-trd = scio.loadmat('/Users/sunyihuan/PycharmProjects/DeltaLab/Sense_model/data/face_1_channel_XY64_sense.mat')
-trX = trd['X'][:1200]
-trLabel = trd['Y'][:1200]
-trX = trX.reshape(-1, 64, 64, 1)
+trd = scio.loadmat('/Users/sunyihuan/Desktop/Data/Sense/64X64X3-XY-Sense-train.mat')
 
+trX = trd['X']
+trLabel = trd['Y']
+trX = trX.reshape(-1, 64, 64, 3)
 
-ted = scio.loadmat('/Users/sunyihuan/PycharmProjects/DeltaLab/Sense_model/data/face_1_channel_XY64_sense.mat')
-teX = ted['X'][1200:]
-teLabel = ted['Y'][1200:]
-teX = teX.reshape(-1, 64, 64, 1)
+val = scio.loadmat('/Users/sunyihuan/Desktop/Data/Sense/64X64X3-XY-Sense-valid.mat')
+vaX = val['X']
+vaLabel = val['Y']
+vaX = vaX.reshape(-1, 64, 64, 3)
+vaLabel = vaLabel.astype(np.int32)
+
+ted = scio.loadmat('/Users/sunyihuan/Desktop/Data/Sense/64X64X3-XY-Sense-test.mat')
+teX = ted['X']
+teLabel = ted['Y']
+teX = teX.reshape(-1, 64, 64, 3)
+
+predict(teX / 255., teLabel)
+assert 1 == 0
 
 # trX, teX, trY, teY = train_test_split(trX / 255., trLabel, test_size=.2, shuffle=True)
-model(trX / 255., trLabel, teX / 255., teLabel, epoches=1000)
+model(trX / 255., trLabel, vaX / 255., vaLabel, epoches=1000)
 # predict()
 # draw_feature()
