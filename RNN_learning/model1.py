@@ -68,3 +68,7 @@ def build_datase(words):
 
 
 data, count, dictionary, reverse_dictionary = build_datase(words)
+
+del words
+print("Most common words (+UNK)", count[:5])
+print("Sample data", data[:10], [reverse_dictionary[i] for i in data[:10]])
