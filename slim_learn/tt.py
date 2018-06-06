@@ -6,10 +6,11 @@ created on 2018/5/28
 '''
 from tensorflow.contrib.slim.nets import *
 
-alexnet
-inception
-overfeat
-resnet_utils
-resnet_v1
-resnet_v2
-vgg
+# alexnet
+# inception
+# overfeat
+# resnet_utils
+# resnet_v1
+# resnet_v2
+# vgg
+
