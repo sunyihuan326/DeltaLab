@@ -17,7 +17,7 @@ from tensorflow_serving.apis import prediction_service_pb2_grpc, prediction_serv
 import time
 from serving_learning.hair_length_service import corp_region, get_baseInfo_tx, preprocess
 
-server = "47.93.235.220:8502"
+server = "118.25.212.169:8501"
 
 file_name = "/Users/sunyihuan/Desktop/Data/check_data/hair_length/0815fachang-yan_check0/tapai/2/8929.jpg"
 land_point = get_baseInfo_tx(file_name)
