@@ -7,6 +7,8 @@ Created on 2018/1/12.
 
 from PIL import Image, ImageDraw, ImageEnhance
 
+import os
+
 
 def get_face_box(points):
     X = points[:, 0]
@@ -42,3 +44,69 @@ def get_face_box(points):
     region = ImageEnhance.Contrast(region).enhance(999)
 
     return region
+
+
+def timeConversion(s):
+    if s[-2] == "P":
+        if int(s.split(":")[0]) >= 12:
+            t__ = s[:-2]
+        elif int(s.split(":")[0]) < 12:
+            t__ = str(int(s.split(":")[0]) + 12) + s[2:-2]
+    elif s[-2] == "A":
+        if int(s.split(":")[0]) >= 12:
+            a = int(s.split(":")[0]) - 12
+            if a < 10:
+                a = str(0) + str(a)
+            else:
+                a = str(a)
+            t__ = a + s[2:-2]
+        elif int(s.split(":")[0]) < 12:
+            t__ = s[:-2]
+    return t__
+    #
+    # Write your code here.
+    #
+
+
+def superReducedString(s):
+    s = list(s)
+    ll = len(s)
+    print(set(s))
+    aa = []
+    for i in range(ll - 3):
+        if s[i + 2] != s[i + 1] and s[i + 1] == s[i]:
+            aa.append(s[i + 1])
+            aa.append(s[i])
+    tt = list(set(s) - set(aa))
+    if len(tt) == 0:
+        t = "Empty String"
+    else:
+        t = tt
+    return t
+
+
+def money(a, pv, y):
+    '''
+
+    :param a: 每月交付金额
+    :param pv: 现有银行利率
+    :param y: 要交的年数
+    :return:
+    '''
+    money = 0.0
+    for i in range(y * 12):
+        k = a * pow((1 + pv / 1200), y * 12 - i)
+        money = money + k
+
+    return money
+
+
+if __name__ == '__main__':
+    # s = "aaabccddd"
+    #
+    # result = superReducedString(s)
+    # print(result)
+    # print(money(700, 6, 36))
+    file = "/Users/sunyihuan/Desktop/1.zip"
+    with open(file):
+        print("OK")
