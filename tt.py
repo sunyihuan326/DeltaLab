@@ -106,7 +106,7 @@ if __name__ == '__main__':
     #
     # result = superReducedString(s)
     # print(result)
-    # print(money(700, 6, 36))
-    file = "/Users/sunyihuan/Desktop/1.zip"
-    with open(file):
-        print("OK")
+    print(money(983, 3, 20))
+    # file = "/Users/sunyihuan/Desktop/1.zip"
+    # with open(file):
+    #     print("OK")

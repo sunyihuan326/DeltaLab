@@ -32,13 +32,13 @@ flags.DEFINE_integer('img_height', 224, 'height size')
 flags.DEFINE_integer('img_depth', 3, 'depth size')
 flags.DEFINE_integer('num_classes', 9, 'num of classes')
 
-flags.DEFINE_float('min_lr', 1e-6, 'the minimum value of  lr')
-flags.DEFINE_float('start_lr', 1e-4, 'the start value of  lr')
+flags.DEFINE_float('min_lr', 1e-8, 'the minimum value of  lr')
+flags.DEFINE_float('start_lr', 1e-8, 'the start value of  lr')
 flags.DEFINE_float('weight_decay', 1e-8, 'weight_decay of l2_loss')
 flags.DEFINE_float('dropout_rate', .5, 'Dropout rate')
 
 flags.DEFINE_string('data_dir_simple',
-                    '/Users/sunyihuan/Desktop/Data/hair_length/second_data_for_model/simple',
+                    '/Users/sunyihuan/Desktop/Data/hair_length/second_data_for_model//simple',
                     'The data directory.')
 flags.DEFINE_string('data_dir_complex',
                     '/Users/sunyihuan/Desktop/Data/hair_length/second_data_for_model/complex_all',
@@ -162,7 +162,9 @@ def loader(saver, session, load_dir):
 
 def finetune_model(base_out, num_classes, drop_rate):
     net = tf.layers.flatten(base_out)
-    out = tf.layers.dense(inputs=net, units=num_classes, name='OUT')
+    net = tf.layers.dense(inputs=net, units=100, name='DENSE1')
+    net = tf.layers.batch_normalization(net)
+    out = tf.layers.dense(inputs=net, units=9, name='OUT')
     return out
 
 
@@ -211,16 +213,15 @@ def train():
         # features, labels = get_record_data(graph, 'train')
         features = tf.placeholder(tf.float32, shape=[None, FLAGS.img_height, FLAGS.img_height, FLAGS.img_depth],
                                   name='features')
-        print(features)
         labels = tf.placeholder(tf.int32, shape=[None, ], name='labels')
         Y = tf.one_hot(labels, depth=class_num, axis=1, dtype=tf.float32)
 
         # extend others model
-        model = Model('vgg_16', features)
+        model = Model('inception_v4', features)
         # for key in model.end_points.keys():
         #     print(key)
         # 根据模型需要修改
-        net = model.end_points["vgg_16/conv2/conv2_1"]
+        net = model.end_points["global_pool"]
 
         # 后续的模型结构
         out = finetune_model(net, class_num, drop_rate)  # OUT/BiasAdd:0
@@ -239,8 +240,8 @@ def train():
 
         # for v in tf.trainable_variables():
         #     print(v)
-        train_layers = ["vgg_16/conv1", "vgg_16/conv2", "OUT"]
-        var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train_layers]
+        not_train_layers = ["Predictions", "PreLogitsFlatten", "Logits"]
+        var_list = [v for v in tf.global_variables() if v.name.split('/')[0] not in not_train_layers]
         # print(var_list)
         print(var_list)
 
@@ -315,28 +316,28 @@ def train():
                 test_count_complex = 0
                 te_features_complex, te_labels_complex, _ = get_record_data(graph, FLAGS.data_dir_complex, "test",
                                                                             False)
-
-                for _ in range(24):
-                    try:
-                        te_feature_batch, te_label_batch = sess.run([te_features_complex, te_labels_complex])
-                        test_feed_dict = {
-                            features: te_feature_batch,
-                            labels: te_label_batch
-                        }
-                        acc = sess.run(accuracy, feed_dict=test_feed_dict)
-                        s = sess.run(merge_op, feed_dict=test_feed_dict)
-                        valid_writer.add_summary(s, epoch * 130 + _)
-
-                        test_acc_complex += acc * len(te_label_batch)
-                        test_count_complex += len(te_label_batch)
-                        del te_feature_batch
-                        del te_label_batch
-                    except tf.errors.OutOfRangeError:
-                        print(_)
-                test_acc_complex /= test_count_complex
-                _S1 = tf.Summary(value=[tf.Summary.Value(tag='test_complex_accuracy', simple_value=test_acc_complex)])
-                valid_writer.add_summary(summary=_S1, global_step=epoch)
-                print("test complex Accuracy = {:.4f}".format(test_acc_complex))
+                #
+                # for _ in range(24):
+                #     try:
+                #         te_feature_batch, te_label_batch = sess.run([te_features_complex, te_labels_complex])
+                #         test_feed_dict = {
+                #             features: te_feature_batch,
+                #             labels: te_label_batch
+                #         }
+                #         acc = sess.run(accuracy, feed_dict=test_feed_dict)
+                #         s = sess.run(merge_op, feed_dict=test_feed_dict)
+                #         valid_writer.add_summary(s, epoch * 130 + _)
+                #
+                #         test_acc_complex += acc * len(te_label_batch)
+                #         test_count_complex += len(te_label_batch)
+                #         del te_feature_batch
+                #         del te_label_batch
+                #     except tf.errors.OutOfRangeError:
+                #         print(_)
+                # test_acc_complex /= test_count_complex
+                # _S1 = tf.Summary(value=[tf.Summary.Value(tag='test_complex_accuracy', simple_value=test_acc_complex)])
+                # valid_writer.add_summary(summary=_S1, global_step=epoch)
+                # print("test complex Accuracy = {:.4f}".format(test_acc_complex))
 
                 # # if (epoch + 1) % 2 == 0:
                 # # save checkpoint of the model
@@ -347,7 +348,23 @@ def train():
 
 
 def predict(error_show=False):
-    pass
+    hair_length_graph = tf.Graph()
+
+    # model_path = "/Users/sunyihuan/Desktop/parameters/hair_length/second/complex75.03_simple78.63/model.ckpt-23"  # check4
+    model_path = "/Users/sunyihuan/Desktop/parameters/hair_length/second/complex77_simple70/model.ckpt-39"  # check0
+    # 98.34
+    MEAN = 0
+    STD = 1.0
+    IMG_SIZE = 224
+
+    with hair_length_graph.as_default():
+        saver = tf.train.import_meta_graph("{}.meta".format(model_path))
+        sess = tf.InteractiveSession(graph=hair_length_graph)
+        saver.restore(sess, model_path)
+
+        predict_op = hair_length_graph.get_tensor_by_name("classes:0")
+        features = hair_length_graph.get_tensor_by_name("features: 0")
+
 
 
 def main(_):
