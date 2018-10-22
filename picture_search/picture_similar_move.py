@@ -20,8 +20,8 @@ def picture_copy(file_root_dir, file_search, file_query):
     to_save_dir = os.path.join(file_root_dir, str(f.split(".")[0]))  # 要保存的文件夹
 
     os.makedirs(to_save_dir, exist_ok=True)  # 创建文件夹
-    #
+
     file_query_name = file_query.split("/")[-1]  # 获取被选中图片的名字
-    #
+
     shutil.copy(file_search, os.path.join(to_save_dir, f))
     shutil.copy(file_query, os.path.join(to_save_dir, file_query_name))

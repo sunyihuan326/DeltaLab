@@ -140,11 +140,11 @@ if __name__ == "__main__":
     file_search = "/Users/sunyihuan/Desktop/tt/65978163b01bdf8e.jpg"
     image = img_process(file_search)
     img_data = get_hash(image).hexdigest()  # hash值展示
-    print(len(img_data))
+    print(img_data)
 
     file_query = output_similar(file_search)
     b = time.time()
-    # print("time:", b - a)
+    print("time:", b - a)
     print(file_query)
     Image.open(file_query).show()
 

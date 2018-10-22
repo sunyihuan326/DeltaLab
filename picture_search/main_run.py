@@ -4,32 +4,38 @@ created on 2018/10/15
 
 @author:sunyihuan
 '''
+import os
+import numpy as np
+from PIL import Image
+from picture_search.histogram.histogram import calMultipleHistogramSimilarity  # 直方图距离计算图片相似度
+import time
 
-import argparse
-import cv2
-from picture_search.picture_descriptor import ColorDescriptor
-from picture_search.picture_descriptor import Searcher
 
-aparse = argparse.ArgumentParser()
-aparse.add_argument("-q", "--queryFile", required=True, help="Path to the query image")
-aparse.add_argument("-i", "--indexFile", required=True, help="Path to where the computed index will be stored")
-aparse.add_argument("-r", "--result_path", required=True, help="Path to the result path")
-args = vars(aparse.parse_args())
+def output_similar_picture(file_search, file_query_dir):
+    '''
+    输出相似度最高的图片地址
+    :param file_search: 目标图片地址
+    :param file_query_dir: 被搜索文件夹
+    :return:
+    '''
+    HistogramSimilarity = []
+    dir_list = os.listdir(file_query_dir)
+    for i, file in enumerate(dir_list):
+        if file != ".DS_Store":
+            HistogramSimilarityData = calMultipleHistogramSimilarity(file_search, os.path.join(file_query_dir, file))
+            HistogramSimilarity.append(HistogramSimilarityData)
+    # print(len(HistogramSimilarity))
+    simlar_max = np.argmax(HistogramSimilarity)
+    # print(simlar_max)
+    file_query_file = dir_list[simlar_max]
+    return os.path.join(file_query_dir, file_query_file)
 
-cd = ColorDescriptor((8, 12, 3))  # 初始化图片描述
-query_img = cv2.imread(args["queryFile"])
-features = cd.describe(query_img)  # 获取指定图片的特征
 
-searcher = Searcher(args["indexFile"])
-results = searcher.search(features)
-print(results)
+file_search = "/Users/sunyihuan/Desktop/tt/65978163b01bdf8e.jpg"
+file_query_dir = "/Users/sunyihuan/Desktop/unlike"
 
-# cv2.imshow("Query", query_img) #显示指定的图片
-
-for (score, resultID) in results:
-    print(score, resultID)
-    # 显示搜索到的符合要求的照片
-    result = cv2.imread(args["result_path"] + "/" + resultID)
-# print result
-# cv2.imshow("Result", result)
-# cv2.waitKey(0)
+start = time.time()
+file_query_path = output_similar_picture(file_search, file_query_dir)
+end = time.time()
+print("all_time:", end - start)
+Image.open(file_query_path).show()

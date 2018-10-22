@@ -133,6 +133,7 @@ def get_hair_length_bei(img_path):
     :return:
     '''
     landmark_dict = get_baseInfo_tx(img_path)
+    print(landmark_dict)
     img = corp_region(img_path, landmark_dict)
     trX = preprocess(np.array(img.resize([IMG_SIZE, IMG_SIZE])).reshape([-1, IMG_SIZE, IMG_SIZE, 3]))
 
@@ -203,24 +204,28 @@ def output_similar(file_search_path):
 
 
 if __name__ == "__main__":
-    times = "firs0t"
+    times = "first0"
     if times == "first":
         write_data_as_mat()
 
     save_root_dir = "/Users/sunyihuan/Desktop/tt/search"
 
-    file_dir = "/Users/sunyihuan/Desktop/like"
-    for file in os.listdir(file_dir):
-        if file != ".DS_Store":
-            try:
-                file_search = os.path.join(file_dir, file)
-                file_query = output_similar(file_search)
-                picture_copy(save_root_dir, file_search, file_query)
-
-            except:
-                print("error:^**********")
+    # file_dir = "/Users/sunyihuan/Desktop/like"
+    # for file in os.listdir(file_dir):
+    #     if file != ".DS_Store":
+    #         try:
+    #             file_search = os.path.join(file_dir, file)
+    #             file_query = output_similar(file_search)
+    #             picture_copy(save_root_dir, file_search, file_query)
+    #
+    #         except:
+    #             print("error:^**********")
 
     # mat_path = "/Users/sunyihuan/Desktop/unlike.mat"
     # file_name, file_inceptionData = load_mat_data(mat_path)
     # print(file_name[0])
     # print(len(file_name[0]))
+    file_name = "/Users/sunyihuan/Desktop/tt/65978163b01bdf8e.jpg"
+
+    res = np.array(get_hair_length_bei(file_name))
+    print(res)
