@@ -11,13 +11,6 @@ import os
 
 
 class phash(object):
-    def __init__(self, img1_path, img2_path):
-        self.img1 = Image.open(img1_path)
-        self.img2 = Image.open(img2_path)
-
-    # 正则化图像
-    def regularizeImage(self, img, size=(256, 256)):
-        return np.array(img.resize(size).convert('L'))
 
     # 计算系数矩阵
     def getCoefficient(self, length):
@@ -40,6 +33,7 @@ class phash(object):
 
     # 计算左上角8*8并转化为list
     def submatrix_list(self, matrix, size=(8, 8)):
+        matrix = self.DCT(matrix)
         value = []
         for i in range(size[0]):
             for j in range(size[1]):
@@ -47,7 +41,8 @@ class phash(object):
         return value
 
     # 计算hash值
-    def getHashCode(self, sub_list):
+    def getHashCode(self, img):
+        sub_list = self.submatrix_list(img)
         length = len(sub_list)
         mean = sum(sub_list) / length
 
@@ -59,37 +54,3 @@ class phash(object):
                 result.append(0)
 
         return result
-
-    # 比较hash值
-    def compHashCode(self, hc1, hc2):
-        cnt = 0
-        for i, j in zip(hc1, hc2):
-            if i == j:
-                cnt += 1
-        return cnt
-
-    # 计算感知哈希算法相似度
-    def calpHashSimilarity(self):
-        img1 = self.regularizeImage(self.img1)
-        img2 = self.regularizeImage(self.img2)
-
-        DCT1 = self.DCT(img1)
-        DCT2 = self.DCT(img2)
-
-        sub_list1 = self.submatrix_list(DCT1)
-        sub_list2 = self.submatrix_list(DCT2)
-
-        hc1 = self.getHashCode(sub_list1)
-        hc2 = self.getHashCode(sub_list2)
-        return self.compHashCode(hc1, hc2)
-
-
-if __name__ == '__main__':
-    file_search = "/Users/sunyihuan/Desktop/tt/65978163b01bdf8e.jpg"
-    file_query_dir = "/Users/sunyihuan/Desktop/unlike"
-    dir_list = os.listdir(file_query_dir)
-    for i, file in enumerate(dir_list):
-        if file != ".DS_Store":
-            file_query = os.path.join(file_query_dir, file)
-            pahsh_start = phash(file_query, file_search)
-            print(pahsh_start.calpHashSimilarity())
