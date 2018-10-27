@@ -32,7 +32,7 @@ class phash(object):
         return DCT_matrix
 
     # 计算左上角8*8并转化为list
-    def submatrix_list(self, matrix, size=(8, 8)):
+    def submatrix_list(self, matrix, size=(64, 64)):
         matrix = self.DCT(matrix)
         value = []
         for i in range(size[0]):

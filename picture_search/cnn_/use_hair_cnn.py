@@ -133,7 +133,6 @@ def get_hair_length_bei(img_path):
     :return:
     '''
     landmark_dict = get_baseInfo_tx(img_path)
-    print(landmark_dict)
     img = corp_region(img_path, landmark_dict)
     trX = preprocess(np.array(img.resize([IMG_SIZE, IMG_SIZE])).reshape([-1, IMG_SIZE, IMG_SIZE, 3]))
 
@@ -141,24 +140,22 @@ def get_hair_length_bei(img_path):
     return res
 
 
-def write_data_as_mat():
+def write_data_as_mat(file_dir):
     '''
     将背搜索的图片特征提取后保存为mat格式
     :return:
     '''
-    file_dir = "/Users/sunyihuan/Desktop/unlike"
     X = []
     inceptionV3_value = []
     for i, file in enumerate(os.listdir(file_dir)):
         if file != ".DS_Store":
             try:
-                print(file)
                 file_res = get_hair_length_bei(os.path.join(file_dir, file))
                 X.append(str(os.path.join(file_dir, file)))
                 inceptionV3_value.append(file_res)
             except:
                 print("error")
-    scio.savemat("/Users/sunyihuan/Desktop/unlike.mat", {"X": X, "Y": inceptionV3_value})
+    scio.savemat("/Users/sunyihuan/Desktop/kongqi/unlike_cnn.mat", {"X": X, "Y": inceptionV3_value})
 
 
 def load_mat_data(mat_path):
@@ -190,7 +187,7 @@ def output_similar(file_search_path):
     :param file_search_path:
     :return:
     '''
-    mat_path = "/Users/sunyihuan/Desktop/unlike.mat"
+    mat_path = "/Users/sunyihuan/Desktop/kongqi/unlike_cnn.mat"
 
     res = np.array(get_hair_length_bei(file_search_path))
     file_name, file_inceptionData = load_mat_data(mat_path)
@@ -204,28 +201,27 @@ def output_similar(file_search_path):
 
 
 if __name__ == "__main__":
+    file_query_dir = "/Users/sunyihuan/Desktop/kongqi/kongqi0"  # 被搜索图文件夹
+
     times = "first0"
     if times == "first":
-        write_data_as_mat()
+        write_data_as_mat(file_query_dir)
 
-    save_root_dir = "/Users/sunyihuan/Desktop/tt/search"
+    file_search_dir = "/Users/sunyihuan/Desktop/like"  # 目标图文件夹
 
-    # file_dir = "/Users/sunyihuan/Desktop/like"
-    # for file in os.listdir(file_dir):
-    #     if file != ".DS_Store":
-    #         try:
-    #             file_search = os.path.join(file_dir, file)
-    #             file_query = output_similar(file_search)
-    #             picture_copy(save_root_dir, file_search, file_query)
+    save_root_dir = "/Users/sunyihuan/Desktop/kongqi/cnn_kongqi0"  # 要保存的文件夹
+
+    for file in os.listdir(file_search_dir):
+        if file != ".DS_Store":
+            try:
+                file_search = os.path.join(file_search_dir, file)
+                file_query = output_similar(file_search)
+                picture_copy(save_root_dir, file_search, file_query)
+
+            except:
+                print("error:^**********")
+
+    # file_name = "/Users/sunyihuan/Desktop/65978163b01bdf8e.jpg"
     #
-    #         except:
-    #             print("error:^**********")
-
-    # mat_path = "/Users/sunyihuan/Desktop/unlike.mat"
-    # file_name, file_inceptionData = load_mat_data(mat_path)
-    # print(file_name[0])
-    # print(len(file_name[0]))
-    file_name = "/Users/sunyihuan/Desktop/tt/65978163b01bdf8e.jpg"
-
-    res = np.array(get_hair_length_bei(file_name))
-    print(res)
+    # res = np.array(get_hair_length_bei(file_name))
+    # print(res)

@@ -11,7 +11,7 @@ import os
 
 class dhash(object):
     # 计算hash值
-    def getHashCode(self, img, size=(8, 8)):
+    def getHashCode(self, img, size=(64, 64)):
         result = []
         for i in range(size[0] - 1):
             for j in range(size[1]):

@@ -13,7 +13,7 @@ import os
 class ahash(object):
 
     # 计算hash值
-    def getHashCode(self, img, size=(8, 8)):
+    def getHashCode(self, img, size=(64, 64)):
         pixel = []
         for i in range(size[0]):
             for j in range(size[1]):

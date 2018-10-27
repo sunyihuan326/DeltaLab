@@ -62,15 +62,15 @@ def write_data_as_mat(file_query_dir, hash="ahash"):
                 print(file)
                 # img = img_process(os.path.join(file_query_dir, file))
                 img = np.array(img_process(os.path.join(file_query_dir, file)).convert("L"))
-                hash0 = imghash()
                 file_res = hash0.getHashCode(img)
                 X.append(str(os.path.join(file_query_dir, file)))
                 inceptionV3_value.append(file_res)
             except:
                 print("error")
-    scio.savemat("/Users/sunyihuan/Desktop/unlike_{}.mat".format(hash), {"X": X, "Y": inceptionV3_value})
+    scio.savemat("/Users/sunyihuan/Desktop/kongqi/1_{}.mat".format(hash), {"X": X, "Y": inceptionV3_value})
 
 
 if __name__ == "__main__":
-    file_query_dir = "/Users/sunyihuan/Desktop/unlike"
+    file_query_dir = "/Users/sunyihuan/Desktop/kongqi/kongqi1"
+    hash0 = imghash()
     write_data_as_mat(file_query_dir, hash="imghash")

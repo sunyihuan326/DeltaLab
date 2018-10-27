@@ -9,6 +9,7 @@ import scipy.io as scio
 import numpy as np
 import time
 from PIL import Image
+from picture_search.picture_similar_move import picture_copy
 from picture_search.hash_method.ahash import ahash  # ahash
 from picture_search.hash_method.dhash import dhash  # dhash
 from picture_search.hash_method.phash import phash  # phash
@@ -50,6 +51,26 @@ def img_process(file_search):
     return image.resize((64, 64))
 
 
+def write_data_as_mat(file_query_dir, hash="ahash"):
+    '''
+    将背搜索的图片特征提取后保存为mat格式
+    :return:
+    '''
+    X = []
+    inceptionV3_value = []
+    for i, file in enumerate(os.listdir(file_query_dir)):
+        if file != ".DS_Store":
+            try:
+                print(file)
+                img = np.array(img_process(os.path.join(file_query_dir, file)).convert("L"))
+                file_res = hash0.getHashCode(img)
+                X.append(str(os.path.join(file_query_dir, file)))
+                inceptionV3_value.append(file_res)
+            except:
+                print("error")
+    scio.savemat("/Users/sunyihuan/Desktop/kongqi/1_{}.mat".format(hash), {"X": X, "Y": inceptionV3_value})
+
+
 def load_mat_data(mat_path):
     '''
     家在mat文件中的图片特征数据
@@ -77,10 +98,9 @@ def output_similar(file_search_path, hash="ahash"):
     :return:
     '''
 
-    mat_path = "/Users/sunyihuan/Desktop/unlike_{}.mat".format(hash)
+    mat_path = "/Users/sunyihuan/Desktop/kongqi/1_{}.mat".format(hash)
 
     img = img_process(file_search_path)
-
     res = hash0.getHashCode(np.array(img.convert("L")))
     file_name, file_inceptionData = load_mat_data(mat_path)
     dist = np.zeros((len(file_inceptionData), 1))
@@ -94,13 +114,27 @@ def output_similar(file_search_path, hash="ahash"):
 
 if __name__ == "__main__":
     a = time.time()
-    file_search = "/Users/sunyihuan/Desktop/tt/65978163b01bdf8e.jpg"
+    file_query_dir = "/Users/sunyihuan/Desktop/kongqi/kongqi1"
 
-    hash0 = ahash()  # 选择hash方法
-    mat_hash = "ahash"
+    hash0 = imghash()  # 选择hash方法
+    mat_hash = "imghash"
 
-    file_query = output_similar(file_search, hash=mat_hash)
+    times = "first"
+    if times == "first":
+        write_data_as_mat(file_query_dir, mat_hash)
+
+    file_search_dir = "/Users/sunyihuan/Desktop/like1"  # 目标图文件夹
+
+    save_root_dir = "/Users/sunyihuan/Desktop/kongqi/{}_kongqi1".format(mat_hash)  # 要保存的文件夹
+
+    for file in os.listdir(file_search_dir):
+        if file != ".DS_Store":
+            try:
+                file_search = os.path.join(file_search_dir, file)
+                file_query = output_similar(file_search, mat_hash)
+                picture_copy(save_root_dir, file_search, file_query)
+
+            except:
+                print("error:^**********")
     b = time.time()
     print("time:", b - a)
-    print(file_query)
-    Image.open(file_query).show()
