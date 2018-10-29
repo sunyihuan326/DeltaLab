@@ -4,7 +4,7 @@ Created on 2017/12/12.
 
 @author: chk01
 '''
-from practice_two.load_data.utils import *
+from shuwei_fengge.practice_two.load_data.utils import *
 
 
 def main():

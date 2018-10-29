@@ -8,6 +8,9 @@
 .settings/*
 .project
 .pydevproject
+*.png
+*.jpg
+
 
 *.dat
 sessions/*

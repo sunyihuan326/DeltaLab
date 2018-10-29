@@ -6,7 +6,7 @@ Created on 2018/1/4.
 '''
 import os
 from PIL import Image, ImageDraw, ImageEnhance
-from practice_two.load_data.utils import *
+from shuwei_fengge.practice_two.load_data.utils import *
 
 LabelToSense = [0, 1, 2, 0, 1, 2, 0, 1, 2]
 

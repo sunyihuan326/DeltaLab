@@ -4,10 +4,9 @@ Created on 2018/1/15.
 
 @author: chk01
 '''
-from practice_two.load_data.utils import *
+from shuwei_fengge.practice_two.load_data.utils import *
 from PIL import Image, ImageDraw
 import tensorflow as tf
-import scipy.io as scio
 import matplotlib.pyplot as plt
 
 

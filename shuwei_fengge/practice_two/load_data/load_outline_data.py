@@ -1,12 +1,15 @@
 # coding:utf-8
 '''
-Created on 2018/1/5.
+Created on 2017/12/7.
 
 @author: chk01
 '''
 import os
 from PIL import Image, ImageDraw, ImageEnhance
-from practice_two.load_data.utils import *
+from shuwei_fengge.practice_two.load_data.utils import *
+
+LabelToSense = [0, 1, 2, 0, 1, 2, 0, 1, 2]
+LabelToOutline = [0, 0, 0, 1, 1, 1, 2, 2, 2]
 
 
 def get_face_box(points):
@@ -41,28 +44,37 @@ def get_face_box(points):
     region = pil_image.crop([new_x, new_y, new_x + wid, new_y + wid])
     region = region.resize((64, 64), Image.ANTIALIAS).convert("L")
     region = ImageEnhance.Contrast(region).enhance(999)
+    # region.show()
     return region
 
 
-def main():
-    logdir = '../../practice_two/data/image3channel'
-    label_dir = '../../practice_two/data/label'
+def main(typ):
+    logdir = '../data/image3channel'
+    label_dir = '../data/label'
     files = os.listdir(logdir)
     num = len(files)
     print('total num ------>', num)
-    data_X = np.zeros((num, 64 * 64))
-    data_Y = np.zeros((num, 9))
+    data_X = np.zeros((num, 13 * 2))
+    data_Y = np.zeros((num, 3))
     for i, file in enumerate(files):
         print('read_{}_data------->loading----->start'.format(file))
         points = scio.loadmat(logdir + '/' + file)['Points']
-        data_X[i, :] = np.array(get_face_box(points)).reshape(1, -1)
-        label = np.argmax(scio.loadmat(label_dir + '/' + file.replace('Point', 'Label'))['Label'])
-        data_Y[i, :] = convert_to_one_hot(label, 9)
+        tt = points[:13] - points[6]
 
+        data_X[i, :] = np.array(tt).reshape(1, -1)
+        label = np.argmax(scio.loadmat(label_dir + '/' + file.replace('Point', 'Label'))['Label'])
+        if typ == 'outline':
+            data_Y[i, :] = convert_to_one_hot(LabelToOutline[label], 3)
+        else:
+            data_Y[i, :] = convert_to_one_hot(LabelToSense[label], 3)
         print('read_{}_data------->loading----->end'.format(file))
 
-    scio.savemat('data/style64x64', {"X": data_X, "Y": data_Y})
+    scio.savemat('../data/outline/face_1_channel_vec{}'.format(typ), {"X": data_X, "Y": data_Y})
 
 
 if __name__ == '__main__':
-    main()
+    main('outline')
+    # pass
+    # tt = scio.loadmat('../data/outline/face_1_channel_sense.mat')
+    # print(tt['X'].shape)
+    # print(tt['Y'].shape)
